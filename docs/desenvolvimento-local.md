@@ -84,4 +84,4 @@ Estes itens precisam de aparelho real ou da AWS. Eles definem quando fazer o dep
 ## Quando fazer o deploy
 
 - **Deploy de integração até 28/nov, obrigatório.** Ele não depende de tudo estar verde localmente. Se o ciclo local atrasar, registra-se o bloqueio e sobe-se o que já está validado. Abaixo dessa data não sobra tempo para os 10 itens acima antes do TestFlight da família em 15/dez.
-- **Exceção que antecipa:** uma prova mínima do **Sign in with Apple com o Cognito** logo nas primeiras semanas, antes de construir o login inteiro. É um risco de desenho, não de detalhe.
+- **Sign in with Apple:** fica para depois da compra da conta Apple Developer (até 20/nov). Ele é testado no deploy de 28/nov. Até lá, o login é só por código por e-mail.

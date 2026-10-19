@@ -8,7 +8,7 @@
 
 - **Local primeiro.** Código e testes rodam no Mac (Docker + iOS Simulator) até o ciclo estar validado. Veja `desenvolvimento-local.md`.
 - **Deploy de integração até 28/nov, obrigatório**, mesmo que nem tudo esteja verde localmente.
-- **Exceção:** uma prova mínima do Sign in with Apple com o Cognito real nas primeiras semanas.
+- **Conta Apple Developer adiada** para cortar custos. Sem ela não há Sign in with Apple, APNs nem TestFlight. A data-limite para comprar é **20/nov**: a aprovação leva de 1 a 2 dias, e o deploy de 28/nov e o TestFlight dependem dela. Até lá, o login é por código por e-mail, e o "Continuar com Apple" entra depois.
 - **Cada spike registra** a hipótese, a evidência, a limitação encontrada e a decisão tomada.
 - **Folga de 25% em cada semana** para integração e correções.
 - **Gatilho de replanejamento:** se um gate crítico falhar até **02/nov**, ou se o ciclo local não fechar até **27/nov**, replanejar na hora com o Guilherme.
@@ -42,7 +42,7 @@ Antes de qualquer feature, o repositório vai para o GitHub com um CI que bloque
 
 | Período | Objetivo | Pronto quando |
 |---|---|---|
-| **20/out–02/nov** Base local e spikes | Depois do CI: monorepo, `docker compose` (Postgres, MinIO, ElasticMQ, Mailpit), API Hono, migrations, app Expo no Simulator. Spikes **locais**: fornecedor de lugares (com licença), sync e outbox com dois Simulators, lote de fotos → MinIO, render Remotion no container amd64, auth dev. **Prova mínima de Apple + Cognito real.** Contas, domínio, SES e conversa com o fornecedor começam no dia 20. | Um roteiro e uma visita sobrevivem a reinício offline e convergem entre os dois Simulators. Um lote de fotos e um MP4 fazem o caminho de ida e volta localmente. O fornecedor está escolhido ou é risco declarado. O caminho do login com a Apple está decidido. |
+| **20/out–02/nov** Base local e spikes | Depois do CI: monorepo, `docker compose` (Postgres, MinIO, ElasticMQ, Mailpit), API Hono, migrations, app Expo no Simulator. Spikes **locais**: fornecedor de lugares (com licença), sync e outbox com dois Simulators, lote de fotos → MinIO, render Remotion no container amd64, auth dev (código por e-mail no Mailpit). Fornecedor: **Geoapify** como candidato (veja `pesquisa-fornecedores-lugares.md`). | Um roteiro e uma visita sobrevivem a reinício offline e convergem entre os dois Simulators. Um lote de fotos e um MP4 fazem o caminho de ida e volta localmente. O fornecedor está escolhido ou é risco declarado. |
 | **03–16/nov** Planejamento e Hoje offline | Login, home, criação, convite (servido localmente), aviso, adicionar lugar, "quero ir", roteiro com papéis, membros, cartão. Tela Hoje, Eu fui, favorito, avaliação, observações, Estamos aqui, fases e fuso, Pronto para viajar. | Duas pessoas (dois Simulators) fazem convite → sugerir → montar roteiro → um dia offline, divergem e reconectam sem perder nada. Os testes Maestro desses fluxos passam. |
 | **17–23/nov** Memórias + recap mínimo | Lote com sugestão de lugar, lembrete local, miniaturas, álbum, visualizador, esconder e remover. Recap mínimo integrado cedo: snapshot, job e vídeo simples. | Um lote com HEIC e fotos sem EXIF sobrevive a falhas e reinício sem duplicar. Um recap mínimo sai do snapshot até o MP4. |
 | **24–27/nov** Fechar o ciclo local | Recap completo (telas, estados, gerar de novo, variantes com e sem marca), encerramento automático e manual, reconciliação de jobs. CDK preparado em paralelo. | O ciclo completo roda localmente com os testes verdes. Se não rodar, o bloqueio fica registrado. |
@@ -60,15 +60,17 @@ Antes de qualquer feature, o repositório vai para o GitHub com um CI que bloque
 
 **O que não se corta:** sugestão individual com busca e link, colaboração e permissões, roteiro offline, visitas e fotos em fila durável, lote com sugestão de lugar e lembrete, endereço local, convite web e aviso, álbum, recap, vídeo e gerar de novo. Cortar qualquer item aprovado exige decisão explícita do Guilherme.
 
-## Dependências externas (começar em 20/out)
+## Dependências externas
 
 Elas não andam mais rápido com agentes:
 
-- **Apple:** conta de desenvolvedor, Sign in with Apple, TestFlight e chave APNs.
-- **SES:** sair do sandbox e configurar DKIM no domínio.
-- **Domínio do app.**
-- **Contrato com o fornecedor de lugares.**
-- **Acesso a uma rede chinesa para teste** (opcional).
+| O quê | Até quando | Para quê |
+|---|---|---|
+| Chave de desenvolvimento da **Geoapify** (plano grátis) e confirmação por escrito da licença | Semana 1 | Spike A |
+| **Subdomínio** do domínio pessoal do Guilherme (por exemplo, `trippy.seudominio.com`) | 14/nov | E-mail do código de login (SES), links do convite e URL da API |
+| **AWS:** pedir a saída do sandbox do SES (com DKIM no subdomínio) e criar um alarme no AWS Budgets | 14/nov | Deploy de 28/nov. Nada é necessário na AWS antes disso. |
+| **Conta Apple Developer** | **20/nov** | Sign in with Apple, APNs e TestFlight |
+| Acesso a uma rede chinesa para teste (opcional) | 07/dez | Validar o eSIM na China |
 
 ## Depois do beta
 
