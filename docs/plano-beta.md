@@ -13,11 +13,33 @@
 - **Folga de 25% em cada semana** para integração e correções.
 - **Gatilho de replanejamento:** se um gate crítico falhar até **02/nov**, ou se o ciclo local não fechar até **27/nov**, replanejar na hora com o Guilherme.
 
+## Ponto de partida: repositório no GitHub + CI (20–22/out)
+
+Antes de qualquer feature, o repositório vai para o GitHub com um CI que bloqueia o merge quando algo quebra. Skills usadas: `ci-cd-and-automation` (quality gates), `github-actions` (builds de React Native) e `github-actions-hardening` (segurança).
+
+| Workflow | Quando roda | O que faz |
+|---|---|---|
+| `ci.yml` → **quality** | Todo PR e push na `main` | `pnpm install` com cache, ESLint + Prettier, `tsc -b` (typecheck), testes de unidade com Vitest. Jobs em paralelo, com filtro por caminho (app × API). |
+| `ci.yml` → **integration** | Todo PR e push na `main` | Postgres, MinIO e ElasticMQ como services. Migrations e testes de integração da API e do sync. |
+| `ci.yml` → **render-image** | PR que mexe em `worker-render` | Build da imagem Docker **linux/amd64** do Remotion e um render curto de fumaça. |
+| `mobile.yml` → **ios-simulator** | Push na `main`, todo dia à noite e PR com o label `ios` | Runner macOS: `expo prebuild` + build para o Simulator + testes **Maestro**. O app de Simulator fica como artefato. |
+| `security.yml` | Semanal + PR | `pnpm audit`, Dependabot (npm e github-actions) e varredura de segredos. |
+
+**Regras de segurança do CI:**
+
+- `permissions: contents: read` por padrão, com escopo extra só no job que precisar.
+- Actions de terceiros fixadas por **SHA completo**.
+- Nada de `pull_request_target`.
+- Nenhum segredo de produção no CI.
+- Proteção da `main`: os checks **quality** e **integration** são obrigatórios, e force-push é bloqueado.
+
+**Pronto quando:** um PR com erro de tipo, teste falhando ou lint quebrado fica **bloqueado**, um PR limpo passa em menos de 10 minutos, e o build de iOS no runner macOS gera o artefato do Simulator.
+
 ## Semanas
 
 | Período | Objetivo | Pronto quando |
 |---|---|---|
-| **20/out–02/nov** Base local e spikes | Monorepo, `docker compose` (Postgres, MinIO, ElasticMQ, Mailpit), API Hono, migrations, app Expo no Simulator. Spikes **locais**: fornecedor de lugares (com licença), sync e outbox com dois Simulators, lote de fotos → MinIO, render Remotion no container amd64, auth dev. **Prova mínima de Apple + Cognito real.** Contas, domínio, SES e conversa com o fornecedor começam no dia 20. | Um roteiro e uma visita sobrevivem a reinício offline e convergem entre os dois Simulators. Um lote de fotos e um MP4 fazem o caminho de ida e volta localmente. O fornecedor está escolhido ou é risco declarado. O caminho do login com a Apple está decidido. |
+| **20/out–02/nov** Base local e spikes | Depois do CI: monorepo, `docker compose` (Postgres, MinIO, ElasticMQ, Mailpit), API Hono, migrations, app Expo no Simulator. Spikes **locais**: fornecedor de lugares (com licença), sync e outbox com dois Simulators, lote de fotos → MinIO, render Remotion no container amd64, auth dev. **Prova mínima de Apple + Cognito real.** Contas, domínio, SES e conversa com o fornecedor começam no dia 20. | Um roteiro e uma visita sobrevivem a reinício offline e convergem entre os dois Simulators. Um lote de fotos e um MP4 fazem o caminho de ida e volta localmente. O fornecedor está escolhido ou é risco declarado. O caminho do login com a Apple está decidido. |
 | **03–16/nov** Planejamento e Hoje offline | Login, home, criação, convite (servido localmente), aviso, adicionar lugar, "quero ir", roteiro com papéis, membros, cartão. Tela Hoje, Eu fui, favorito, avaliação, observações, Estamos aqui, fases e fuso, Pronto para viajar. | Duas pessoas (dois Simulators) fazem convite → sugerir → montar roteiro → um dia offline, divergem e reconectam sem perder nada. Os testes Maestro desses fluxos passam. |
 | **17–23/nov** Memórias + recap mínimo | Lote com sugestão de lugar, lembrete local, miniaturas, álbum, visualizador, esconder e remover. Recap mínimo integrado cedo: snapshot, job e vídeo simples. | Um lote com HEIC e fotos sem EXIF sobrevive a falhas e reinício sem duplicar. Um recap mínimo sai do snapshot até o MP4. |
 | **24–27/nov** Fechar o ciclo local | Recap completo (telas, estados, gerar de novo, variantes com e sem marca), encerramento automático e manual, reconciliação de jobs. CDK preparado em paralelo. | O ciclo completo roda localmente com os testes verdes. Se não rodar, o bloqueio fica registrado. |
