@@ -3,3 +3,5 @@ pnpm-lock.yaml
 .claude/
 docs/
 apps/mobile/assets/
+apps/mobile/ios/
+apps/mobile/android/
