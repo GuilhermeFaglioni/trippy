@@ -1,6 +1,6 @@
 # Pesquisa: fornecedor de lugares
 
-> 19/out/2026. Pesquisa documental feita em paralelo pelo Claude Code e pelo Codex, nos termos oficiais de cada fornecedor. **Ainda sem benchmark.** A cobertura real (principalmente na China) é medida no spike A.
+> 19/out/2026. **A decisão final está no `docs/adr/0001-fornecedores-de-lugares.md`**, que substitui a recomendação abaixo (a Foursquare API foi descartada, e o Google entrou como enriquecimento ao vivo). Pesquisa documental feita em paralelo pelo Claude Code e pelo Codex, nos termos oficiais de cada fornecedor. **Ainda sem benchmark.** A cobertura real (principalmente na China) é medida no spike A.
 
 ## O que o Trippy precisa
 
