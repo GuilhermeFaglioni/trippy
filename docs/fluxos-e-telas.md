@@ -1,10 +1,10 @@
 # Trippy: Fluxos e Telas
 
-> Rascunho v0.2 de 19/out/2026, derivado de `visao-produto.md` (v0.3). Descreve o produto do ponto de vista de quem usa: o que cada pessoa vê e faz. Não define tecnologia nem layout final.
+> Rascunho v0.3 de 19/out/2026, derivado de `visao-produto.md` (v0.3). Descreve o produto do ponto de vista de quem usa: o que cada pessoa vê e faz. Não define tecnologia nem layout final.
 >
 > Legenda: **[P]** marca uma proposta que ainda não foi aprovada pelo Guilherme. O que não tem marca segue uma decisão já registrada em `visao-produto.md`.
 
-## A viagem tem 3 fases [P]
+## A viagem tem 3 fases
 
 O app muda conforme a fase da viagem: a mesma viagem mostra coisas diferentes antes, durante e depois.
 
@@ -103,8 +103,8 @@ Quando a viagem começa, ela abre direto na tela **Hoje**:
 
 ### 9. Fotos (todos)
 
-1. A pessoa manda várias fotos de uma vez, quando for conveniente. [P] O app pode lembrar à noite.
-2. Ela escolhe o lugar de cada foto, ou deixa a foto sem lugar. [P] O app pode sugerir o lugar pela hora em que a foto foi tirada.
+1. A pessoa manda várias fotos de uma vez, quando for conveniente. O app lembra à noite.
+2. O app sugere o lugar de cada foto pela hora em que ela foi tirada. A pessoa confirma, corrige ou deixa a foto sem lugar.
 3. Qualquer membro pode salvar no próprio celular fotos tiradas por outras pessoas.
 4. Quem pode esconder ou remover uma foto: o autor, o organizador e os coorganizadores. O app avisa que cópias já salvas por outras pessoas não somem.
 
@@ -150,8 +150,16 @@ Toda tela vazia mostra o próximo passo sem cobrar participação de ninguém. P
 - **Lugar sem endereço no idioma local:** um aviso para o organizador.
 - **Memórias sem fotos:** "As fotos da viagem aparecem aqui".
 
-## Perguntas em aberto destes fluxos
+## Decisões aprovadas (19/out/2026)
 
-- **Fases e datas [P]:** as fases automáticas e o botão **Encerrar viagem** fazem sentido?
-- **Recap sem espera [P]:** está bom gerar o recap assim que a viagem acaba, e permitir gerar de novo depois? A alternativa seria esperar alguns dias para o grupo mandar fotos.
-- **Lembrete e sugestão de lugar [P]:** o lembrete noturno e a sugestão automática de lugar para as fotos entram no MVP ou ficam para depois?
+- **Fases:** a viagem muda de fase automaticamente pelas datas. O botão **Encerrar viagem** serve para quando o grupo volta antes.
+- **Recap:** é gerado assim que a viagem acaba e pode ser gerado de novo depois, se chegarem mais fotos.
+- **Fotos:** o lembrete noturno para mandar fotos e a sugestão automática do lugar de cada foto entram no MVP.
+
+## Propostas ainda marcadas com [P]
+
+- **Link do convite:** o que fica visível antes de entrar no grupo. Depende do que acontece quando o link é repassado.
+- **Ordem da lista de lugares:** ordenar pelas reações "quero ir".
+- **Pronto para viajar:** um aviso para o organizador antes da viagem começar.
+- **Estamos aqui:** como registrar um lugar fora do roteiro, inclusive na China.
+- **Recap:** mapa do percurso e "dia mais intenso" ficam para depois.
