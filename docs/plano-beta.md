@@ -42,7 +42,7 @@ Antes de qualquer feature, o repositório vai para o GitHub com um CI que bloque
 
 | Período | Objetivo | Pronto quando |
 |---|---|---|
-| **20/out–02/nov** Base local e spikes | Depois do CI: monorepo, `docker compose` (Postgres, MinIO, ElasticMQ, Mailpit), API Hono, migrations, app Expo no Simulator. Spikes **locais**: fornecedor de lugares (com licença), sync e outbox com dois Simulators, lote de fotos → MinIO, render Remotion no container amd64, auth dev (código por e-mail no Mailpit). Fornecedor: **Geoapify** como candidato (veja `pesquisa-fornecedores-lugares.md`). | Um roteiro e uma visita sobrevivem a reinício offline e convergem entre os dois Simulators. Um lote de fotos e um MP4 fazem o caminho de ida e volta localmente. O fornecedor está escolhido ou é risco declarado. |
+| **20/out–02/nov** Base local e spikes | Depois do CI: monorepo, `docker compose` (Postgres, MinIO, ElasticMQ, Mailpit), API Hono, migrations, app Expo no Simulator. Spikes **locais**: fornecedor de lugares (com licença), sync e outbox com dois Simulators, lote de fotos → MinIO, render Remotion no container amd64, auth dev (código por e-mail no Mailpit). Lugares: Geoapify + "Detalhes do Google" (veja `adr/0001-fornecedores-de-lugares.md`, inclusive o que o spike A mede). | Um roteiro e uma visita sobrevivem a reinício offline e convergem entre os dois Simulators. Um lote de fotos e um MP4 fazem o caminho de ida e volta localmente. O fornecedor está escolhido ou é risco declarado. |
 | **03–16/nov** Planejamento e Hoje offline | Login, home, criação, convite (servido localmente), aviso, adicionar lugar, "quero ir", roteiro com papéis, membros, cartão. Tela Hoje, Eu fui, favorito, avaliação, observações, Estamos aqui, fases e fuso, Pronto para viajar. | Duas pessoas (dois Simulators) fazem convite → sugerir → montar roteiro → um dia offline, divergem e reconectam sem perder nada. Os testes Maestro desses fluxos passam. |
 | **17–23/nov** Memórias + recap mínimo | Lote com sugestão de lugar, lembrete local, miniaturas, álbum, visualizador, esconder e remover. Recap mínimo integrado cedo: snapshot, job e vídeo simples. | Um lote com HEIC e fotos sem EXIF sobrevive a falhas e reinício sem duplicar. Um recap mínimo sai do snapshot até o MP4. |
 | **24–27/nov** Fechar o ciclo local | Recap completo (telas, estados, gerar de novo, variantes com e sem marca), encerramento automático e manual, reconciliação de jobs. CDK preparado em paralelo. | O ciclo completo roda localmente com os testes verdes. Se não rodar, o bloqueio fica registrado. |
@@ -66,7 +66,7 @@ Elas não andam mais rápido com agentes:
 
 | O quê | Até quando | Para quê |
 |---|---|---|
-| Chave de desenvolvimento da **Geoapify** (plano grátis) e confirmação por escrito da licença | Semana 1 | Spike A |
+| Chave da **Geoapify** (plano grátis) e chave do **Google Cloud** (Places API, com conta de faturamento, dentro da franquia grátis) | Semana 1 | Spike A |
 | **Subdomínio** do domínio pessoal do Guilherme (por exemplo, `trippy.seudominio.com`) | 14/nov | E-mail do código de login (SES), links do convite e URL da API |
 | **AWS:** pedir a saída do sandbox do SES (com DKIM no subdomínio) e criar um alarme no AWS Budgets | 14/nov | Deploy de 28/nov. Nada é necessário na AWS antes disso. |
 | **Conta Apple Developer** | **20/nov** | Sign in with Apple, APNs e TestFlight |

@@ -109,11 +109,14 @@ Cada tabela sincronizável tem `trip_id`, `seq bigint` e `deleted_at`. **O `seq`
 6. **Gerar de novo:** cria uma nova versão do snapshot. As versões anteriores continuam guardadas.
 7. **Marca d'água:** cada versão é renderizada em duas variantes, **sem marca** e **com marca**. O download e o compartilhamento entregam a variante que vale **no momento do pedido**: sem marca se o organizador for assinante. Cópias já entregues não mudam. No beta, as assinaturas estão desligadas.
 
-## Lugares (fornecedor a escolher)
+## Lugares
 
-- Os termos do Google Places **não permitem guardar** nome e endereço indefinidamente, o que é incompatível com o cartão offline e com as memórias. O fornecedor precisa ter licença que permita **armazenar e compartilhar** os campos usados no cartão e no recap. A escolha sai de um spike.
-- A busca roda **no servidor**, atrás de um adaptador (`PlacesProvider`). A tabela `places` guarda `provider` e `provider_ref`.
-- Fallback já aprovado: nome digitado + GPS, com o endereço completado depois.
+Decisão em **`docs/adr/0001-fornecedores-de-lugares.md`**:
+- **Buscar, descobrir e salvar:** Geoapify, a única fonte persistida.
+- **Enriquecer e confirmar:** "Detalhes do Google" ao vivo, só por toque, guardando apenas o `place_id`.
+- **Depois do beta:** índice próprio do FSQ OS Places.
+
+A busca roda **no servidor**, atrás do adaptador `PlacesProvider`. A tabela `places` guarda a origem e a licença de cada campo, separada das correções do usuário. O fallback continua sendo nome digitado + GPS.
 
 ## Custo estimado no beta (on-demand, us-east-1)
 
