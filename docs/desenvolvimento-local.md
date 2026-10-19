@@ -25,6 +25,8 @@ A arquitetura isola a AWS atrás de adaptadores (`arquitetura.md`). Localmente, 
 
 Endereços: o Simulator alcança o Mac por `localhost`. Os containers alcançam o Mac por `host.docker.internal`. Um iPhone físico precisa do IP do Mac na rede local.
 
+**Portas:** outros projetos na máquina já usam as portas padrão (5432, 5433, 8025). Por isso, o Trippy expõe tudo só em `127.0.0.1` e em portas próprias: o Postgres fica na `54329` (veja `.env.example`). MinIO, ElasticMQ e Mailpit seguem a mesma regra quando entrarem.
+
 Tudo sobe com `docker compose up` (Postgres, MinIO, ElasticMQ, Mailpit) + `pnpm dev` (API e workers) + `npx expo run:ios` (app no Simulator).
 
 ## Estrutura do repositório

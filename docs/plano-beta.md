@@ -17,13 +17,16 @@
 
 Antes de qualquer feature, o repositório vai para o GitHub com um CI que bloqueia o merge quando algo quebra. Skills usadas: `ci-cd-and-automation` (quality gates), `github-actions` (builds de React Native) e `github-actions-hardening` (segurança).
 
+**Branches:** `develop` é o branch padrão e recebe os PRs de feature. A `main` é o release e **só recebe PRs vindos do `develop`**. A promoção do `develop` para a `main` acontece quando se quer um build para testar no iPhone, não a cada feature.
+
 | Workflow | Quando roda | O que faz |
 |---|---|---|
-| `ci.yml` → **quality** | Todo PR e push na `main` | `pnpm install` com cache, ESLint + Prettier, `tsc -b` (typecheck), testes de unidade com Vitest. Jobs em paralelo, com filtro por caminho (app × API). |
-| `ci.yml` → **integration** | Todo PR e push na `main` | Postgres, MinIO e ElasticMQ como services. Migrations e testes de integração da API e do sync. |
-| `ci.yml` → **render-image** | PR que mexe em `worker-render` | Build da imagem Docker **linux/amd64** do Remotion e um render curto de fumaça. |
-| `mobile.yml` → **ios-simulator** | Push na `main`, todo dia à noite e PR com o label `ios` | Runner macOS: `expo prebuild` + build para o Simulator + testes **Maestro**. O app de Simulator fica como artefato. |
-| `security.yml` | Semanal + PR | `pnpm audit`, Dependabot (npm e github-actions) e varredura de segredos. |
+| `ci.yml` → **quality** e **integration** | Todo PR e push no `develop` e na `main` | `pnpm install` com cache, ESLint + Prettier, `tsc` (typecheck), testes de unidade com Vitest. Integração com Postgres como service. **Obrigatório nos dois branches.** |
+| `security.yml` | Todo PR + semanal | `pnpm audit`. Mais o Dependabot (npm, github-actions e docker-compose). **Obrigatório nos dois branches.** |
+| `release.yml` → **origem do PR** | PR para a `main` | Recusa PR para a `main` que não venha do `develop`. |
+| `release.yml` → **ios-simulator** | **Sempre** em PR para a `main`; no `develop`, só com o label `ios` e no **build noturno** | Runner macOS: `expo prebuild` + build para o Simulator. O `.app` fica como artefato. |
+| `release.yml` → **e2e-maestro**, **render-image** (quando existirem) | PR para a `main` | Testes Maestro no Simulator, e build amd64 do Remotion com render curto. |
+| `release.yml` → **testflight** (a partir de 28/nov) | Depois do merge na `main` | Deploy e envio para o TestFlight, via GitHub Environment `release` com **aprovação manual**. Haverá também um Environment `dev`. |
 
 **Regras de segurança do CI:**
 
@@ -31,9 +34,9 @@ Antes de qualquer feature, o repositório vai para o GitHub com um CI que bloque
 - Actions de terceiros fixadas por **SHA completo**.
 - Nada de `pull_request_target`.
 - Nenhum segredo de produção no CI.
-- Proteção da `main`: os checks **quality** e **integration** são obrigatórios, e force-push é bloqueado.
+- Proteção dos dois branches: merge só por PR, force-push bloqueado e checks obrigatórios. No `develop`: quality, integration e audit. Na `main`: os mesmos, mais a origem do PR e o build iOS.
 
-**Pronto quando:** um PR com erro de tipo, teste falhando ou lint quebrado fica **bloqueado**, um PR limpo passa em menos de 10 minutos, e o build de iOS no runner macOS gera o artefato do Simulator.
+**Pronto quando:** um PR com erro de tipo, teste falhando ou lint quebrado fica **bloqueado**, um PR limpo passa em menos de 10 minutos, um PR para a `main` vindo de outro branch é recusado, e o build de iOS gera o artefato do Simulator.
 
 ## Semanas
 

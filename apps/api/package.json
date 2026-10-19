@@ -1,0 +1,21 @@
+{
+  "name": "@trippy/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@trippy/domain": "workspace:*",
+    "hono": "^4.10.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/pg": "^8.15.0",
+    "tsx": "^4.20.0"
+  }
+}
