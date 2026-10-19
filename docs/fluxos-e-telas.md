@@ -1,8 +1,8 @@
 # Trippy: Fluxos e Telas
 
-> Rascunho v0.3 de 19/out/2026, derivado de `visao-produto.md` (v0.3). Descreve o produto do ponto de vista de quem usa: o que cada pessoa vê e faz. Não define tecnologia nem layout final.
+> Rascunho v0.4 de 19/out/2026, derivado de `visao-produto.md` (v0.3). Descreve o produto do ponto de vista de quem usa: o que cada pessoa vê e faz. Não define tecnologia nem layout final.
 >
-> Legenda: **[P]** marca uma proposta que ainda não foi aprovada pelo Guilherme. O que não tem marca segue uma decisão já registrada em `visao-produto.md`.
+> Todas as propostas deste documento foram aprovadas pelo Guilherme em 19/out/2026. O wireframe de referência é o "Trippy — Telas" v0.3, com 35 telas.
 
 ## A viagem tem 3 fases
 
@@ -54,7 +54,7 @@ A tela **Lugares** reúne todos os lugares da viagem com o status de cada um: *s
 
 ### 3. Entrar na viagem (convidado)
 
-1. Abre o link. Sem instalar o app, já consegue consultar a viagem. [P] O que exatamente aparece antes de entrar no grupo depende de uma decisão em aberto: o que acontece quando o link é repassado.
+1. Abre o link. Sem instalar o app, já vê a viagem: nome, datas, número de pessoas e o roteiro. Quem tiver o link vê isso, mesmo que o link tenha sido repassado.
 2. Toca em **Participar**, instala o app e cria a conta.
 3. Na entrada, um aviso deixa claro que fazer parte do grupo autoriza compartilhar o vídeo recap, inclusive fora do app.
 
@@ -67,11 +67,11 @@ A tela **Lugares** reúne todos os lugares da viagem com o status de cada um: *s
 
 ### 5. Montar o roteiro (organizador e coorganizadores)
 
-1. Em **Lugares**, escolhe um lugar e define o dia. [P] A lista pode ser ordenada pelo número de reações "quero ir".
+1. Em **Lugares**, escolhe um lugar e define o dia. A lista vem ordenada pelo número de reações "quero ir".
 2. Ordena os lugares dentro de cada dia.
 3. Os outros membros só consultam o roteiro.
 
-### 6. Preparar para viajar [P]
+### 6. Preparar para viajar
 
 Nos dias antes do início, o organizador vê um aviso **Pronto para viajar** que mostra:
 
@@ -87,7 +87,7 @@ Quando a viagem começa, ela abre direto na tela **Hoje**:
 2. **Próximo lugar:** com o botão **Mostrar endereço**, que abre o cartão em tela cheia com o nome e o endereço no idioma local.
 3. **O que mudou:** as alterações do roteiro que o celular já recebeu.
 4. **Lugares do dia:** em ordem, cada um com os atalhos **Eu fui**, **Favorito** e **Foto**.
-5. **[P] Estamos aqui:** registra um lugar fora do roteiro. Ainda falta decidir como adicionar lugares na China.
+5. **Estamos aqui:** registra um lugar fora do roteiro. O app sugere lugares próximos pelo GPS. Se a busca falhar (o que é comum na China) ou não houver permissão de localização, a pessoa digita o nome, e o endereço pode ser completado depois.
 
 **Sem internet:**
 
@@ -121,7 +121,7 @@ Quando a viagem começa, ela abre direto na tela **Hoje**:
 2. O recap é uma sequência de telas no estilo Spotify Wrapped. **Uma tela só aparece quando há dados suficientes para ela.**
    - **Sempre:** a viagem em números (dias, lugares visitados, fotos) e os destaques do álbum.
    - **Quando há dados:** o favorito do grupo, os lugares mais bem avaliados (nunca com uma avaliação só), e o momento de cada pessoa (um destaque pessoal dentro do recap do grupo, não um vídeo separado).
-   - **[P] Para depois:** mapa do percurso e "dia mais intenso".
+   - **Para depois:** mapa do percurso e "dia mais intenso".
 3. No fim da sequência vem o **vídeo curto**, com **Compartilhar** e **Baixar**. Quanto menos fotos, mais curto o vídeo. Ele leva uma marca discreta do Trippy, que não aparece para assinantes.
 4. **Estados do recap:**
    - *Gerando*.
@@ -156,10 +156,7 @@ Toda tela vazia mostra o próximo passo sem cobrar participação de ninguém. P
 - **Recap:** é gerado assim que a viagem acaba e pode ser gerado de novo depois, se chegarem mais fotos.
 - **Fotos:** o lembrete noturno para mandar fotos e a sugestão automática do lugar de cada foto entram no MVP.
 
-## Propostas ainda marcadas com [P]
-
-- **Link do convite:** o que fica visível antes de entrar no grupo. Depende do que acontece quando o link é repassado.
-- **Ordem da lista de lugares:** ordenar pelas reações "quero ir".
-- **Pronto para viajar:** um aviso para o organizador antes da viagem começar.
-- **Estamos aqui:** como registrar um lugar fora do roteiro, inclusive na China.
-- **Recap:** mapa do percurso e "dia mais intenso" ficam para depois.
+- **Convite:** o link mostra a viagem e o roteiro para qualquer pessoa que o abrir.
+- **Lugares:** a lista vem ordenada por "quero ir".
+- **Pronto para viajar:** o card aparece com o botão **Avisar**, que abre o WhatsApp (ou outro app de mensagem) com o link da viagem para quem ainda não abriu o app. Uma notificação do app não chegaria a quem nunca o instalou.
+- **Estamos aqui:** busca lugares próximos pelo GPS e permite digitar o nome quando a busca não funciona.

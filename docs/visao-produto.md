@@ -1,6 +1,6 @@
 # Trippy — Visão de Produto
 
-> Rascunho v0.3 — 19/out/2026. Construído a partir das respostas do Guilherme às rodadas de perguntas de escopo (Claude Code + Codex). Só produto: nada de tecnologia ainda.
+> Rascunho v0.4 — 19/out/2026. Construído a partir das respostas do Guilherme às rodadas de perguntas de escopo (Claude Code + Codex). Só produto: nada de tecnologia ainda.
 
 ## Em uma frase
 
@@ -72,7 +72,7 @@ Se só o organizador se dedicar, os convidados ainda recebem o roteiro e as lemb
 
 ## Grupo e privacidade
 
-- **Grupo fechado:** todo grupo é fechado por padrão.
+- **Grupo fechado:** todo grupo é fechado por padrão. O link do convite, porém, mostra a viagem e o roteiro para quem o abrir, mesmo sem instalar o app.
 - **Vídeo recap:** entrar no grupo autoriza compartilhar o vídeo recap, inclusive fora do app.
 - **Papéis:** a viagem tem um organizador e coorganizadores escolhidos por ele. Os dois podem editar o roteiro.
 - **Moderação:** organizadores, coorganizadores e o dono da foto podem esconder ou remover uma foto. Organizadores e coorganizadores podem remover membros.
@@ -83,7 +83,8 @@ Se só o organizador se dedicar, os convidados ainda recebem o roteiro e as lemb
 
 - **Freemium:** o app não é inteiramente pago. Existe uma parte gratuita e uma assinatura.
 - **Guarda das memórias:** fotos, álbum e vídeo ficam disponíveis enquanto a assinatura estiver ativa e por um período X depois que ela acabar.
-- **Marca no vídeo:** o vídeo recap leva uma marca discreta do Trippy, que some para quem paga.
+- **Marca no vídeo:** o vídeo recap leva uma marca discreta do Trippy, que some para quem paga. Quando a assinatura acaba, os vídeos já gerados não mudam. A marca só aparece nos recaps gerados ou baixados depois disso.
+- **Nome da assinatura:** Trippy+.
 - **Preço:** o que é gratuito, o que é pago e quanto custa ainda está em definição pelo Guilherme.
 
 ## Aquisição
@@ -103,5 +104,4 @@ Os primeiros organizadores vêm de comunidades de viagem, amigos e família. A d
 - **Critérios do beta:** o que conta como "completou o ciclo" e quantos grupos de fora precisam usar o app, e por quanto tempo. (O Guilherme está pensando.)
 - **Adicionar lugar na China:** a busca e o link dependem do Google Maps, que é bloqueado na China. Falta definir como adicionar um lugar durante o beta, por exemplo deixando tudo cadastrado antes de embarcar.
 - **Mudanças de plano:** como os convidados ficam sabendo quando o roteiro muda durante a viagem, inclusive sem internet.
-- **Link do roteiro repassado:** o que acontece quando o link é repassado para alguém de fora do grupo.
 - **Pessoas de fora nas fotos:** como fica quem aparece nas fotos sem ser membro do grupo.
