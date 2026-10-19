@@ -1,26 +1,46 @@
-name: Mobile
+name: Release
 
-# Runner macOS é lento; roda na main, toda noite e em PRs com o label "ios".
+# Checks pesados. Obrigatórios nos PRs develop -> main (release).
+# No develop: só com o label "ios" e no build noturno (schedule roda no branch padrão, o develop).
 on:
-  push:
-    branches: [main]
+  pull_request:
+    branches: [develop, main]
+    types: [opened, synchronize, reopened, labeled]
   schedule:
     - cron: '0 6 * * *'
-  pull_request:
-    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: mobile-${{ github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  promotion-source:
+    name: Origem do PR de release
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: A main só recebe PRs vindos do develop
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "::error::PRs para a main precisam vir do branch develop deste repositório (veio de $HEAD_REPO:$HEAD_REF)."
+            exit 1
+          fi
+
   ios-simulator:
     name: Build iOS (Simulator)
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ios')
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.base_ref == 'main' ||
+      contains(github.event.pull_request.labels.*.name, 'ios')
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
@@ -60,3 +80,8 @@ jobs:
           path: trippy-ios-simulator.app.tar.gz
           if-no-files-found: error
           retention-days: 7
+
+  # Próximos jobs deste workflow, conforme forem existindo:
+  # - e2e-maestro: fluxos do fluxos-e-telas.md no Simulator, usando o .app acima
+  # - render-image: build linux/amd64 do worker Remotion + render curto de fumaça
+  # - testflight (após merge na main, com Environment "release" e aprovação manual)
