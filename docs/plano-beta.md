@@ -1,30 +1,30 @@
 # Trippy — Plano até o beta
 
-> v0.1, 19/out/2026. Rascunho do Codex, condensado pelo Claude Code. A arquitetura está em `arquitetura.md`.
+> v0.2, 19/out/2026. Rascunho do Codex, condensado pelo Claude Code e reordenado para desenvolvimento local primeiro. A arquitetura está em `arquitetura.md`.
 >
 > **Datas-chave:** a família recebe o TestFlight até **15/dez**, e o embarque é em **29/dez/2026**. Uma pessoa (Guilherme) com agentes.
 
 ## Regras
 
-- **TestFlight técnico desde a semana 1.** O dia 15/dez marca o uso pela família, não a primeira tentativa de distribuir.
-- **Spikes antes das telas.** Nada das 35 telas começa antes de provar login, persistência offline, upload e render.
-- **Cada spike registra** a hipótese, a evidência (em aparelho real), a limitação encontrada e a decisão tomada.
+- **Local primeiro.** Código e testes rodam no Mac (Docker + iOS Simulator) até o ciclo estar validado. Veja `desenvolvimento-local.md`.
+- **Deploy de integração até 28/nov, obrigatório**, mesmo que nem tudo esteja verde localmente.
+- **Exceção:** uma prova mínima do Sign in with Apple com o Cognito real nas primeiras semanas.
+- **Cada spike registra** a hipótese, a evidência, a limitação encontrada e a decisão tomada.
 - **Folga de 25% em cada semana** para integração e correções.
-- **Gatilho de replanejamento:** se um gate crítico falhar até **02/nov**, ou se o ciclo completo não funcionar até **30/nov**, replanejar na hora com o Guilherme, sem absorver o atraso em silêncio.
+- **Gatilho de replanejamento:** se um gate crítico falhar até **02/nov**, ou se o ciclo local não fechar até **27/nov**, replanejar na hora com o Guilherme.
 
 ## Semanas
 
-| Semana | Objetivo | Pronto quando |
+| Período | Objetivo | Pronto quando |
 |---|---|---|
-| **1 · 20–26/out** Fundação e spikes | Ter a infraestrutura mínima no CDK: API Gateway + Lambda, Neon com TLS, Cognito + SES, S3, SQS e alarmes de custo. Fazer um build Expo nos iPhones e o TestFlight técnico. Login com Apple + OTP. Rodar os spikes: **fornecedor de lugares**, outbox em dois celulares, lote de fotos → PUT pré-assinado, **Remotion no Fargate Spot**, e acesso pela rede chinesa se houver como testar. | O roteiro e as visitas sobrevivem a um reinício offline e aparecem no segundo celular depois de reconectar. Um lote de fotos e um MP4 completam o caminho de ida e volta. Os riscos que sobraram têm próximo passo definido. |
-| **2 · 27/out–02/nov** Fechar gates e base de dados | Escolher o fornecedor de lugares, com os direitos de uso documentados. Fazer o modelo de dados e as migrations: usuários, membros, papéis, viagens e lugares. Sync completo: push e pull por cursor, idempotência, remoções e conflito por versão do roteiro. Resolver lote interrompido e URL de upload vencida, refresh do Cognito, e a fila do recap com interrupção do Spot. | Os gates críticos passam em dois aparelhos. Reenvio não duplica nada. Versão antiga não sobrescreve o roteiro. Membro removido não consegue escrever. |
-| **3 · 03–09/nov** Planejamento compartilhado | Login e retorno à viagem, home, criação e estados vazios. Convite web com preview no WhatsApp e aviso de compartilhamento do vídeo. Adicionar lugar (busca e link), "quero ir", dia e ordem para organizadores, consulta para membros, gestão de membros e cartão do lugar. | Duas pessoas fazem convite → entrar → sugerir → montar roteiro, e consultam tudo em modo avião. O servidor recusa edição indevida. |
-| **4 · 10–16/nov** Durante a viagem, offline | Tela Hoje, cartão, Eu fui, favorito, avaliação e observações. Estamos aqui, com GPS negado e nome digitado. Último sync e fila visíveis. Fases e fuso da viagem, dia livre e tudo visitado. Pronto para viajar e Avisar via WhatsApp. Push APNs. | Duas pessoas passam um dia simulado offline, divergem no roteiro e reconectam sem perder nada. Os dias seguem o fuso da viagem, não o do Brasil. |
-| **5 · 17–23/nov** Memórias | Seleção em lote, cópia durável, sugestão de lugar pelo horário, lembrete noturno local, upload com novas tentativas e miniaturas. Álbum por dia, por lugar e sem lugar. Visualizador e salvar. Esconder e remover por papel. | Um lote real (HEIC e fotos sem EXIF) sobrevive a perda de rede e reinício, sem duplicatas. Com uma pessoa só contribuindo, o grupo já tem álbum. |
-| **6 · 24–30/nov** Recap e primeiro ensaio integral | Encerramento automático e manual, snapshot com versões, telas do recap, vídeo, estados (gerando, falhou, sem fotos), baixar e compartilhar, e gerar de novo. | Uma viagem de teste vai do convite ao vídeo, incluindo os casos sem fotos, com fotos tardias e com falha de render. Job duplicado não publica duas versões. |
-| **7 · 01–07/dez** Estabilização | Ensaio curto com a família e com um grupo de fora, se houver. Revisar acessibilidade (texto ampliado, contraste, leitor de tela). Testar backup e restore do Neon. Alarmes e fila de falhas. Teste rápido no Android. Teste China/eSIM, se houver acesso. | Ciclo completo sem perda de conteúdo e sem vazamento entre grupos. **Funcionalidades congeladas no fim da semana.** |
-| **8 · 08–14/dez** Contingência e preparação | Corrigir só bloqueios. TestFlight com todos os familiares. Fazer login antes de embarcar, cadastrar a viagem real, conferir os endereços locais e verificar que tudo abre em modo avião. Guia mínimo para a família. | Todos os iPhones instalam, abrem e consultam o roteiro offline. Pelo menos dois aparelhos completam contribuição e sync. |
-| **15/dez** Entrega | Beta familiar completo no TestFlight. De 16 a 28/dez, só correções indispensáveis. | |
+| **20/out–02/nov** Base local e spikes | Monorepo, `docker compose` (Postgres, MinIO, ElasticMQ, Mailpit), API Hono, migrations, app Expo no Simulator. Spikes **locais**: fornecedor de lugares (com licença), sync e outbox com dois Simulators, lote de fotos → MinIO, render Remotion no container amd64, auth dev. **Prova mínima de Apple + Cognito real.** Contas, domínio, SES e conversa com o fornecedor começam no dia 20. | Um roteiro e uma visita sobrevivem a reinício offline e convergem entre os dois Simulators. Um lote de fotos e um MP4 fazem o caminho de ida e volta localmente. O fornecedor está escolhido ou é risco declarado. O caminho do login com a Apple está decidido. |
+| **03–16/nov** Planejamento e Hoje offline | Login, home, criação, convite (servido localmente), aviso, adicionar lugar, "quero ir", roteiro com papéis, membros, cartão. Tela Hoje, Eu fui, favorito, avaliação, observações, Estamos aqui, fases e fuso, Pronto para viajar. | Duas pessoas (dois Simulators) fazem convite → sugerir → montar roteiro → um dia offline, divergem e reconectam sem perder nada. Os testes Maestro desses fluxos passam. |
+| **17–23/nov** Memórias + recap mínimo | Lote com sugestão de lugar, lembrete local, miniaturas, álbum, visualizador, esconder e remover. Recap mínimo integrado cedo: snapshot, job e vídeo simples. | Um lote com HEIC e fotos sem EXIF sobrevive a falhas e reinício sem duplicar. Um recap mínimo sai do snapshot até o MP4. |
+| **24–27/nov** Fechar o ciclo local | Recap completo (telas, estados, gerar de novo, variantes com e sem marca), encerramento automático e manual, reconciliação de jobs. CDK preparado em paralelo. | O ciclo completo roda localmente com os testes verdes. Se não rodar, o bloqueio fica registrado. |
+| **28/nov** Deploy de integração | CDK: API Gateway + Lambda, Neon, Cognito, SES, S3 + CloudFront, SQS, ECS Fargate Spot, Scheduler, alarmes de custo. | A stack sobe e o app no Simulator funciona apontando para a AWS. |
+| **29/nov–07/dez** Validação real | Cognito + Apple, iPhones físicos, APNs, upload em segundo plano, Spot (interrupção e custo), Neon real, preview no WhatsApp, China/eSIM se houver acesso. TestFlight técnico. Ensaio curto com a família. **Funcionalidades congeladas em 07/dez.** | O ciclo completo funciona em iPhones reais via TestFlight, sem perda de conteúdo nem vazamento entre grupos. |
+| **08–14/dez** Contingência e preparação | Corrigir só bloqueios. TestFlight com todos os familiares, login antes de embarcar, viagem real cadastrada, endereços locais conferidos, tudo abrindo em modo avião. Guia mínimo. | Todos os iPhones instalam, abrem e consultam o roteiro offline. Pelo menos dois aparelhos completam contribuição e sync. |
+| **15/dez** Entrega | Beta familiar no TestFlight. De 16 a 28/dez, só correções indispensáveis. | |
 
 ## Se atrasar: o que pode ser cortado
 
