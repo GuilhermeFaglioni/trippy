@@ -5,14 +5,35 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Só atualizações publicadas há pelo menos 7 dias.
+    cooldown:
+      default-days: 7
     groups:
-      dev-dependencies:
-        dependency-type: development
+      # Patch e minor juntos num PR só. Majors vêm um por PR, para revisão manual.
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Gerenciados pelo SDK do Expo: atualizar juntos com `npx expo install --fix`.
+      - dependency-name: expo
+      - dependency-name: expo-*
+      - dependency-name: react
+      - dependency-name: react-native
+      - dependency-name: '@types/react'
+      - dependency-name: typescript
+      # Runtime é Node 22 (.nvmrc).
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
   - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Mesmo major do Postgres de produção (Neon).
+      - dependency-name: postgres
+        update-types: [version-update:semver-major]
