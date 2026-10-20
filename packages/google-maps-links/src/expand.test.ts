@@ -5,6 +5,7 @@ import { lookup } from 'node:dns/promises'
 import { request } from 'node:https'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { expandGoogleMapsUrl } from './expand.js'
+import { parseGoogleMapsUrl } from './parse.js'
 
 vi.mock('node:dns/promises', () => ({ lookup: vi.fn() }))
 vi.mock('node:https', () => ({ request: vi.fn() }))
@@ -112,6 +113,28 @@ describe('expandGoogleMapsUrl', () => {
     )
     expect(mockedLookup).toHaveBeenCalledTimes(2)
     expect(observedConnections).toHaveLength(2)
+  })
+
+  it('expande link curto para URL canônica que o parser entende', async () => {
+    responses = [
+      {
+        statusCode: 302,
+        location: 'https://www.google.com/maps/place/Casa+Batll%C3%B3/data=!3d41.38!4d2.17',
+      },
+      { statusCode: 200 },
+    ]
+
+    const expandedUrl = await expandGoogleMapsUrl('https://maps.app.goo.gl/short')
+
+    expect(expandedUrl).toBe(
+      'https://www.google.com/maps/place/Casa+Batll%C3%B3/data=!3d41.38!4d2.17',
+    )
+    expect(parseGoogleMapsUrl(expandedUrl)).toEqual({
+      kind: 'coordinates',
+      coordinates: { latitude: 41.38, longitude: 2.17 },
+      source: 'place',
+      query: 'Casa Batlló',
+    })
   })
 
   it('recusa host fora da allowlist antes de resolver ou conectar', async () => {

@@ -52,7 +52,9 @@ export function parseGoogleMapsUrl(url: string): GoogleMapsUrlParseResult {
   const queryText = cleanText(
     parsedUrl.searchParams.get('q') ?? parsedUrl.searchParams.get('query') ?? '',
   )
-  const placeName = getPlaceName(pathname)
+  const placeSegment = getPlaceSegment(pathname)
+  const opaquePlaceId = placeSegment !== undefined && isOpaquePlaceId(placeSegment)
+  const placeName = opaquePlaceId ? undefined : placeSegment
   const pathAndData = decodePath(`${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`)
 
   if (/\/maps\/(?:dir|list|placelists)(?:\/|$)/i.test(pathname)) {
@@ -82,6 +84,7 @@ export function parseGoogleMapsUrl(url: string): GoogleMapsUrlParseResult {
   const hasOpaqueId =
     parsedUrl.searchParams.has('cid') ||
     parsedUrl.searchParams.has('ftid') ||
+    opaquePlaceId ||
     /!1s[^!/?&#]+/i.test(pathAndData)
 
   if (queryText && !parseCoordinatePair(queryText)) {
@@ -128,13 +131,17 @@ function makeCoordinates(latitude: number, longitude: number): GoogleMapsCoordin
   return { latitude, longitude }
 }
 
-function getPlaceName(pathname: string): string | undefined {
+function getPlaceSegment(pathname: string): string | undefined {
   const segments = pathname.split('/').filter(Boolean)
   const placeIndex = segments.findIndex((segment) => segment.toLowerCase() === 'place')
   if (placeIndex === -1) return undefined
-  const title = cleanText(segments[placeIndex + 1] ?? '')
-  if (!title || title.startsWith('@') || title.startsWith('data=')) return undefined
-  return title
+  const segment = cleanText(segments[placeIndex + 1] ?? '')
+  if (!segment || segment.startsWith('@') || segment.startsWith('data=')) return undefined
+  return segment
+}
+
+function isOpaquePlaceId(segment: string): boolean {
+  return /^(?:ChIJ[A-Za-z0-9_-]{16,}|0x[0-9a-f]+:0x[0-9a-f]+)$/i.test(segment)
 }
 
 function decodePath(value: string): string {

@@ -69,6 +69,20 @@ describe('parseGoogleMapsUrl', () => {
     })
   })
 
+  it('envia ID de lugar no caminho sem nome para fallback de busca', () => {
+    expect(
+      parseGoogleMapsUrl('https://www.google.com/maps/place/ChIJN1t_tDeuEmsRUsoyG83frY4'),
+    ).toEqual({ kind: 'fallback', reason: 'opaque_id' })
+  })
+
+  it('preserva nome curto que começa com ChIJ como busca por lugar', () => {
+    expect(parseGoogleMapsUrl('https://www.google.com/maps/place/ChIJunctionCafe')).toEqual({
+      kind: 'query',
+      query: 'ChIJunctionCafe',
+      reason: 'place_name',
+    })
+  })
+
   it('envia links de lista e rota para fallback', () => {
     expect(
       parseGoogleMapsUrl('https://www.google.com/maps/dir/?api=1&origin=A&destination=B'),
