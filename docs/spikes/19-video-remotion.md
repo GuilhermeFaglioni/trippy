@@ -45,7 +45,7 @@ O dispatcher criou o worker em modo detached e retornou após 190 ms. Um worker 
 - `pnpm typecheck`: passou nos seis pacotes do workspace.
 - `pnpm test`: 6 arquivos e 24 testes passaram.
 - `pnpm test:integration`: 5 arquivos e 10 testes passaram. Foi executado com buckets e filas de integração exclusivos; esses recursos foram removidos após o teste.
-- No teste de integração `publishes outbox jobs and starts one detached worker for duplicate messages`, duas mensagens iguais para o mesmo job produziram uma única chamada de `launchWorker`; a segunda chamada do dispatcher retornou `busy`, sem iniciar outro worker. O teste também verifica uma mensagem restante na fila e a rejeição do fencing token antigo após a recuperação.
+- No teste de integração `publishes outbox jobs and starts one detached worker for duplicate messages`, duas mensagens iguais para o mesmo job levam a uma única chamada de `launchWorker`. Após requeue e conclusão com fencing token novo, o dispatcher consome a mensagem da geração antiga como `stale`; uma duplicata da geração concluída retorna `duplicate`. `launchWorker` continua com uma chamada. O teste exercita Postgres e ElasticMQ reais, com Docker substituído por runtime controlado.
 
 Vitest exibiu aviso não bloqueante sobre `configLoader: 'native'` e sintaxe ESM em `vitest.config.ts` CommonJS.
 

@@ -267,16 +267,6 @@ describe('createRecap', () => {
     expect(await dispatchOne(database(), sqs, runtime, config)).toEqual({ kind: 'busy' })
     expect(launchCount).toBe(1)
 
-    const remainingDuplicate = await sqs.send(
-      new ReceiveMessageCommand({ QueueUrl: queueUrl, MaxNumberOfMessages: 1, WaitTimeSeconds: 1 }),
-    )
-    expect(remainingDuplicate.Messages).toHaveLength(1)
-    await sqs.send(
-      new DeleteMessageCommand({
-        QueueUrl: queueUrl,
-        ReceiptHandle: remainingDuplicate.Messages![0]!.ReceiptHandle,
-      }),
-    )
     if (started.kind !== 'started') throw new Error('Dispatcher não iniciou worker desacoplado')
 
     await database().query(
@@ -348,6 +338,18 @@ describe('createRecap', () => {
       cpu_milliseconds: '9876',
       peak_memory_bytes: '8000000',
     })
+
+    expect(await dispatchOne(database(), sqs, runtime, config)).toEqual({ kind: 'stale' })
+    expect(launchCount).toBe(1)
+
+    await sqs.send(
+      new SendMessageCommand({
+        QueueUrl: queueUrl,
+        MessageBody: JSON.stringify({ jobId: duplicateJob.id, generation: retried.job.generation }),
+      }),
+    )
+    expect(await dispatchOne(database(), sqs, runtime, config)).toEqual({ kind: 'duplicate' })
+    expect(launchCount).toBe(1)
   })
 
   it('marks an interrupted job failed after three attempts', async () => {
