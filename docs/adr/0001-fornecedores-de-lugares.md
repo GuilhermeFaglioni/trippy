@@ -1,6 +1,6 @@
 # ADR 0001: Fornecedores de lugares
 
-- **Status:** aceito em 19/out/2026, condicionado ao spike A.
+- **Status:** aceito em 19/out/2026, condicionado ao spike A. **Revisado em 20/out/2026** após o spike #18 (veja "Revisão após o spike #18"): fornecedor mantido provisoriamente; a validação final fica com a #25.
 - **Decisores:** Guilherme, com debate entre Claude Code e Codex.
 - **Pesquisa:** `docs/pesquisa-fornecedores-lugares.md`.
 
@@ -92,3 +92,41 @@ Cada função tem um fornecedor:
 5. **Link colado:** 20 links do Google Maps em formatos diferentes. Medir a taxa de resolução correta e quando é preciso buscar pelo nome.
 
 **Este ADR é revisto se** a Geoapify não acertar a maioria dos lugares globais e os principais da China, ou se a correspondência com o Google exigir escolha manual na maioria dos casos.
+
+## Revisão após o spike #18 (20/out/2026)
+
+Resultado completo em `docs/spikes/18-geoapify.md`. Debatido entre Claude Code e Codex e aprovado pelo Guilherme.
+
+**O que o spike mostrou** (acerto no 1º resultado, por lugar):
+
+| Método | China (30) | Resto do mundo (20) |
+|---|---|---|
+| Geocoding da Geoapify (`type=amenity` + nome) | 20 (67%) | 15 (75%) |
+| Places da Geoapify (categoria + nome) | 8 (27%) | 6 (30%) |
+| Melhor dos dois | 21 (70%) | 15 (75%) |
+
+O endereço local completo quase nunca veio na China (1 de 60 chamadas, medido por tokens). O parser acertou os 24 links rotulados.
+
+**Isto não é uma aprovação da condição do ADR.** As referências não foram verificadas, as fontes OSM podem coincidir com o fornecedor, a tolerância na China foi de 1 km e o método foi escolhido depois de comparar os resultados. O fornecedor fica **mantido provisoriamente**, e a validação acontece na #25, com o fluxo final congelado.
+
+**Ajustes na decisão:**
+
+1. **Buscar por nome:** o Geocoding é a fonte principal. Sem mesclagem automática com o Places. O Places aparece como **segunda tentativa** quando o Geocoding vier vazio ou quando a pessoa rejeitar os candidatos. A #25 decide se isso vira automático, medindo o ganho real (a união acrescentou só 1 lugar na China e nenhum fora dela).
+2. **Descobrir** (categoria + raio) continua no Places, mas este spike não mediu esse percurso. Ele precisa de medição própria.
+3. **Endereço e nome locais:**
+   - o campo de endereço local é **sempre editável**;
+   - o app **destaca** quando o endereço está ausente, parece incompleto ou não está no idioma local. O alfabeto do destino é só um sinal auxiliar, nunca a única regra;
+   - a pessoa pode salvar com a pendência. O "Pronto para viajar" e o cartão offline avisam o que falta;
+   - o nome local também tem o estado "ausente / não confirmado". O app não supõe que o fornecedor o entregue;
+   - o que a pessoa digita é fonte própria e fica separado do dado do fornecedor. **Copiar endereço do Google para a ficha continua proibido.**
+4. **Proveniência:** guardar o `datasource` e as atribuições que o Geocoding devolve, porque ele mistura fontes. Não presumir que tudo é OSM.
+5. **O que a #25 mede**, com o fluxo final:
+   - amostra independente, com referências verificadas, filiais e entradas, e o datum documentado (WGS-84 × GCJ-02);
+   - consultas em português, inglês e no idioma local;
+   - top-1 e top-5 **por lugar e por segmento**. Na China, um recorte explícito das atrações essenciais;
+   - separar "o candidato certo apareceu" de "a pessoa escolheu o certo";
+   - endereço local medido sobre o candidato escolhido;
+   - correspondência com o Google;
+   - créditos pelo painel de faturamento, não estimados.
+
+**Continuam pendentes:** a confirmação dos termos de armazenamento e redistribuição do Places e as obrigações da ODbL.
