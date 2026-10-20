@@ -10,7 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r --parallel typecheck",
-    "test": "vitest run --project unit",
+    "test": "vitest run --project unit && pnpm --filter @trippy/mobile test",
     "test:integration": "vitest run --project integration"
   },
   "devDependencies": {

@@ -8,14 +8,19 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['{apps,packages}/*/{src,test}/**/*.test.ts'],
-          exclude: ['**/*.int.test.ts', '**/node_modules/**'],
+          exclude: [
+            '**/*.int.test.ts',
+            'apps/mobile/src/**/*.test.ts',
+            'apps/mobile/src/**/*.test.tsx',
+            '**/node_modules/**',
+          ],
         },
       },
       {
         test: {
           name: 'integration',
           include: ['{apps,packages}/*/{src,test}/**/*.int.test.ts'],
-          exclude: ['**/node_modules/**'],
+          exclude: ['apps/mobile/src/**/*.int.test.ts', '**/node_modules/**'],
         },
       },
     ],
