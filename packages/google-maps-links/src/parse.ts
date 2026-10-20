@@ -1,0 +1,151 @@
+import { googleMapsAllowedHosts } from './hosts.js'
+
+/** Coordenada WGS-84 extraída do texto de um link do Google Maps. */
+export interface GoogleMapsCoordinates {
+  latitude: number
+  longitude: number
+}
+
+/** Resultado seguro do parser; coordenadas `@lat,lng` nunca entram em `coordinates`. */
+export type GoogleMapsUrlParseResult =
+  | {
+      kind: 'coordinates'
+      coordinates: GoogleMapsCoordinates
+      source: 'query' | 'place'
+      query?: string
+    }
+  | {
+      kind: 'query'
+      query: string
+      reason: 'query' | 'place_name' | 'viewport' | 'opaque_id'
+    }
+  | {
+      kind: 'fallback'
+      reason: 'opaque_id' | 'list' | 'viewport' | 'unsupported'
+    }
+
+const coordinatePair = /^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*$/
+
+/**
+ * Extrai somente informação presente no texto da URL. IDs opacos, listas,
+ * links sem destino e coordenadas de câmera retornam busca/fallback.
+ */
+export function parseGoogleMapsUrl(url: string): GoogleMapsUrlParseResult {
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  } catch {
+    return { kind: 'fallback', reason: 'unsupported' }
+  }
+
+  if (
+    parsedUrl.protocol !== 'https:' ||
+    !googleMapsAllowedHosts.has(parsedUrl.hostname.toLowerCase()) ||
+    parsedUrl.username !== '' ||
+    parsedUrl.password !== '' ||
+    (parsedUrl.port !== '' && parsedUrl.port !== '443')
+  ) {
+    return { kind: 'fallback', reason: 'unsupported' }
+  }
+
+  const pathname = decodePath(parsedUrl.pathname)
+  const queryText = cleanText(
+    parsedUrl.searchParams.get('q') ?? parsedUrl.searchParams.get('query') ?? '',
+  )
+  const placeName = getPlaceName(pathname)
+  const pathAndData = decodePath(`${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`)
+
+  if (/\/maps\/(?:dir|list|placelists)(?:\/|$)/i.test(pathname)) {
+    return { kind: 'fallback', reason: 'list' }
+  }
+
+  const placeCoordinates = getMarkedCoordinates(pathAndData)
+  if (placeCoordinates) {
+    return {
+      kind: 'coordinates',
+      coordinates: placeCoordinates,
+      source: 'place',
+      ...(placeName ? { query: placeName } : {}),
+    }
+  }
+
+  if (queryText) {
+    const queryCoordinates = parseCoordinatePair(queryText)
+    if (queryCoordinates) {
+      return { kind: 'coordinates', coordinates: queryCoordinates, source: 'query' }
+    }
+  }
+
+  const viewport = /@([+-]?(?:\d+(?:\.\d*)?|\.\d+)),\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))/i.test(
+    pathAndData,
+  )
+  const hasOpaqueId =
+    parsedUrl.searchParams.has('cid') ||
+    parsedUrl.searchParams.has('ftid') ||
+    /!1s[^!/?&#]+/i.test(pathAndData)
+
+  if (queryText && !parseCoordinatePair(queryText)) {
+    return { kind: 'query', query: queryText, reason: 'query' }
+  }
+
+  if (placeName) {
+    return {
+      kind: 'query',
+      query: placeName,
+      reason: hasOpaqueId ? 'opaque_id' : viewport ? 'viewport' : 'place_name',
+    }
+  }
+
+  if (hasOpaqueId) return { kind: 'fallback', reason: 'opaque_id' }
+  if (viewport) return { kind: 'fallback', reason: 'viewport' }
+  return { kind: 'fallback', reason: 'unsupported' }
+}
+
+function getMarkedCoordinates(text: string): GoogleMapsCoordinates | undefined {
+  const latitude = /!3d([+-]?(?:\d+(?:\.\d*)?|\.\d+))/i.exec(text)?.[1]
+  const longitude = /!4d([+-]?(?:\d+(?:\.\d*)?|\.\d+))/i.exec(text)?.[1]
+  if (latitude === undefined || longitude === undefined) return undefined
+  return makeCoordinates(Number(latitude), Number(longitude))
+}
+
+function parseCoordinatePair(text: string): GoogleMapsCoordinates | undefined {
+  const match = coordinatePair.exec(text)
+  if (!match) return undefined
+  return makeCoordinates(Number(match[1]), Number(match[2]))
+}
+
+function makeCoordinates(latitude: number, longitude: number): GoogleMapsCoordinates | undefined {
+  if (
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    return undefined
+  }
+  return { latitude, longitude }
+}
+
+function getPlaceName(pathname: string): string | undefined {
+  const segments = pathname.split('/').filter(Boolean)
+  const placeIndex = segments.findIndex((segment) => segment.toLowerCase() === 'place')
+  if (placeIndex === -1) return undefined
+  const title = cleanText(segments[placeIndex + 1] ?? '')
+  if (!title || title.startsWith('@') || title.startsWith('data=')) return undefined
+  return title
+}
+
+function decodePath(value: string): string {
+  try {
+    return decodeURIComponent(value.replace(/\+/g, ' '))
+  } catch {
+    return value.replace(/%21/gi, '!').replace(/\+/g, ' ')
+  }
+}
+
+function cleanText(value: string): string | undefined {
+  const cleaned = value.trim().replace(/\s+/g, ' ')
+  return cleaned === '' ? undefined : cleaned
+}
