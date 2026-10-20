@@ -9,9 +9,11 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @trippy/db migrate",
     "typecheck": "pnpm -r --parallel typecheck",
     "test": "vitest run --project unit && pnpm --filter @trippy/mobile test",
-    "test:integration": "vitest run --project integration"
+    "test:integration": "vitest run --project integration",
+    "bootstrap": "pnpm --filter @trippy/dev-env bootstrap"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

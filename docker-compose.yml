@@ -1,4 +1,5 @@
-# Serviços locais (desenvolvimento-local.md). MinIO, ElasticMQ e Mailpit entram quando os spikes precisarem.
+name: trippy
+
 services:
   postgres:
     image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
@@ -8,7 +9,69 @@ services:
       POSTGRES_DB: trippy
     ports:
       - '127.0.0.1:54329:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U trippy']
       interval: 5s
       retries: 10
+
+  minio:
+    image: cgr.dev/chainguard/minio:latest-dev@sha256:1195e844c6b5594ea26def1dd88dae4d9ee766c4db6b3ff7a2d2f0398e7dd164
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: '${AWS_ACCESS_KEY_ID:-trippy}'
+      MINIO_ROOT_PASSWORD: '${AWS_SECRET_ACCESS_KEY:-trippy-dev-secret}'
+    ports:
+      - '127.0.0.1:59000:9000'
+      - '127.0.0.1:59001:9001'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '-q',
+          '--spider',
+          '--tries=1',
+          '--timeout=2',
+          'http://127.0.0.1:9000/minio/health/ready',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  elasticmq:
+    image: softwaremill/elasticmq:1.6.16@sha256:7c401d18fbf6ac5db2bc688f468793904658f15e6625f7a45596d5fcfb7a6952
+    user: '0:0'
+    ports:
+      - '127.0.0.1:59324:9324'
+      - '127.0.0.1:59325:9325'
+    volumes:
+      - ./docker/elasticmq.conf:/opt/elasticmq.conf:ro
+      - elasticmq_data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1:9324/health']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:v1.31.2@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+    ports:
+      - '127.0.0.1:51025:1025'
+      - '127.0.0.1:58025:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  minio_data:
+  elasticmq_data:
