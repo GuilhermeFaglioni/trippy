@@ -1,0 +1,31 @@
+{
+  "name": "@trippy/worker-render",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "worker": "node --import tsx src/render-worker.ts",
+    "dispatcher": "node --env-file-if-exists=../../.env --import tsx src/dispatcher-cli.ts",
+    "dispatcher:once": "node --env-file-if-exists=../../.env --import tsx src/dispatcher-cli.ts --once",
+    "reconcile": "node --env-file-if-exists=../../.env --import tsx src/reconciler-cli.ts",
+    "reconcile:watch": "node --env-file-if-exists=../../.env --import tsx src/reconciler-cli.ts --watch",
+    "rehearse": "node --env-file-if-exists=../../.env --import tsx src/rehearsal-cli.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1153.0",
+    "@aws-sdk/client-sqs": "3.1153.0",
+    "@remotion/bundler": "4.0.512",
+    "@remotion/renderer": "4.0.512",
+    "@trippy/domain": "workspace:*",
+    "pg": "8.16.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.512",
+    "tsx": "4.20.0"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.0",
+    "@types/react": "19.3.0"
+  }
+}
