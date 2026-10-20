@@ -81,6 +81,10 @@ it('aceita banner SMTP fragmentado somente quando recebe CRLF', async () => {
   const config: ApiConfig = {
     port: 3000,
     host: '127.0.0.1',
+    appEnv: 'development',
+    authMode: 'dev',
+    authIssuer: 'trippy-dev-auth',
+    authAudience: 'trippy-dev',
     databaseUrl: 'postgres://trippy:trippy@localhost:54329/trippy',
     awsRegion: 'us-east-1',
     s3ForcePathStyle: false,
