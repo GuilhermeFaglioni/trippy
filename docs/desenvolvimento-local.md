@@ -12,7 +12,7 @@ A arquitetura isola a AWS atrás de adaptadores (`arquitetura.md`). Localmente, 
 |---|---|---|
 | API Gateway + Lambda (Hono) | `node` / `tsx watch` rodando o mesmo app Hono | O handler da Lambda é só um adaptador fino em volta do app. |
 | Postgres no Neon | Postgres 17 em Docker | Mesmas migrations. Os testes de integração criam e removem um banco descartável no serviço local. |
-| S3 + URL pré-assinada | **MinIO** em Docker (compatível com S3) | O bootstrap cria os buckets de fotos e vídeos. **Atenção:** o host faz parte da assinatura da URL. O Simulator alcança MinIO em `localhost:59000`; não troque o host depois da assinatura. |
+| S3 + URL pré-assinada | **MinIO** em Docker (compatível com S3) | Bootstrap cria buckets e filas locais, mas ainda não liga o evento "objeto criado" à fila de miniaturas. MinIO não publica nesse SQS/ElasticMQ; esse fluxo fica para o spike de fotos/miniaturas. **Atenção:** o host faz parte da assinatura da URL. O Simulator alcança MinIO em `localhost:59000`; não troque o host depois da assinatura. |
 | SQS | **ElasticMQ** em Docker (compatível com SQS) | Bootstrap cria filas e DLQs com redrive policy; filas locais têm persistência. |
 | Lambda de miniaturas | Worker Node local consumindo a fila de miniaturas | Mesmo código, com `sharp`. |
 | Fargate + Remotion | Um dispatcher local consome a fila e dispara o container de render **de forma assíncrona**, como faria o `RunTask`, e grava o job | Assim aparecem os mesmos problemas da produção: confirmação antes do fim, duplicação, worker morto e reconciliação. A imagem é construída para **linux/amd64** (a arquitetura do Fargate), com as fontes Noto CJK e os limites de CPU, memória e disco iguais aos da task. |

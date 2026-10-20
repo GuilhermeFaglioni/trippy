@@ -1,5 +1,6 @@
 export interface ApiConfig {
   port: number
+  host: string
   databaseUrl: string
   awsRegion: string
   awsAccessKeyId?: string
@@ -51,6 +52,7 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): ApiCon
 
   return {
     port: integer(environment, 'PORT', 3000),
+    host: optional(environment, 'HOST') ?? '127.0.0.1',
     databaseUrl: required(environment, 'DATABASE_URL'),
     awsRegion: optional(environment, 'AWS_REGION') ?? 'us-east-1',
     ...(accessKeyId ? { awsAccessKeyId: accessKeyId } : {}),

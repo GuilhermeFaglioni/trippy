@@ -66,12 +66,17 @@ function checkMail(host: string, port: number, timeoutMs: number): Promise<void>
     socket.on('error', (error) => finish(error))
     socket.on('data', (chunk: Buffer) => {
       greeting += chunk.toString('utf8')
-      const lines = greeting.split(/\r?\n/)
-      const firstLine = lines[0]
-      if (lines.some((line) => line.startsWith('220 '))) {
-        finish()
-      } else if (firstLine && !firstLine.startsWith('220-')) {
+      const lines = greeting.split('\r\n')
+      if (lines.length === 1) return
+      lines.pop()
+
+      const firstLine = lines[0]!
+      if (!firstLine.startsWith('220-') && !firstLine.startsWith('220 ')) {
         finish(new Error(`Banner SMTP inválido: ${firstLine}`))
+      } else if (lines.some((line) => line.startsWith('220 '))) {
+        finish()
+      } else if (lines.some((line) => !line.startsWith('220-'))) {
+        finish(new Error('Banner SMTP inválido.'))
       }
     })
   })

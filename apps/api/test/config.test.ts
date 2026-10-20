@@ -27,6 +27,7 @@ it('aplica valores padrão e lê configurações locais', () => {
     }),
   ).toEqual({
     port: 3100,
+    host: '127.0.0.1',
     databaseUrl: validEnvironment.DATABASE_URL,
     awsRegion: 'us-east-2',
     s3Endpoint: 'http://localhost:59000',
@@ -37,4 +38,8 @@ it('aplica valores padrão e lê configurações locais', () => {
     smtpHost: 'localhost',
     smtpPort: 51025,
   })
+})
+
+it('permite configurar o endereço de escuta com HOST', () => {
+  expect(loadConfig({ ...validEnvironment, HOST: '0.0.0.0' }).host).toBe('0.0.0.0')
 })

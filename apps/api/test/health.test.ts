@@ -1,6 +1,10 @@
+import { createServer } from 'node:net'
+import { once } from 'node:events'
+import type { AddressInfo } from 'node:net'
 import { expect, it } from 'vitest'
 import { createApp } from '../src/app.ts'
-import type { HealthChecks } from '../src/health.ts'
+import { createHealthChecks, type HealthChecks } from '../src/health.ts'
+import type { ApiConfig } from '../src/config.ts'
 
 function healthyChecks(): HealthChecks {
   return {
@@ -59,4 +63,38 @@ it('GET /health transforma timeout em erro do serviço', async () => {
       queue: { status: 'error', error: 'Tempo esgotado após 10 ms.' },
     },
   })
+})
+
+it('aceita banner SMTP fragmentado somente quando recebe CRLF', async () => {
+  const smtp = createServer((socket) => {
+    socket.setNoDelay(true)
+    const send = (chunk: string) => {
+      if (!socket.destroyed) socket.write(chunk)
+    }
+    send('2')
+    setTimeout(() => send('20 Mailpit ESMTP\r'), 10)
+    setTimeout(() => send('\n'), 20)
+  })
+  smtp.listen(0, '127.0.0.1')
+  await once(smtp, 'listening')
+  const address = smtp.address() as AddressInfo
+  const config: ApiConfig = {
+    port: 3000,
+    host: '127.0.0.1',
+    databaseUrl: 'postgres://trippy:trippy@localhost:54329/trippy',
+    awsRegion: 'us-east-1',
+    s3ForcePathStyle: false,
+    s3BucketPhotos: 'trippy-photos',
+    sqsQueueThumbs: 'trippy-thumbs',
+    smtpHost: '127.0.0.1',
+    smtpPort: address.port,
+  }
+
+  try {
+    await expect(createHealthChecks(config).mail()).resolves.toBeUndefined()
+  } finally {
+    await new Promise<void>((resolve, reject) => {
+      smtp.close((error) => (error ? reject(error) : resolve()))
+    })
+  }
 })
