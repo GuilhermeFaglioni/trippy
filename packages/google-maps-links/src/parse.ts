@@ -49,11 +49,12 @@ export function parseGoogleMapsUrl(url: string): GoogleMapsUrlParseResult {
   }
 
   const pathname = decodePath(parsedUrl.pathname)
-  const queryText = cleanText(
-    parsedUrl.searchParams.get('q') ?? parsedUrl.searchParams.get('query') ?? '',
-  )
+  const queryText =
+    cleanText(parsedUrl.searchParams.get('q') ?? '') ??
+    cleanText(parsedUrl.searchParams.get('query') ?? '') ??
+    ''
   const queryOpaqueId = queryText !== undefined && isOpaqueQueryId(queryText)
-  const placeSegment = getPlaceSegment(pathname)
+  const placeSegment = getPlaceSegment(parsedUrl.pathname)
   const opaquePlaceId = placeSegment !== undefined && isOpaquePlaceId(placeSegment)
   const placeName = opaquePlaceId ? undefined : placeSegment
   const pathAndData = decodePath(`${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`)
@@ -137,17 +138,45 @@ function getPlaceSegment(pathname: string): string | undefined {
   const segments = pathname.split('/').filter(Boolean)
   const placeIndex = segments.findIndex((segment) => segment.toLowerCase() === 'place')
   if (placeIndex === -1) return undefined
-  const segment = cleanText(segments[placeIndex + 1] ?? '')
+  const segment = cleanText(decodePath(segments[placeIndex + 1] ?? ''))
   if (!segment || segment.startsWith('@') || segment.startsWith('data=')) return undefined
   return segment
 }
 
 function isOpaquePlaceId(segment: string): boolean {
-  return /^(?:ChIJ[A-Za-z0-9_-]{16,}|0x[0-9a-f]+:0x[0-9a-f]+)$/i.test(segment)
+  return (
+    isExplicitPlaceId(segment) ||
+    isDocumentedPlaceId(segment) ||
+    /^0x[0-9a-f]+:0x[0-9a-f]+$/i.test(segment)
+  )
 }
 
 function isOpaqueQueryId(query: string): boolean {
-  return isOpaquePlaceId(query.replace(/^place_id:\s*/i, ''))
+  return isOpaquePlaceId(query)
+}
+
+function isExplicitPlaceId(value: string): boolean {
+  return /^place_id:\s*\S/i.test(value)
+}
+
+function isDocumentedPlaceId(value: string): boolean {
+  const normalized = value.trim()
+  const encodedId = /^(ChIJ|GhIJ|Eic|IhoS)([A-Za-z0-9_-]{16,})$/i.exec(normalized)
+  if (encodedId) {
+    const payload = encodedId[2]
+    if (!payload) return false
+    // Texto cru pode ser ambíguo: preserve TitleCase claro; nos demais tokens, priorize fallback seguro.
+    return /[0-9_-]/.test(payload) || !looksLikeCamelCaseName(payload)
+  }
+
+  // O exemplo oficial EpID é longo; o limiar evita confundir nomes iniciados por "Epid" com IDs.
+  return /^EpID(?=[A-Za-z0-9_,\s-]{64,}$)(?=.*\d)[A-Za-z0-9_,\s-]+$/i.test(normalized)
+}
+
+function looksLikeCamelCaseName(value: string): boolean {
+  if (!/^[A-Za-z]+$/.test(value)) return false
+  const words = value.match(/[A-Z]?[a-z]+/g) ?? []
+  return words.length >= 3 && words.filter((word) => word.length >= 3).length >= 2
 }
 
 function decodePath(value: string): string {
