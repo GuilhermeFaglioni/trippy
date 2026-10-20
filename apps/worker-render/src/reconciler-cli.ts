@@ -1,12 +1,12 @@
-import pg from 'pg'
 import { loadDispatcherConfig } from './config.ts'
 import { DockerRuntime } from './docker-runtime.ts'
 import { createQueueClient } from './queue.ts'
+import { createWorkerPool } from './pool.ts'
 import { reconcileCycle, runReconciler } from './reconciler.ts'
 
 async function main(): Promise<void> {
   const config = loadDispatcherConfig()
-  const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 2 })
+  const pool = createWorkerPool(config.databaseUrl)
   const sqs = createQueueClient(config)
   const runtime = new DockerRuntime(config)
   const controller = new AbortController()

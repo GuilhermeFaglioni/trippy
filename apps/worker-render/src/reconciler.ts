@@ -83,7 +83,7 @@ export async function reconcileWorkers(
 export async function reconcileCycle(
   pool: Pool,
   sqs: SQSClient,
-  runtime: DockerRuntime,
+  runtime: Pick<DockerRuntime, 'inspect' | 'stop' | 'remove'>,
   config: DispatcherConfig,
 ): Promise<ReconciliationSummary> {
   const jobs = await reconcileWorkers(pool, runtime, 20)
@@ -94,7 +94,7 @@ export async function reconcileCycle(
 export async function runReconciler(
   pool: Pool,
   sqs: SQSClient,
-  runtime: DockerRuntime,
+  runtime: Pick<DockerRuntime, 'inspect' | 'stop' | 'remove'>,
   config: DispatcherConfig,
   signal: AbortSignal,
 ): Promise<void> {

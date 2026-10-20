@@ -121,7 +121,7 @@ export async function dispatchOne(
 export async function runDispatcher(
   pool: Pool,
   sqs: SQSClient,
-  runtime: DockerRuntime,
+  runtime: Pick<DockerRuntime, 'launchWorker' | 'stop' | 'remove'>,
   config: DispatcherConfig,
   signal: AbortSignal,
 ): Promise<void> {
