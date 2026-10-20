@@ -17,6 +17,10 @@ Todos os arquivos têm 540 × 960 px, H.264 e duração de 30,059 s. `ffprobe` c
 - Bucket de vídeos mantido para inspeção: `trippy-spike19-v-04784f22e414` (quatro objetos MP4).
 - Fixture: `apps/worker-render/fixtures/beijing-courtyard.png`, ilustração raster gerada localmente pelo script `apps/worker-render/fixtures/generate-courtyard.py`; sem fotografia ou recurso externo.
 
+## Limite do spike
+
+As migrations atuais ainda não persistem lugares ou fotos. `createRecap` lê metadados da viagem no Postgres e recebe os lugares/fotos manuais do ensaio como entrada; snapshot, recap, jobs e outbox são gravados na mesma transação. A integração de produção ainda precisa montar o conteúdo a partir dos registros confirmados no servidor e filtrar fotos pendentes/ocultas, conforme `docs/arquitetura.md`.
+
 O dispatcher criou o worker em modo detached e retornou após 190 ms. Um worker foi interrompido deliberadamente; o job foi retomado com tentativa 2 e fencing token 2. O objeto publicado usa `fence-2.mp4`, demonstrando que a conclusão pertence à geração atual.
 
 ## Medições
