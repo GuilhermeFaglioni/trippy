@@ -12,7 +12,8 @@
     "db:migrate": "pnpm --filter @trippy/db migrate",
     "typecheck": "pnpm -r --parallel typecheck",
     "test": "vitest run --project unit",
-    "test:integration": "vitest run --project integration"
+    "test:integration": "vitest run --project integration",
+    "bootstrap": "pnpm --filter @trippy/dev-env bootstrap"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
