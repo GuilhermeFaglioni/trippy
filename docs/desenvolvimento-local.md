@@ -29,6 +29,12 @@ Endereços: o Simulator alcança o Mac por `localhost`. Os containers alcançam 
 
 Tudo sobe com `docker compose up` (Postgres, MinIO, ElasticMQ, Mailpit) + `pnpm dev` (API e workers) + `npx expo run:ios` (app no Simulator).
 
+### Diagnóstico da API no app
+
+O app consulta `GET /health` da API local, disponível por padrão em `http://localhost:3000`. Para subir somente a API, execute `pnpm --filter @trippy/api dev` em um terminal. O app usa esse endereço por padrão; para apontar a outro endereço, defina `EXPO_PUBLIC_API_URL` ao iniciar o Expo, por exemplo: `EXPO_PUBLIC_API_URL=http://localhost:3000 pnpm --filter @trippy/mobile ios`. O campo de endereço aparece apenas na tela de diagnóstico e não altera a configuração persistida.
+
+No iOS Simulator, `localhost` alcança o Mac. Em aparelho físico, use o IP do Mac na rede local. A variável é pública e vai para o bundle do app; não coloque segredos nela.
+
 ## Estrutura do repositório
 
 ```
