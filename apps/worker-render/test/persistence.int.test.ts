@@ -16,6 +16,7 @@ import {
   claimQueuedJob,
   completeJob,
   createRecap,
+  isJobVideoPublished,
   publishOutboxBatch,
   reconcileExpiredJobs,
 } from '../src/persistence.ts'
@@ -309,6 +310,20 @@ describe('createRecap', () => {
         metrics: { renderMilliseconds: 12_345, cpuMilliseconds: 9_876, peakMemoryBytes: 8_000_000 },
       }),
     ).toEqual({ completed: true, recapStatus: 'rendering' })
+    expect(
+      await isJobVideoPublished(database(), {
+        jobId: duplicateJob.id,
+        fencingToken: retried.job.fencingToken,
+        videoKey: 'recaps/test/clean/2.mp4',
+      }),
+    ).toBe(true)
+    expect(
+      await isJobVideoPublished(database(), {
+        jobId: duplicateJob.id,
+        fencingToken: started.fencingToken,
+        videoKey: 'stale-worker.mp4',
+      }),
+    ).toBe(false)
 
     const completed = await database().query<{
       status: string

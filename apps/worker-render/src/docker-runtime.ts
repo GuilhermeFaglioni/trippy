@@ -34,7 +34,7 @@ export class DockerRuntime {
       '--tag',
       this.config.renderImage,
       '--file',
-      'apps/worker-render/Dockerfile',
+      join(repositoryRoot, 'apps/worker-render/Dockerfile'),
       repositoryRoot,
     ])
   }
@@ -59,6 +59,7 @@ export class DockerRuntime {
         'run',
         '--detach',
         '--init',
+        '--rm',
         '--name',
         input.executionName,
         '--label',

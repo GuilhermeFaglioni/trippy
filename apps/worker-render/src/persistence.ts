@@ -430,6 +430,20 @@ export async function completeJob(
   }
 }
 
+export async function isJobVideoPublished(
+  pool: Pool,
+  input: Readonly<{ jobId: string; fencingToken: number; videoKey: string }>,
+): Promise<boolean> {
+  const result = await pool.query<{ published: boolean }>(
+    `SELECT EXISTS (
+       SELECT 1 FROM render_jobs
+       WHERE id = $1 AND fencing_token = $2 AND status = 'succeeded' AND video_key = $3
+     ) AS published`,
+    [input.jobId, input.fencingToken, input.videoKey],
+  )
+  return result.rows[0]!.published
+}
+
 export async function reconcileExpiredJobs(
   pool: Pool,
   limit: number,

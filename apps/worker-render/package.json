@@ -4,7 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "worker": "node --import tsx src/render-worker.ts",
+    "dispatcher": "node --env-file-if-exists=../../.env --import tsx src/dispatcher-cli.ts",
+    "dispatcher:once": "node --env-file-if-exists=../../.env --import tsx src/dispatcher-cli.ts --once",
+    "reconcile": "node --env-file-if-exists=../../.env --import tsx src/reconciler-cli.ts",
+    "reconcile:watch": "node --env-file-if-exists=../../.env --import tsx src/reconciler-cli.ts --watch",
+    "rehearse": "node --env-file-if-exists=../../.env --import tsx src/rehearsal-cli.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1153.0",
