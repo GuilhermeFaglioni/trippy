@@ -52,6 +52,7 @@ export function parseGoogleMapsUrl(url: string): GoogleMapsUrlParseResult {
   const queryText = cleanText(
     parsedUrl.searchParams.get('q') ?? parsedUrl.searchParams.get('query') ?? '',
   )
+  const queryOpaqueId = queryText !== undefined && isOpaqueQueryId(queryText)
   const placeSegment = getPlaceSegment(pathname)
   const opaquePlaceId = placeSegment !== undefined && isOpaquePlaceId(placeSegment)
   const placeName = opaquePlaceId ? undefined : placeSegment
@@ -84,10 +85,11 @@ export function parseGoogleMapsUrl(url: string): GoogleMapsUrlParseResult {
   const hasOpaqueId =
     parsedUrl.searchParams.has('cid') ||
     parsedUrl.searchParams.has('ftid') ||
+    queryOpaqueId ||
     opaquePlaceId ||
     /!1s[^!/?&#]+/i.test(pathAndData)
 
-  if (queryText && !parseCoordinatePair(queryText)) {
+  if (queryText && !parseCoordinatePair(queryText) && !queryOpaqueId) {
     return { kind: 'query', query: queryText, reason: 'query' }
   }
 
@@ -142,6 +144,10 @@ function getPlaceSegment(pathname: string): string | undefined {
 
 function isOpaquePlaceId(segment: string): boolean {
   return /^(?:ChIJ[A-Za-z0-9_-]{16,}|0x[0-9a-f]+:0x[0-9a-f]+)$/i.test(segment)
+}
+
+function isOpaqueQueryId(query: string): boolean {
+  return isOpaquePlaceId(query.replace(/^place_id:\s*/i, ''))
 }
 
 function decodePath(value: string): string {

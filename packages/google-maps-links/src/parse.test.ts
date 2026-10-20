@@ -31,6 +31,26 @@ describe('parseGoogleMapsUrl', () => {
     })
   })
 
+  it.each([
+    'https://www.google.com/maps?q=place_id:ChIJN1t_tDeuEmsRUsoyG83frY4',
+    'https://www.google.com/maps/search/?api=1&query=ChIJN1t_tDeuEmsRUsoyG83frY4',
+    'https://www.google.com/maps?q=0x47e66e2964e34e2d:0x8ddca9ee380ef7e0',
+  ])('envia ID opaco em q/query para fallback: %s', (url) => {
+    expect(parseGoogleMapsUrl(url)).toEqual({ kind: 'fallback', reason: 'opaque_id' })
+  })
+
+  it('preserva busca nominal acompanhada de um ID opaco', () => {
+    expect(
+      parseGoogleMapsUrl(
+        'https://www.google.com/maps/search/?query=Casa+Batll%C3%B3+place_id%3AChIJN1t_tDeuEmsRUsoyG83frY4',
+      ),
+    ).toEqual({
+      kind: 'query',
+      query: 'Casa Batlló place_id:ChIJN1t_tDeuEmsRUsoyG83frY4',
+      reason: 'query',
+    })
+  })
+
   it('usa !3d e !4d quando coordenadas de lugar estão presentes', () => {
     expect(
       parseGoogleMapsUrl('https://www.google.com/maps/place/Colosseum/data=!3d41.8902!4d12.4922'),
