@@ -113,4 +113,14 @@ describe('TextField', () => {
     expect(onFocus).toHaveBeenCalledTimes(1)
     expect(onBlur).toHaveBeenCalledTimes(1)
   })
+
+  it('seleciona Noto JP para valor Han-only quando o locale é japonês', async () => {
+    const utils = await render(
+      <DesignSystemProvider>
+        <TextField label="住所" value="東京" onChangeText={jest.fn()} locale="ja-JP" />
+      </DesignSystemProvider>,
+    )
+
+    expect(utils.getByLabelText('住所')).toHaveStyle({ fontFamily: 'Noto Sans JP' })
+  })
 })

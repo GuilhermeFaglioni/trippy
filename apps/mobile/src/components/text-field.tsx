@@ -1,7 +1,13 @@
 import { useState } from 'react'
-import { Text, TextInput, View, type TextInputProps } from 'react-native'
+import { Platform, TextInput, View, type TextInputProps } from 'react-native'
 
-import { TEXT_SCALING_PROPS, useTheme } from '../design-system'
+import {
+  getTextInputFontFamily,
+  normalizeFontPlatform,
+  TEXT_SCALING_PROPS,
+  TypographyText,
+  useTheme,
+} from '../design-system'
 import { getTypography } from './component-typography'
 import { FocusRing } from './focus-ring'
 
@@ -24,6 +30,7 @@ export type TextFieldProps = Omit<
   error?: string
   disabled?: boolean
   accessibilityHint?: string
+  locale?: string
   testID?: string
 }
 
@@ -34,6 +41,7 @@ export function TextField({
   error,
   disabled = false,
   accessibilityHint,
+  locale,
   placeholder,
   onFocus,
   onBlur,
@@ -42,6 +50,7 @@ export function TextField({
   ...inputProps
 }: TextFieldProps) {
   const theme = useTheme()
+  const fontPlatform = normalizeFontPlatform(Platform.OS)
   const [focused, setFocused] = useState(false)
   const hasError = error !== undefined && error.length > 0
   const inputRadius = theme.radius.radiusSm
@@ -58,12 +67,13 @@ export function TextField({
 
   return (
     <View style={{ gap: theme.spacing.space1 }}>
-      <Text
-        {...TEXT_SCALING_PROPS}
+      <TypographyText
+        family="sans"
+        locale={locale}
         style={[getTypography('bodyStrong'), { color: theme.colors.ink }]}
       >
         {label}
-      </Text>
+      </TypographyText>
       <FocusRing
         focused={focused && !disabled}
         radius={inputRadius}
@@ -101,6 +111,12 @@ export function TextField({
               borderRadius: inputRadius,
               borderWidth: disabled ? 0 : focused || hasError ? 2 : 1,
               color: disabled ? theme.colors.inkMuted : theme.colors.ink,
+              fontFamily: getTextInputFontFamily(
+                value || placeholder || '',
+                'sans',
+                fontPlatform,
+                locale,
+              ),
               minHeight: theme.spacing.targetMin,
               minWidth: theme.spacing.targetMin,
               paddingHorizontal: theme.spacing.space3,
@@ -110,13 +126,14 @@ export function TextField({
         />
       </FocusRing>
       {hasError ? (
-        <Text
+        <TypographyText
+          family="sans"
+          locale={locale}
           accessibilityLiveRegion="polite"
-          {...TEXT_SCALING_PROPS}
           style={[getTypography('bodySm'), { color: theme.colors.danger }]}
         >
           {error}
-        </Text>
+        </TypographyText>
       ) : null}
     </View>
   )

@@ -1,6 +1,6 @@
-import { Text, View } from 'react-native'
+import { View } from 'react-native'
 
-import { TEXT_SCALING_PROPS, useTheme } from '../design-system'
+import { TypographyText, useTheme } from '../design-system'
 import { getTypography } from './component-typography'
 
 export type NoticeTone = 'neutral' | 'success' | 'warning' | 'danger'
@@ -9,10 +9,11 @@ export type NoticeProps = {
   message: string
   title?: string
   tone?: NoticeTone
+  locale?: string
   testID?: string
 }
 
-export function Notice({ message, title, tone = 'neutral', testID }: NoticeProps) {
+export function Notice({ message, title, tone = 'neutral', locale, testID }: NoticeProps) {
   const theme = useTheme()
   const colors = {
     neutral: { background: theme.colors.sand, foreground: theme.colors.inkMuted },
@@ -37,19 +38,24 @@ export function Notice({ message, title, tone = 'neutral', testID }: NoticeProps
       }}
     >
       {title ? (
-        <Text
-          {...TEXT_SCALING_PROPS}
+        <TypographyText
+          family="sans"
+          locale={locale}
           style={[
             getTypography('bodyStrong'),
             { color: colors.foreground, marginBottom: theme.spacing.space1 },
           ]}
         >
           {title}
-        </Text>
+        </TypographyText>
       ) : null}
-      <Text {...TEXT_SCALING_PROPS} style={[getTypography('body'), { color: colors.foreground }]}>
+      <TypographyText
+        family="sans"
+        locale={locale}
+        style={[getTypography('body'), { color: colors.foreground }]}
+      >
         {message}
-      </Text>
+      </TypographyText>
     </View>
   )
 }

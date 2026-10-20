@@ -24,7 +24,13 @@ export {
 export {
   createTypographyTokens,
   getFontFamilyForPlatform,
+  normalizeFontPlatform,
+  getTextInputFontFamily,
+  getTypographyFontRuns,
   TEXT_SCALING_PROPS,
   type FontPlatform,
+  type CjkLocale,
+  type TypographyFontRun,
   type TypographyTokens,
 } from './typography'
+export { TypographyText, type TypographyTextProps } from './typography-text'

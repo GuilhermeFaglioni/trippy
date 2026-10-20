@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
-import { Platform, ScrollView, Text, View } from 'react-native'
+import { Platform, ScrollView, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
   createTypographyTokens,
-  TEXT_SCALING_PROPS,
+  normalizeFontPlatform,
+  TypographyText,
   useTheme,
-  type FontPlatform,
 } from '../../design-system'
 import { Button, Card, Notice, TextField, type NoticeTone } from '../../components'
 import { checkApiHealth, getApiBaseUrl, type HealthCheckResult } from './health-client'
@@ -20,8 +20,7 @@ type NoticeCopy = {
   buttonLabel: string
 }
 
-const fontPlatform: FontPlatform =
-  Platform.OS === 'android' ? 'android' : Platform.OS === 'web' ? 'web' : 'ios'
+const fontPlatform = normalizeFontPlatform(Platform.OS)
 const typography = createTypographyTokens(fontPlatform)
 
 export function ApiDiagnosticsScreen() {
@@ -104,12 +103,12 @@ export function ApiDiagnosticsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={{ gap: theme.spacing.space2 }}>
-          <Text style={[typography.titleL, { color: theme.colors.ink }]} {...TEXT_SCALING_PROPS}>
+          <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
             Diagnóstico da API
-          </Text>
-          <Text style={[typography.body, { color: theme.colors.inkMuted }]} {...TEXT_SCALING_PROPS}>
+          </TypographyText>
+          <TypographyText family="sans" style={[typography.body, { color: theme.colors.inkMuted }]}>
             Confira se o serviço local está disponível.
-          </Text>
+          </TypographyText>
         </View>
 
         <Card testID="api-diagnostics-card">
@@ -133,12 +132,12 @@ export function ApiDiagnosticsScreen() {
                 disabled={isChecking}
                 testID="api-base-url"
               />
-              <Text
+              <TypographyText
+                family="sans"
                 style={[typography.bodySm, { color: theme.colors.inkMuted }]}
-                {...TEXT_SCALING_PROPS}
               >
                 Usado apenas para esta verificação.
-              </Text>
+              </TypographyText>
             </View>
 
             <Button

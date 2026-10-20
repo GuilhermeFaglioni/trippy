@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ActivityIndicator, Pressable, Text, View } from 'react-native'
+import { ActivityIndicator, Pressable, View } from 'react-native'
 
-import { TEXT_SCALING_PROPS, useTheme } from '../design-system'
+import { TypographyText, useTheme } from '../design-system'
 import { getTypography } from './component-typography'
 import { derivePressedColor } from './button-colors'
 import { FocusRing } from './focus-ring'
@@ -17,6 +17,7 @@ export type ButtonProps = {
   loading?: boolean
   accessibilityLabel?: string
   accessibilityHint?: string
+  locale?: string
   testID?: string
 }
 
@@ -29,6 +30,7 @@ export function Button({
   loading = false,
   accessibilityLabel,
   accessibilityHint,
+  locale,
   testID,
 }: ButtonProps) {
   const theme = useTheme()
@@ -90,8 +92,9 @@ export function Button({
         }}
       >
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-          <Text
-            {...TEXT_SCALING_PROPS}
+          <TypographyText
+            family="sans"
+            locale={locale}
             style={[
               getTypography('bodyStrong'),
               {
@@ -108,7 +111,7 @@ export function Button({
             ]}
           >
             {label}
-          </Text>
+          </TypographyText>
           {loading ? (
             <ActivityIndicator
               testID={testID ? `${testID}-loading-indicator` : undefined}
