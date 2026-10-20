@@ -1,0 +1,5495 @@
+{
+  "schemaVersion": 1,
+  "provider": "Geoapify",
+  "createdAt": "2026-10-20T02:12:24.918Z",
+  "dataset": {
+    "cases": 60,
+    "chinaPois": 30,
+    "globalPois": 20,
+    "addresses": 10,
+    "linkFixtures": 20,
+    "linkFixturesPending": 20,
+    "referencePrecisionUnverified": 60
+  },
+  "parameters": {
+    "resultLimit": 5,
+    "topK": 5,
+    "maxRequests": 120,
+    "delayMs": 1100,
+    "timeoutMs": 10000
+  },
+  "plannedRequests": 110,
+  "executedRequests": 110,
+  "requestLimitReached": false,
+  "summary": {
+    "total": {
+      "calls": 110,
+      "successful": 59,
+      "notFound": 41,
+      "errors": 10,
+      "validResponses": 100,
+      "absences": 41,
+      "top1Hits": 49,
+      "top1Denominator": 100,
+      "top1HitRate": 0.49,
+      "topKHits": 49,
+      "topKDenominator": 100,
+      "topKHitRate": 0.49,
+      "localAddressCompleteCount": 12,
+      "localAddressCompletenessRate": 0.12,
+      "matchedCoordinateCount": 57,
+      "coordinateWithinToleranceCount": 49,
+      "coordinateWithinToleranceRate": 0.86,
+      "missingCoordinates": 0,
+      "medianMatchedDistanceMeters": 334.5,
+      "p95MatchedDistanceMeters": 1916.4,
+      "duplicateCount": 0,
+      "estimatedCredits": 100,
+      "meanLatencyMs": 1208.5,
+      "medianLatencyMs": 464,
+      "p95LatencyMs": 4561,
+      "maxLatencyMs": 6873
+    },
+    "byGroup": {
+      "china": {
+        "calls": 60,
+        "successful": 32,
+        "notFound": 28,
+        "errors": 0,
+        "validResponses": 60,
+        "absences": 28,
+        "top1Hits": 28,
+        "top1Denominator": 60,
+        "top1HitRate": 0.467,
+        "topKHits": 28,
+        "topKDenominator": 60,
+        "topKHitRate": 0.467,
+        "localAddressCompleteCount": 1,
+        "localAddressCompletenessRate": 0.017,
+        "matchedCoordinateCount": 31,
+        "coordinateWithinToleranceCount": 28,
+        "coordinateWithinToleranceRate": 0.903,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": 453.9,
+        "p95MatchedDistanceMeters": 1916.4,
+        "duplicateCount": 0,
+        "estimatedCredits": 60,
+        "meanLatencyMs": 1489.517,
+        "medianLatencyMs": 464,
+        "p95LatencyMs": 4561,
+        "maxLatencyMs": 5417
+      },
+      "global": {
+        "calls": 40,
+        "successful": 27,
+        "notFound": 13,
+        "errors": 0,
+        "validResponses": 40,
+        "absences": 13,
+        "top1Hits": 21,
+        "top1Denominator": 40,
+        "top1HitRate": 0.525,
+        "topKHits": 21,
+        "topKDenominator": 40,
+        "topKHitRate": 0.525,
+        "localAddressCompleteCount": 11,
+        "localAddressCompletenessRate": 0.275,
+        "matchedCoordinateCount": 26,
+        "coordinateWithinToleranceCount": 21,
+        "coordinateWithinToleranceRate": 0.808,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": 63.9,
+        "p95MatchedDistanceMeters": 417.4,
+        "duplicateCount": 0,
+        "estimatedCredits": 40,
+        "meanLatencyMs": 1029.475,
+        "medianLatencyMs": 652,
+        "p95LatencyMs": 2372,
+        "maxLatencyMs": 6873
+      },
+      "address": {
+        "calls": 10,
+        "successful": 0,
+        "notFound": 0,
+        "errors": 10,
+        "validResponses": 0,
+        "absences": 0,
+        "top1Hits": 0,
+        "top1Denominator": 0,
+        "top1HitRate": null,
+        "topKHits": 0,
+        "topKDenominator": 0,
+        "topKHitRate": null,
+        "localAddressCompleteCount": 0,
+        "localAddressCompletenessRate": null,
+        "matchedCoordinateCount": 0,
+        "coordinateWithinToleranceCount": 0,
+        "coordinateWithinToleranceRate": null,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": null,
+        "p95MatchedDistanceMeters": null,
+        "duplicateCount": 0,
+        "estimatedCredits": 0,
+        "meanLatencyMs": 238.5,
+        "medianLatencyMs": 235,
+        "p95LatencyMs": 269,
+        "maxLatencyMs": 269
+      }
+    },
+    "byMethod": {
+      "geocoding": {
+        "calls": 60,
+        "successful": 44,
+        "notFound": 6,
+        "errors": 10,
+        "validResponses": 50,
+        "absences": 6,
+        "top1Hits": 35,
+        "top1Denominator": 50,
+        "top1HitRate": 0.7,
+        "topKHits": 35,
+        "topKDenominator": 50,
+        "topKHitRate": 0.7,
+        "localAddressCompleteCount": 9,
+        "localAddressCompletenessRate": 0.18,
+        "matchedCoordinateCount": 42,
+        "coordinateWithinToleranceCount": 35,
+        "coordinateWithinToleranceRate": 0.833,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": 334.5,
+        "p95MatchedDistanceMeters": 1916.4,
+        "duplicateCount": 0,
+        "estimatedCredits": 50,
+        "meanLatencyMs": 1860.067,
+        "medianLatencyMs": 1292,
+        "p95LatencyMs": 5143,
+        "maxLatencyMs": 6873
+      },
+      "places": {
+        "calls": 50,
+        "successful": 15,
+        "notFound": 35,
+        "errors": 0,
+        "validResponses": 50,
+        "absences": 35,
+        "top1Hits": 14,
+        "top1Denominator": 50,
+        "top1HitRate": 0.28,
+        "topKHits": 14,
+        "topKDenominator": 50,
+        "topKHitRate": 0.28,
+        "localAddressCompleteCount": 3,
+        "localAddressCompletenessRate": 0.06,
+        "matchedCoordinateCount": 15,
+        "coordinateWithinToleranceCount": 14,
+        "coordinateWithinToleranceRate": 0.933,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": 334.5,
+        "p95MatchedDistanceMeters": 896.1,
+        "duplicateCount": 0,
+        "estimatedCredits": 50,
+        "meanLatencyMs": 426.62,
+        "medianLatencyMs": 387,
+        "p95LatencyMs": 668,
+        "maxLatencyMs": 997
+      }
+    }
+  },
+  "results": [
+    {
+      "caseId": "cn-beijing-forbidden-city",
+      "group": "china",
+      "kind": "poi",
+      "query": "故宫博物院",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2015,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "故宫博物院",
+          "addressParts": [
+            "故宫博物院, 4号 景山前街, Donghuamen, 100010 BJ, 中华人民共和国",
+            "故宫博物院",
+            "4号 景山前街, Donghuamen, 100010 BJ, 中华人民共和国",
+            "故宫博物院",
+            "4号",
+            "景山前街",
+            "Donghuamen",
+            "北京市",
+            "北京",
+            "100010",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.917431,
+            "lon": 116.390782
+          },
+          "placeId": "516477819202195d405915ab06616ef54340f00103f9012fdf87e700000000c0020192030fe69585e5aeabe58d9ae789a9e999a2e203236f70656e7374726565746d61703a76656e75653a6e6f64652f33383834343431333931"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 561.6,
+        "matchedDistanceMeters": 561.6,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-forbidden-city",
+      "group": "china",
+      "kind": "poi",
+      "query": "故宫博物院",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 324,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-tiananmen-square",
+      "group": "china",
+      "kind": "poi",
+      "query": "天安门广场",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 713,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-tiananmen-square",
+      "group": "china",
+      "kind": "poi",
+      "query": "天安门广场",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 357,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-temple-of-heaven",
+      "group": "china",
+      "kind": "poi",
+      "query": "天坛公园",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1992,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "天坛公园",
+          "addressParts": [
+            "天坛公园, 首都功能核心区, 100010 东城区, 中国",
+            "天坛公园",
+            "首都功能核心区, 100010 东城区, 中国",
+            "天坛公园",
+            "首都功能核心区",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.8799066,
+            "lon": 116.4028716
+          },
+          "placeId": "512e9ff6a5c8195d40596c448bc7a0f04340f00102f901e6ca7a0100000000c0020192030ce5a4a9e59d9be585ace59bad"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 414.8,
+        "matchedDistanceMeters": 414.8,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-temple-of-heaven",
+      "group": "china",
+      "kind": "poi",
+      "query": "天坛公园",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 327,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-summer-palace",
+      "group": "china",
+      "kind": "poi",
+      "query": "颐和园",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2017,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "颐和园",
+          "addressParts": [
+            "颐和园, 19 新建宫门路, Yiheyuan, 100091 BJ, 中华人民共和国",
+            "颐和园",
+            "19 新建宫门路, Yiheyuan, 100091 BJ, 中华人民共和国",
+            "颐和园",
+            "19",
+            "新建宫门路",
+            "Yiheyuan",
+            "北京市",
+            "北京",
+            "100091",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.996676,
+            "lon": 116.275597
+          },
+          "placeId": "510c789961a3115d4059a35a441493ff4340f00102f901e5febd0100000000c00201920309e9a290e5928ce59bade203206f70656e7374726565746d61703a76656e75653a7761792f3239323238373733"
+        },
+        {
+          "name": "颐和园",
+          "addressParts": [
+            "颐和园, 19, 100091 海淀区, 中国",
+            "颐和园",
+            "19, 100091 海淀区, 中国",
+            "颐和园",
+            "19",
+            "海淀区",
+            "100091",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9900983,
+            "lon": 116.2647403
+          },
+          "placeId": "51ba9b4c81f1105d4059a029858abbfe4340f00102f901e5febd0100000000c00201920309e9a290e5928ce59bad"
+        },
+        {
+          "name": "颐和园",
+          "addressParts": [
+            "颐和园, 天童东路, 衢州市, ZJ, 中国",
+            "颐和园",
+            "天童东路, 衢州市, ZJ, 中国",
+            "颐和园",
+            "天童东路",
+            "开化县",
+            "浙江省",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 29.3007772,
+            "lon": 118.4146201
+          },
+          "placeId": "51e970be22899a5d4059e8610dbcff4c3d40f00103f901efeef68801000000c00201920309e9a290e5928ce59bade203236f70656e7374726565746d61703a76656e75653a6e6f64652f36353932383531363935"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 362.1,
+        "matchedDistanceMeters": 362.1,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-summer-palace",
+      "group": "china",
+      "kind": "poi",
+      "query": "颐和园",
+      "city": "Beijing",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 357,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "颐和园",
+          "addressParts": [
+            "颐和园, 长廊, 青龙桥街道, 100093 海淀区, 中国",
+            "颐和园",
+            "长廊, 青龙桥街道, 100093 海淀区, 中国",
+            "颐和园",
+            "长廊",
+            "青龙桥街道",
+            "海淀区",
+            "100093",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.996719,
+            "lon": 116.2757976
+          },
+          "placeId": "512e14faaaa6115d4059a226fa7c94ff4340f00103f901616b731f01000000920309e9a290e5928ce59bad"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 360.2,
+        "matchedDistanceMeters": 360.2,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-national-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "中国国家博物馆",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2864,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "中国国家博物馆",
+          "addressParts": [
+            "中国国家博物馆, 16 东长安街, Qianmendajie, 100006 BJ, 中华人民共和国",
+            "中国国家博物馆",
+            "16 东长安街, Qianmendajie, 100006 BJ, 中华人民共和国",
+            "中国国家博物馆",
+            "16",
+            "东长安街",
+            "Qianmendajie",
+            "北京市",
+            "北京",
+            "100006",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.90235,
+            "lon": 116.394329
+          },
+          "placeId": "5152b7b3af3c195d4059d6c56d3480f34340f00101f9015158830000000000c00201920315e4b8ade59bbde59bbde5aeb6e58d9ae789a9e9a686e203246f70656e7374726565746d61703a76656e75653a72656c6174696f6e2f38363037383235"
+        },
+        {
+          "name": "中国国家博物馆",
+          "addressParts": [
+            "中国国家博物馆, 16 东长安街, 东华门街道, 100006 东城区, 中国",
+            "中国国家博物馆",
+            "16 东长安街, 东华门街道, 100006 东城区, 中国",
+            "中国国家博物馆",
+            "16",
+            "东长安街",
+            "东华门街道",
+            "东城区",
+            "100006",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9037459,
+            "lon": 116.3953896
+          },
+          "placeId": "516d4b2e104e195d4059713216f2adf34340f00101f9015158830000000000c00201920315e4b8ade59bbde59bbde5aeb6e58d9ae789a9e9a686"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 266.7,
+        "matchedDistanceMeters": 266.7,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-national-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "中国国家博物馆",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 405,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-yonghe-temple",
+      "group": "china",
+      "kind": "poi",
+      "query": "雍和宫",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2031,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "雍和宫",
+          "addressParts": [
+            "雍和宫, 戏楼胡同, 北新桥街道, 100010 东城区, 中国",
+            "雍和宫",
+            "戏楼胡同, 北新桥街道, 100010 东城区, 中国",
+            "雍和宫",
+            "戏楼胡同",
+            "北新桥街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9455793,
+            "lon": 116.4110049
+          },
+          "placeId": "51baff7ee74d1a5d405925a314be08f94340f00102f901e0cd7a0100000000c00201920309e99b8de5928ce5aeab"
+        },
+        {
+          "name": "雍和宫",
+          "addressParts": [
+            "雍和宫, 北二环, 北新桥街道, 100010 东城区, 中国",
+            "雍和宫",
+            "北二环, 北新桥街道, 100010 东城区, 中国",
+            "雍和宫",
+            "北二环",
+            "北新桥街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9478727,
+            "lon": 116.4115476
+          },
+          "placeId": "51d4afbecb561a5d4059b7a283e453f94340f00103f90176306b5000000000c00201920309e99b8de5928ce5aeab"
+        },
+        {
+          "name": "雍和宫",
+          "addressParts": [
+            "雍和宫, 五道营胡同, 安定门街道, 100010 东城区, 中国",
+            "雍和宫",
+            "五道营胡同, 安定门街道, 100010 东城区, 中国",
+            "雍和宫",
+            "五道营胡同",
+            "安定门街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9469688,
+            "lon": 116.4100754
+          },
+          "placeId": "5139f9e3ac3e1a5d40598b2a0d4636f94340f00103f9015e8aee5000000000c00201920309e99b8de5928ce5aeab"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 567.6,
+        "matchedDistanceMeters": 567.6,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-yonghe-temple",
+      "group": "china",
+      "kind": "poi",
+      "query": "雍和宫",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 387,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-national-stadium",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京国家体育场",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 3489,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "北顶娘娘庙",
+          "addressParts": [
+            "北顶娘娘庙, 国家体育场南路, 奥运村街道, 100101 朝阳区, 中国",
+            "北顶娘娘庙",
+            "国家体育场南路, 奥运村街道, 100101 朝阳区, 中国",
+            "北顶娘娘庙",
+            "国家体育场南路",
+            "北顶村",
+            "奥运村街道",
+            "朝阳区",
+            "100101",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9891354,
+            "lon": 116.383926
+          },
+          "placeId": "5162855b3e92185d40596f2821fd9bfe4340f00102f901c5b8540300000000c0020192030fe58c97e9a1b6e5a898e5a898e5ba99"
+        },
+        {
+          "name": "北辰洲际酒店",
+          "addressParts": [
+            "北辰洲际酒店, 国家体育场北路, 奥运村街道, 100101 朝阳区, 中国",
+            "北辰洲际酒店",
+            "国家体育场北路, 奥运村街道, 100101 朝阳区, 中国",
+            "北辰洲际酒店",
+            "国家体育场北路",
+            "老虎庙",
+            "奥运村街道",
+            "朝阳区",
+            "100101",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9970356,
+            "lon": 116.3816545
+          },
+          "placeId": "51c2f7fe066d185d40594f79cfdc9eff4340f00103f901eb6001fd00000000c00201920312e58c97e8beb0e6b4b2e99985e98592e5ba97"
+        },
+        {
+          "name": "北京奥运博物馆",
+          "addressParts": [
+            "北京奥运博物馆, 国家体育场南路, 奥运村街道, 100101 朝阳区, 中国",
+            "北京奥运博物馆",
+            "国家体育场南路, 奥运村街道, 100101 朝阳区, 中国",
+            "北京奥运博物馆",
+            "国家体育场南路",
+            "北顶村",
+            "奥运村街道",
+            "朝阳区",
+            "100101",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.989116,
+            "lon": 116.3902855
+          },
+          "placeId": "5198a60870fa185d4059a5f9635a9bfe4340f00102f901012a394300000000c00201920315e58c97e4baace5a5a5e8bf90e58d9ae789a9e9a686"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": 1158,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-national-stadium",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京国家体育场",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 401,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-zoo",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京动物园",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1845,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "北京动物园",
+          "addressParts": [
+            "北京动物园, 西直门外大街, 展览路街道, 100032 西城区, 中国",
+            "北京动物园",
+            "西直门外大街, 展览路街道, 100032 西城区, 中国",
+            "北京动物园",
+            "西直门外大街",
+            "展览路街道",
+            "西城区",
+            "100032",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.941041,
+            "lon": 116.3295423
+          },
+          "placeId": "518349963817155d4059fa980f0874f84340f00102f90137e8bd0100000000c0020192030fe58c97e4baace58aa8e789a9e59bad"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 850.8,
+        "matchedDistanceMeters": 850.8,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-zoo",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京动物园",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 364,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-universal-resort",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京环球度假区",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 3570,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "北京环球度假区",
+          "addressParts": [
+            "北京环球度假区, 环球大道, 文景街道, 100010 通州区, 中国",
+            "北京环球度假区",
+            "环球大道, 文景街道, 100010 通州区, 中国",
+            "北京环球度假区",
+            "环球大道",
+            "文景街道",
+            "通州区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.8548383,
+            "lon": 116.6777865
+          },
+          "placeId": "51e6caa0da602b5d405922ef66576bed4340f00102f901fe051e2c00000000c00201920315e58c97e4baace78eafe79083e5baa6e58187e58cba"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 227,
+        "matchedDistanceMeters": 227,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-universal-resort",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京环球度假区",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 342,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-capital-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "首都博物馆",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1738,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "首都博物馆",
+          "addressParts": [
+            "首都博物馆, 16 复兴门外大街, Fuwaidajie, 100032 BJ, 中华人民共和国",
+            "首都博物馆",
+            "16 复兴门外大街, Fuwaidajie, 100032 BJ, 中华人民共和国",
+            "首都博物馆",
+            "16",
+            "复兴门外大街",
+            "Fuwaidajie",
+            "北京市",
+            "北京",
+            "100032",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.905019,
+            "lon": 116.335874
+          },
+          "placeId": "51e964a9f57e155d40591ba19fa9d7f34340f00102f9018d6f2a0800000000c0020192030fe9a696e983bde58d9ae789a9e9a686e203216f70656e7374726565746d61703a76656e75653a7761792f313336393938373937"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 439.3,
+        "matchedDistanceMeters": 439.3,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-capital-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "首都博物馆",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 442,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-nuo-hotel",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京诺金酒店",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1053,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "北京诺金酒店",
+          "addressParts": [
+            "北京诺金酒店, 2A 将台路, 酒仙桥街道, 100016 BJ, 中国",
+            "北京诺金酒店",
+            "2A 将台路, 酒仙桥街道, 100016 BJ, 中国",
+            "北京诺金酒店",
+            "2A",
+            "将台路",
+            "酒仙桥街道",
+            "朝阳区",
+            "北京",
+            "100016",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9754407,
+            "lon": 116.4744114
+          },
+          "placeId": "515ff6a1c15c1e5d4059fbd7a83ddbfc4340f00102f901cbda581900000000c00201920312e58c97e4baace8afbae98791e98592e5ba97e203216f70656e7374726565746d61703a76656e75653a7761792f343235323533353739"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 3615.8,
+        "matchedDistanceMeters": 3615.8,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-nuo-hotel",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京诺金酒店",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 391,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-hilton-wangfujing",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京王府井希尔顿酒店",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 3754,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "北京王府井希尔顿酒店",
+          "addressParts": [
+            "北京王府井希尔顿酒店, 8 Wangfujing East StreetI, Donghuamen, 100006 BJ, 中华人民共和国",
+            "北京王府井希尔顿酒店",
+            "8 Wangfujing East StreetI, Donghuamen, 100006 BJ, 中华人民共和国",
+            "北京王府井希尔顿酒店",
+            "8",
+            "Wangfujing East StreetI",
+            "Donghuamen",
+            "北京市",
+            "北京",
+            "100006",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.913398,
+            "lon": 116.407063
+          },
+          "placeId": "51581af8510d1a5d4059ac1dc539eaf44340f00102f9012e79fa1500000000c0020192031ee58c97e4baace78e8be5ba9ce4ba95e5b88ce5b094e9a1bfe98592e5ba97e203216f70656e7374726565746d61703a76656e75653a7761792f333638373336353538"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 303.5,
+        "matchedDistanceMeters": 303.5,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-hilton-wangfujing",
+      "group": "china",
+      "kind": "poi",
+      "query": "北京王府井希尔顿酒店",
+      "city": "Beijing",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 331,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "北京王府井希尔顿酒店",
+          "addressParts": [
+            "北京王府井希尔顿酒店, 8 校尉胡同, 东华门街道, 100006 东城区, 中国",
+            "北京王府井希尔顿酒店",
+            "8 校尉胡同, 东华门街道, 100006 东城区, 中国",
+            "北京王府井希尔顿酒店",
+            "8",
+            "校尉胡同",
+            "东华门街道",
+            "东城区",
+            "100006",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9133817,
+            "lon": 116.4070196
+          },
+          "placeId": "510a70c6800d1a5d405917f24bd5e7f44340f00102f9012e79fa150000000092031ee58c97e4baace78e8be5ba9ce4ba95e5b88ce5b094e9a1bfe98592e5ba97"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 307.4,
+        "matchedDistanceMeters": 307.4,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-quanjude-qianmen",
+      "group": "china",
+      "kind": "poi",
+      "query": "全聚德前门店",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 3526,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-quanjude-qianmen",
+      "group": "china",
+      "kind": "poi",
+      "query": "全聚德前门店",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 369,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-da-dong-jinbao",
+      "group": "china",
+      "kind": "poi",
+      "query": "大董烤鸭店",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 3651,
+      "resultCount": 4,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "大董烤鸭店",
+          "addressParts": [
+            "大董烤鸭店, 大纱帽胡同, Donghuamen, 100010 BJ, 中华人民共和国",
+            "大董烤鸭店",
+            "大纱帽胡同, Donghuamen, 100010 BJ, 中华人民共和国",
+            "大董烤鸭店",
+            "大纱帽胡同",
+            "Donghuamen",
+            "北京市",
+            "北京",
+            "100010",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.908895,
+            "lon": 116.40464
+          },
+          "placeId": "51d2a92b9fe5195d4059bc3fdeab56f44340f00103f901ab3a2c5b01000000c0020192030fe5a4a7e891a3e783a4e9b8ade5ba97e203236f70656e7374726565746d61703a76656e75653a6e6f64652f35383234353932353535"
+        },
+        {
+          "name": "大董烤鸭店",
+          "addressParts": [
+            "大董烤鸭店, 甲22号南新仓商务大厦A座首层 东四十条, Dongsi, 100007 BJ, 中华人民共和国",
+            "大董烤鸭店",
+            "甲22号南新仓商务大厦A座首层 东四十条, Dongsi, 100007 BJ, 中华人民共和国",
+            "大董烤鸭店",
+            "甲22号南新仓商务大厦A座首层",
+            "东四十条",
+            "Dongsi",
+            "北京市",
+            "北京",
+            "100007",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.93088,
+            "lon": 116.424541
+          },
+          "placeId": "51eab303ae2b1b5d405910406a1327f74340f00103f901dd68d60901000000c0020192030fe5a4a7e891a3e783a4e9b8ade5ba97e203236f70656e7374726565746d61703a76656e75653a6e6f64652f34343630303133373839"
+        },
+        {
+          "name": "大董烤鸭店(金宝汇购物中心店)",
+          "addressParts": [
+            "大董烤鸭店(金宝汇购物中心店), 金宝街, 建国门街道, 100010 东城区, 中国",
+            "大董烤鸭店(金宝汇购物中心店)",
+            "金宝街, 建国门街道, 100010 东城区, 中国",
+            "大董烤鸭店(金宝汇购物中心店)",
+            "金宝街",
+            "建国门街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9138657,
+            "lon": 116.4151611
+          },
+          "placeId": "5192c4dcff911a5d4059d4371f8df9f44340f00103f9018172690001000000c00201920329e5a4a7e891a3e783a4e9b8ade5ba9728e98791e5ae9de6b187e8b4ade789a9e4b8ade5bf83e5ba9729"
+        },
+        {
+          "name": "大董烤鸭店",
+          "addressParts": [
+            "大董烤鸭店, 1601 南京西路, 静安寺街道, 上海市, 200040 SH, 中国",
+            "大董烤鸭店",
+            "1601 南京西路, 静安寺街道, 上海市, 200040 SH, 中国",
+            "大董烤鸭店",
+            "1601",
+            "南京西路",
+            "静安寺街道",
+            "静安区",
+            "上海市",
+            "200040",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2245539,
+            "lon": 121.4432969
+          },
+          "placeId": "51c4faf5f95e5c5e405973b0485d7c393f40f00103f901a9b9a30601000000c0020192030fe5a4a7e891a3e783a4e9b8ade5ba97e203236f70656e7374726565746d61703a76656e75653a6e6f64652f34343036333630343839"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 1916.4,
+        "matchedDistanceMeters": 1916.4,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-da-dong-jinbao",
+      "group": "china",
+      "kind": "poi",
+      "query": "大董烤鸭店",
+      "city": "Beijing",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 358,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "大董烤鸭店(金宝汇购物中心店)",
+          "addressParts": [
+            "大董烤鸭店(金宝汇购物中心店), 金宝街, 建国门街道, 100010 东城区, 中国",
+            "大董烤鸭店(金宝汇购物中心店)",
+            "金宝街, 建国门街道, 100010 东城区, 中国",
+            "大董烤鸭店(金宝汇购物中心店)",
+            "金宝街",
+            "建国门街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9138657,
+            "lon": 116.4151611
+          },
+          "placeId": "5192c4dcff911a5d4059d4371f8df9f44340f00103f9018172690001000000920329e5a4a7e891a3e783a4e9b8ade5ba9728e98791e5ae9de6b187e8b4ade789a9e4b8ade5bf83e5ba9729"
+        },
+        {
+          "name": "大董烤鸭店",
+          "addressParts": [
+            "大董烤鸭店, 甲22号南新仓商务大厦A座首层 东四十条, 东四街道, 100007 东城区, 中国",
+            "大董烤鸭店",
+            "甲22号南新仓商务大厦A座首层 东四十条, 东四街道, 100007 东城区, 中国",
+            "大董烤鸭店",
+            "甲22号南新仓商务大厦A座首层",
+            "东四十条",
+            "东四街道",
+            "东城区",
+            "100007",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9308798,
+            "lon": 116.4245413
+          },
+          "placeId": "5149d345af2b1b5d4059e6c0bc1127f74340f00103f901dd68d6090100000092030fe5a4a7e891a3e783a4e9b8ade5ba97"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 896.1,
+        "matchedDistanceMeters": 896.1,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-huguosi-snacks",
+      "group": "china",
+      "kind": "poi",
+      "query": "护国寺小吃总店",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 5417,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-beijing-huguosi-snacks",
+      "group": "china",
+      "kind": "poi",
+      "query": "护国寺小吃总店",
+      "city": "Beijing",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 321,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-bund",
+      "group": "china",
+      "kind": "poi",
+      "query": "外滩",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1793,
+      "resultCount": 4,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "外滩",
+          "addressParts": [
+            "外滩, 中山东一路, 外滩街道, 上海市, 200002 SH, 中国",
+            "外滩",
+            "中山东一路, 外滩街道, 上海市, 200002 SH, 中国",
+            "外滩",
+            "中山东一路",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2393233,
+            "lon": 121.4855611
+          },
+          "placeId": "516d2ddd6e135f5e4059b9abb24a443d3f40f00103f901f0a3817000000000c00201920306e5a496e6bba9e203236f70656e7374726565746d61703a76656e75653a6e6f64652f31383837353434333034"
+        },
+        {
+          "name": "外滩",
+          "addressParts": [
+            "外滩, 外滩街道, 上海市, 200002 SH, 中国",
+            "外滩",
+            "外滩街道, 上海市, 200002 SH, 中国",
+            "外滩",
+            "外滩",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2403257,
+            "lon": 121.4860368
+          },
+          "placeId": "51c229183a1b5f5e405968e32dfc853d3f40f00103f901bb4afea002000000c00201920306e5a496e6bba9e203246f70656e7374726565746d61703a76656e75653a6e6f64652f3131323930393534343237"
+        },
+        {
+          "name": "浦西 (外滩)",
+          "addressParts": [
+            "浦西 (外滩), 外滩, 外滩街道, 上海市, 200002 SH, 中国",
+            "浦西 (外滩)",
+            "外滩, 外滩街道, 上海市, 200002 SH, 中国",
+            "浦西 (外滩)",
+            "外滩",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2415533,
+            "lon": 121.4860922
+          },
+          "placeId": "51ce7575221c5f5e4059aabde36fd63d3f40f00103f9011c846b1c00000000c0020192030fe6b5a6e8a5bf2028e5a496e6bba929e203226f70656e7374726565746d61703a76656e75653a6e6f64652f343736383038323230"
+        },
+        {
+          "name": "外滩",
+          "addressParts": [
+            "外滩, 文峰街道, 阜阳市, 236032 AH, 中国",
+            "外滩",
+            "文峰街道, 阜阳市, 236032 AH, 中国",
+            "外滩",
+            "文峰街道",
+            "颍州区",
+            "安徽省",
+            "236032",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 32.8949333,
+            "lon": 115.8332937
+          },
+          "placeId": "519f5d19af54f55c4059f9cca32c8d724040f00103f901f869122901000000c00201920306e5a496e6bba9e203236f70656e7374726565746d61703a76656e75653a6e6f64652f34393834303339393238"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 428.7,
+        "matchedDistanceMeters": 428.7,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-bund",
+      "group": "china",
+      "kind": "poi",
+      "query": "外滩",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 364,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "外滩",
+          "addressParts": [
+            "外滩, 外滩街道, 200002 上海市, 中国",
+            "外滩",
+            "外滩街道, 200002 上海市, 中国",
+            "外滩",
+            "外滩",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2403257,
+            "lon": 121.4860368
+          },
+          "placeId": "51c229183a1b5f5e405968e32dfc853d3f40f00103f901bb4afea002000000920306e5a496e6bba9"
+        },
+        {
+          "name": "外滩牛",
+          "addressParts": [
+            "外滩牛, 外滩, 外滩街道, 200002 上海市, 中国",
+            "外滩牛",
+            "外滩, 外滩街道, 200002 上海市, 中国",
+            "外滩牛",
+            "外滩",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2374823,
+            "lon": 121.4863003
+          },
+          "placeId": "513d224b8b1f5f5e4059fde0d7a3cb3c3f40f00103f901eba8710901000000920309e5a496e6bba9e7899b"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 378.5,
+        "matchedDistanceMeters": 378.5,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-oriental-pearl",
+      "group": "china",
+      "kind": "poi",
+      "query": "东方明珠广播电视塔",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1993,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "东方明珠广播电视塔",
+          "addressParts": [
+            "东方明珠广播电视塔, 陆家嘴环路, 陆家嘴街道, 上海市, 200002 SH, 中国",
+            "东方明珠广播电视塔",
+            "陆家嘴环路, 陆家嘴街道, 上海市, 200002 SH, 中国",
+            "东方明珠广播电视塔",
+            "陆家嘴环路",
+            "陆家嘴街道",
+            "浦东新区",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2415289,
+            "lon": 121.4967325
+          },
+          "placeId": "510f971c77ca5f5e4059f28986d6d43d3f40f00103f901f76fc3cc02000000c0020192031be4b89ce696b9e6988ee78fa0e5b9bfe692ade794b5e8a786e5a194e203246f70656e7374726565746d61703a76656e75653a6e6f64652f3132303235323934383339"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 355.5,
+        "matchedDistanceMeters": 355.5,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-oriental-pearl",
+      "group": "china",
+      "kind": "poi",
+      "query": "东方明珠广播电视塔",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 351,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海博物馆",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1403,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "上海博物馆",
+          "addressParts": [
+            "上海博物馆, 201 人民大道, 南京东路街道, 200001 上海市, 中国",
+            "上海博物馆",
+            "201 人民大道, 南京东路街道, 200001 上海市, 中国",
+            "上海博物馆",
+            "201",
+            "人民大道",
+            "江阴社区",
+            "南京东路街道",
+            "上海市",
+            "上海市",
+            "200001",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2301577,
+            "lon": 121.4709998
+          },
+          "placeId": "510b5b58dc245e5e40592e6c729deb3a3f40f00102f901530d9a0900000000c0020192030fe4b88ae6b5b7e58d9ae789a9e9a686"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 466.7,
+        "matchedDistanceMeters": 466.7,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海博物馆",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 384,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-yu-garden",
+      "group": "china",
+      "kind": "poi",
+      "query": "豫园",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 829,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "豫园",
+          "addressParts": [
+            "豫园街道, 上海市, 中国",
+            "豫园街道",
+            "上海市, 中国",
+            "豫园",
+            "豫园街道",
+            "上海市",
+            "上海市",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2289274,
+            "lon": 121.4879752
+          },
+          "placeId": "51945055fc3a5f5e4059872870fc9a3a3f40f00102f901e8e8620200000000c00201920306e8b1abe59bad"
+        },
+        {
+          "name": "豫园",
+          "addressParts": [
+            "豫园, 人民路, 外滩街道, 200010 上海市, 中国",
+            "豫园",
+            "人民路, 外滩街道, 200010 上海市, 中国",
+            "豫园",
+            "人民路",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2314615,
+            "lon": 121.4842395
+          },
+          "placeId": "519cfbabc7fd5e5e40597ac8940f413b3f40f00103f9015611352f02000000c00201920306e8b1abe59bad"
+        },
+        {
+          "name": "豫园",
+          "addressParts": [
+            "豫园, 河南南路, 豫园街道, 200010 上海市, 中国",
+            "豫园",
+            "河南南路, 豫园街道, 200010 上海市, 中国",
+            "豫园",
+            "河南南路",
+            "豫园街道",
+            "上海市",
+            "上海市",
+            "200010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2299254,
+            "lon": 121.4828695
+          },
+          "placeId": "5119af7955e75e5e40590c851964dc3a3f40f00103f901a5ec493c01000000c00201920306e8b1abe59bad"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 453.9,
+        "matchedDistanceMeters": 453.9,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-yu-garden",
+      "group": "china",
+      "kind": "poi",
+      "query": "豫园",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 428,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "豫园商城",
+          "addressParts": [
+            "豫园商城, 九曲桥广场, 豫园街道, 200010 上海市, 中国",
+            "豫园商城",
+            "九曲桥广场, 豫园街道, 200010 上海市, 中国",
+            "豫园商城",
+            "九曲桥广场",
+            "豫园街道",
+            "上海市",
+            "上海市",
+            "200010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2285062,
+            "lon": 121.4867778
+          },
+          "placeId": "516bf5afb92a5f5e4059f907821b793a3f40f00102f9014726b3030000000092030ce8b1abe59bade59586e59f8e"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 544.8,
+        "matchedDistanceMeters": 544.8,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-tower",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海中心大厦",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2160,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "上海中心大厦",
+          "addressParts": [
+            "上海中心大厦, 501 银城中路, Lu Jia Du, 上海市, 200010 SH, 中华人民共和国",
+            "上海中心大厦",
+            "501 银城中路, Lu Jia Du, 上海市, 200010 SH, 中华人民共和国",
+            "上海中心大厦",
+            "501",
+            "银城中路",
+            "Lu Jia Du",
+            "上海市",
+            "上海",
+            "200010",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.235592,
+            "lon": 121.501275
+          },
+          "placeId": "515bd3bce314605e40590133dfc14f3c3f40f00102f9017bc9e10900000000c00201920312e4b88ae6b5b7e4b8ade5bf83e5a4a7e58ea6e203216f70656e7374726565746d61703a76656e75653a7761792f313635373932313233"
+        },
+        {
+          "name": "上海中心大厦",
+          "addressParts": [
+            "上海中心大厦, 银城中路, Lan Ni Du, 上海市, 200010 SH, 中华人民共和国",
+            "上海中心大厦",
+            "银城中路, Lan Ni Du, 上海市, 200010 SH, 中华人民共和国",
+            "上海中心大厦",
+            "银城中路",
+            "Lan Ni Du",
+            "上海市",
+            "上海",
+            "200010",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.235455,
+            "lon": 121.500439
+          },
+          "placeId": "5126a94c3107605e405900ae64c7463c3f40f00103f901622cde9c02000000c00201920312e4b88ae6b5b7e4b8ade5bf83e5a4a7e58ea6e203246f70656e7374726565746d61703a76656e75653a6e6f64652f3131323231373430363432"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 447.8,
+        "matchedDistanceMeters": 447.8,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-tower",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海中心大厦",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 303,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "上海中心大厦",
+          "addressParts": [
+            "上海中心大厦, 501 银城中路, 陆家嘴街道, 200010 上海市, 中国",
+            "上海中心大厦",
+            "501 银城中路, 陆家嘴街道, 200010 上海市, 中国",
+            "上海中心大厦",
+            "501",
+            "银城中路",
+            "陆家嘴街道",
+            "浦东新区",
+            "上海市",
+            "200010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2356449,
+            "lon": 121.5012495
+          },
+          "placeId": "51d11cb2c814605e4059d43a80594d3c3f40f00102f9017bc9e10900000000920312e4b88ae6b5b7e4b8ade5bf83e5a4a7e58ea6"
+        },
+        {
+          "name": "上海中心大厦",
+          "addressParts": [
+            "上海中心大厦, 银城中路, 陆家嘴街道, 200010 上海市, 中国",
+            "上海中心大厦",
+            "银城中路, 陆家嘴街道, 200010 上海市, 中国",
+            "上海中心大厦",
+            "银城中路",
+            "陆家嘴街道",
+            "浦东新区",
+            "上海市",
+            "200010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2354554,
+            "lon": 121.5004394
+          },
+          "placeId": "515028fa3207605e4059a6aa1ace463c3f40f00103f901622cde9c02000000920312e4b88ae6b5b7e4b8ade5bf83e5a4a7e58ea6"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 453,
+        "matchedDistanceMeters": 453,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-jingan-temple",
+      "group": "china",
+      "kind": "poi",
+      "query": "静安寺",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1821,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "静安寺",
+          "addressParts": [
+            "静安寺, Jing'an, 上海市, 200040 SH, 中华人民共和国",
+            "静安寺",
+            "Jing'an, 上海市, 200040 SH, 中华人民共和国",
+            "静安寺",
+            "静安寺",
+            "Jing'an",
+            "上海市",
+            "上海",
+            "200040",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.224923,
+            "lon": 121.443918
+          },
+          "placeId": "51c4060b27695c5e4059431ec18d94393f40f00102f90136c6ba1c00000000c00201920309e99d99e5ae89e5afbae203216f70656e7374726565746d61703a76656e75653a7761792f343832303032343836"
+        },
+        {
+          "name": "静安寺",
+          "addressParts": [
+            "静安寺, 1686 南京西路, Jing An Si, 上海市, 201100 SH, 中华人民共和国",
+            "静安寺",
+            "1686 南京西路, Jing An Si, 上海市, 201100 SH, 中华人民共和国",
+            "静安寺",
+            "1686",
+            "南京西路",
+            "Jing An Si",
+            "上海市",
+            "上海",
+            "201100",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.224913,
+            "lon": 121.441172
+          },
+          "placeId": "514cfa7b293c5c5e4059fc71fbe593393f40f00102f901f656d50000000000c00201920309e99d99e5ae89e5afbae203206f70656e7374726565746d61703a76656e75653a7761792f3133393831343330"
+        },
+        {
+          "name": "静安寺",
+          "addressParts": [
+            "静安寺, 1686 南京西路, 静安寺街道, 200040 上海市, 中国",
+            "静安寺",
+            "1686 南京西路, 静安寺街道, 200040 上海市, 中国",
+            "静安寺",
+            "1686",
+            "南京西路",
+            "静安寺街道",
+            "静安区",
+            "上海市",
+            "200040",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.225215,
+            "lon": 121.4407923
+          },
+          "placeId": "510835e8f0355c5e40599291b3b0a7393f40f00102f901f656d50000000000c00201920309e99d99e5ae89e5afba"
+        },
+        {
+          "name": "静安寺",
+          "addressParts": [
+            "静安寺, 华山路, 静安寺街道, 200000 上海市, 中国",
+            "静安寺",
+            "华山路, 静安寺街道, 200000 上海市, 中国",
+            "静安寺",
+            "华山路",
+            "静安寺街道",
+            "静安区",
+            "上海市",
+            "200000",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2237595,
+            "lon": 121.4407549
+          },
+          "placeId": "5150430a54355c5e405958ab764d48393f40f00103f901ba23352f02000000c00201920309e99d99e5ae89e5afba"
+        },
+        {
+          "name": "静安寺",
+          "addressParts": [
+            "静安寺, 南京西路, 静安寺街道, 200040 上海市, 中国",
+            "静安寺",
+            "南京西路, 静安寺街道, 200040 上海市, 中国",
+            "静安寺",
+            "南京西路",
+            "静安寺街道",
+            "静安区",
+            "上海市",
+            "200040",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2252915,
+            "lon": 121.4422253
+          },
+          "placeId": "51af3d586b4d5c5e4059199128b4ac393f40f00103f901654885e200000000c00201920309e99d99e5ae89e5afba"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 237.3,
+        "matchedDistanceMeters": 237.3,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-jingan-temple",
+      "group": "china",
+      "kind": "poi",
+      "query": "静安寺",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 337,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-disneyland",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海迪士尼乐园",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 3211,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "上海迪士尼乐园",
+          "addressParts": [
+            "上海迪士尼乐园, 753 申迪北路, 201205 上海市, 中国",
+            "上海迪士尼乐园",
+            "753 申迪北路, 201205 上海市, 中国",
+            "上海迪士尼乐园",
+            "753",
+            "申迪北路",
+            "浦东新区",
+            "上海市",
+            "201205",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.1462523,
+            "lon": 121.6562825
+          },
+          "placeId": "51fa9b5088006a5e4059fc766dca70253f40f00102f901e5e97c1d00000000c00201920315e4b88ae6b5b7e8bfaae5a3abe5b0bce4b990e59bad"
+        },
+        {
+          "name": "上海迪士尼乐园",
+          "addressParts": [
+            "上海迪士尼乐园, 753 申迪北路, 上海市, 201205 SH, 中华人民共和国",
+            "上海迪士尼乐园",
+            "753 申迪北路, 上海市, 201205 SH, 中华人民共和国",
+            "上海迪士尼乐园",
+            "753",
+            "申迪北路",
+            "浦东新区",
+            "上海",
+            "201205",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.145543,
+            "lon": 121.656363
+          },
+          "placeId": "517cd3f4d9016a5e40596729594e42253f40f00102f901e5e97c1d00000000c00201920315e4b88ae6b5b7e8bfaae5a3abe5b0bce4b990e59bade203216f70656e7374726565746d61703a76656e75653a7761792f343934373235363035"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 324.4,
+        "matchedDistanceMeters": 324.4,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-disneyland",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海迪士尼乐园",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 302,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-longhua-temple",
+      "group": "china",
+      "kind": "poi",
+      "query": "龙华寺",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1021,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "龙华寺",
+          "addressParts": [
+            "龙华寺, 2853 龙华路, Xuhui, 上海市, 200232 SH, 中华人民共和国",
+            "龙华寺",
+            "2853 龙华路, Xuhui, 上海市, 200232 SH, 中华人民共和国",
+            "龙华寺",
+            "2853",
+            "龙华路",
+            "Xuhui",
+            "上海市",
+            "上海",
+            "200232",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.175868,
+            "lon": 121.447344
+          },
+          "placeId": "51f583ba48a15c5e4059b6696caf052d3f40f00102f901a0251f1800000000c00201920309e9be99e58d8ee5afbae203216f70656e7374726565746d61703a76656e75653a7761792f343034363934343332"
+        },
+        {
+          "name": "龙华寺",
+          "addressParts": [
+            "龙华寺, 2853 龙华路, 龙华街道, 200232 上海市, 中国",
+            "龙华寺",
+            "2853 龙华路, 龙华街道, 200232 上海市, 中国",
+            "龙华寺",
+            "2853",
+            "龙华路",
+            "龙华街道",
+            "徐汇区",
+            "上海市",
+            "200232",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.1767917,
+            "lon": 121.4472502
+          },
+          "placeId": "5149884dbf9f5c5e405949b48938422d3f40f00102f901a0251f1800000000c00201920309e9be99e58d8ee5afba"
+        },
+        {
+          "name": "龙华寺",
+          "addressParts": [
+            "龙华寺, 洪塘南路, 洪塘街道, 315021 浙江省, 中国",
+            "龙华寺",
+            "洪塘南路, 洪塘街道, 315021 浙江省, 中国",
+            "龙华寺",
+            "洪塘南路",
+            "洪塘街道",
+            "江北区",
+            "浙江省",
+            "315021",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 29.9469725,
+            "lon": 121.5067182
+          },
+          "placeId": "516e522c126e605e40591cb62dca6cf23d40f00102f901346aa64b00000000c00201920309e9be99e58d8ee5afba"
+        },
+        {
+          "name": "龙华寺",
+          "addressParts": [
+            "龙华寺, 昭明路, 桐城街道, 福鼎市, 355200 福建省, 中国",
+            "龙华寺",
+            "昭明路, 桐城街道, 福鼎市, 355200 福建省, 中国",
+            "龙华寺",
+            "昭明路",
+            "桐城街道",
+            "福鼎市",
+            "福建省",
+            "355200",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 27.3177639,
+            "lon": 120.1972529
+          },
+          "placeId": "51a2a2a0ca9f0c5e4059735996f958513b40f00102f901b054f73d00000000c00201920309e9be99e58d8ee5afba"
+        },
+        {
+          "name": "龙华寺",
+          "addressParts": [
+            "龙华寺, 大东门立交, 首义路街道, 武汉市, 430061 HU, 中国",
+            "龙华寺",
+            "大东门立交, 首义路街道, 武汉市, 430061 HU, 中国",
+            "龙华寺",
+            "大东门立交",
+            "首义路街道",
+            "武昌区",
+            "湖北省",
+            "430061",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 30.5438854,
+            "lon": 114.309838
+          },
+          "placeId": "51b743c362d4935c40599ac5d5123c8b3e40f00102f901e20c233600000000c00201920309e9be99e58d8ee5afbae203216f70656e7374726565746d61703a76656e75653a7761792f393038323636373232"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 931.5,
+        "matchedDistanceMeters": 931.5,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-longhua-temple",
+      "group": "china",
+      "kind": "poi",
+      "query": "龙华寺",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 302,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-tianzifang",
+      "group": "china",
+      "kind": "poi",
+      "query": "田子坊",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2218,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "田子坊",
+          "addressParts": [
+            "田子坊, 建国中路, 打浦桥街道, 200025 上海市, 中国",
+            "田子坊",
+            "建国中路, 打浦桥街道, 200025 上海市, 中国",
+            "田子坊",
+            "建国中路",
+            "打浦桥街道",
+            "上海市",
+            "上海市",
+            "200025",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.21034,
+            "lon": 121.4641036
+          },
+          "placeId": "512dfd95dfb35d5e4059670a9dd7d8353f40f00102f901ad7a831100000000c00201920309e794b0e5ad90e59d8a"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 474.5,
+        "matchedDistanceMeters": 474.5,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-tianzifang",
+      "group": "china",
+      "kind": "poi",
+      "query": "田子坊",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 429,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "田子坊",
+          "addressParts": [
+            "田子坊, 建国中路, 打浦桥街道, 200025 上海市, 中国",
+            "田子坊",
+            "建国中路, 打浦桥街道, 200025 上海市, 中国",
+            "田子坊",
+            "建国中路",
+            "打浦桥街道",
+            "上海市",
+            "上海市",
+            "200025",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.21034,
+            "lon": 121.4641036
+          },
+          "placeId": "518dc2e2a9b35d5e4059382ee85bd2353f40f00102f901ad7a831100000000920309e794b0e5ad90e59d8a"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 474.5,
+        "matchedDistanceMeters": 474.5,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-natural-history-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海自然博物馆",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 5284,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "上海自然博物馆",
+          "addressParts": [
+            "上海自然博物馆, 510 北京西路, Ni Cheng Qiao, 上海市, 201100 SH, 中华人民共和国",
+            "上海自然博物馆",
+            "510 北京西路, Ni Cheng Qiao, 上海市, 201100 SH, 中华人民共和国",
+            "上海自然博物馆",
+            "510",
+            "北京西路",
+            "Ni Cheng Qiao",
+            "上海市",
+            "上海",
+            "201100",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.236771,
+            "lon": 121.458063
+          },
+          "placeId": "517d2079e7505d5e405927a435069d3c3f40f00102f901549e601900000000c00201920315e4b88ae6b5b7e887aae784b6e58d9ae789a9e9a686e203216f70656e7374726565746d61703a76656e75653a7761792f343235373632333838"
+        },
+        {
+          "name": "上海自然博物馆",
+          "addressParts": [
+            "上海自然博物馆, 510 北京西路, 石门二路街道, 200041 上海市, 中国",
+            "上海自然博物馆",
+            "510 北京西路, 石门二路街道, 200041 上海市, 中国",
+            "上海自然博物馆",
+            "510",
+            "北京西路",
+            "张家宅",
+            "石门二路街道",
+            "静安区",
+            "上海市",
+            "200041",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2368655,
+            "lon": 121.4577002
+          },
+          "placeId": "51da97c7f54a5d5e4059fa0ca837a33c3f40f00102f901549e601900000000c00201920315e4b88ae6b5b7e887aae784b6e58d9ae789a9e9a686"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 1233.9,
+        "matchedDistanceMeters": 1233.9,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.6666666666666666,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-natural-history-museum",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海自然博物馆",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 402,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-peace-hotel",
+      "group": "china",
+      "kind": "poi",
+      "query": "和平饭店",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1791,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "和平饭店",
+          "addressParts": [
+            "和平饭店, 滇池路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "滇池路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "滇池路",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2411331,
+            "lon": 121.4846079
+          },
+          "placeId": "518778dad0035f5e4059ac7b1ae6ba3d3f40f00102f9018b0c9c0a00000000c0020192030ce5928ce5b9b3e9a5ade5ba97"
+        },
+        {
+          "name": "和平饭店",
+          "addressParts": [
+            "和平饭店, 20 南京东路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "20 南京东路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "20",
+            "南京东路",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2410848,
+            "lon": 121.485078
+          },
+          "placeId": "51958098840b5f5e40590d90c3bbb73d3f40f00101f901ae42240000000000c0020192030ce5928ce5b9b3e9a5ade5ba97"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 592.7,
+        "matchedDistanceMeters": 592.7,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-peace-hotel",
+      "group": "china",
+      "kind": "poi",
+      "query": "和平饭店",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 396,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "和平饭店南楼",
+          "addressParts": [
+            "和平饭店南楼, 19 中山东一路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店南楼",
+            "19 中山东一路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店南楼",
+            "19",
+            "中山东一路",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2406176,
+            "lon": 121.4848172
+          },
+          "placeId": "51be084a78075f5e4059ec7e92f7983d3f40f00102f901860c9c0a00000000920312e5928ce5b9b3e9a5ade5ba97e58d97e6a5bc"
+        },
+        {
+          "name": "和平饭店",
+          "addressParts": [
+            "和平饭店, 20 南京东路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "20 南京东路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "20",
+            "南京东路",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2410848,
+            "lon": 121.485078
+          },
+          "placeId": "51fdc433f6015f5e40592b90f642b93d3f40f00101f901ae4224000000000092030ce5928ce5b9b3e9a5ade5ba97"
+        },
+        {
+          "name": "和平饭店",
+          "addressParts": [
+            "和平饭店, 滇池路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "滇池路, 外滩街道, 200002 上海市, 中国",
+            "和平饭店",
+            "滇池路",
+            "外滩街道",
+            "上海市",
+            "上海市",
+            "200002",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2411331,
+            "lon": 121.4846079
+          },
+          "placeId": "513f816adc015f5e40592af18358b93d3f40f00102f9018b0c9c0a0000000092030ce5928ce5b9b3e9a5ade5ba97"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 563.5,
+        "matchedDistanceMeters": 563.5,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-grand-hyatt",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海金茂君悦大酒店",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 4740,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-grand-hyatt",
+      "group": "china",
+      "kind": "poi",
+      "query": "上海金茂君悦大酒店",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 291,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-jia-jia-tang-bao",
+      "group": "china",
+      "kind": "poi",
+      "query": "佳家汤包黄河路店",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 4266,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-jia-jia-tang-bao",
+      "group": "china",
+      "kind": "poi",
+      "query": "佳家汤包黄河路店",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 318,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-yangs-dumplings",
+      "group": "china",
+      "kind": "poi",
+      "query": "小杨生煎黄河路店",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 4561,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-yangs-dumplings",
+      "group": "china",
+      "kind": "poi",
+      "query": "小杨生煎黄河路店",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 464,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-nanxiang-buns",
+      "group": "china",
+      "kind": "poi",
+      "query": "南翔馒头店豫园",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1717,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "南翔馒头店",
+          "addressParts": [
+            "南翔馒头店, 85 九曲桥广场, 豫园街道, 200010 上海市, 中国",
+            "南翔馒头店",
+            "85 九曲桥广场, 豫园街道, 200010 上海市, 中国",
+            "南翔馒头店",
+            "85",
+            "九曲桥广场",
+            "豫园街道",
+            "上海市",
+            "上海市",
+            "200010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2285341,
+            "lon": 121.4871017
+          },
+          "placeId": "51ddd49bac2c5f5e40595385f535813a3f40f00103f901bb2e1e9400000000c0020192030fe58d97e7bf94e9a692e5a4b4e5ba97"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 559,
+        "matchedDistanceMeters": 559,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.3333333333333333,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "cn-shanghai-nanxiang-buns",
+      "group": "china",
+      "kind": "poi",
+      "query": "南翔馒头店豫园",
+      "city": "Shanghai",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 341,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-eiffel-tower",
+      "group": "global",
+      "kind": "poi",
+      "query": "Eiffel Tower",
+      "city": "Paris",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1124,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Eiffel Tower",
+          "addressParts": [
+            "Eiffel Tower, 5 Avenue Anatole France, 75007 Paris, France",
+            "Eiffel Tower",
+            "5 Avenue Anatole France, 75007 Paris, France",
+            "Eiffel Tower",
+            "5",
+            "Avenue Anatole France",
+            "Paris",
+            "7th Arrondissement",
+            "Paris",
+            "Ile-de-France",
+            "75007",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.8582599,
+            "lon": 2.2945006
+          },
+          "placeId": "5112386d21235b024059effbdc75db6d4840f00102f901747f4c0000000000c0020192030c45696666656c20546f776572"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 15.6,
+        "matchedDistanceMeters": 15.6,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-eiffel-tower",
+      "group": "global",
+      "kind": "poi",
+      "query": "Eiffel Tower",
+      "city": "Paris",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 629,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-louvre",
+      "group": "global",
+      "kind": "poi",
+      "query": "Louvre Museum",
+      "city": "Paris",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1010,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Louvre Museum",
+          "addressParts": [
+            "Louvre Museum, Rue Saint-Honoré, 75001 Paris, France",
+            "Louvre Museum",
+            "Rue Saint-Honoré, 75001 Paris, France",
+            "Louvre Museum",
+            "Rue Saint-Honoré",
+            "Paris",
+            "1st Arrondissement",
+            "Paris",
+            "Ile-de-France",
+            "75001",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.8611473,
+            "lon": 2.3380277
+          },
+          "placeId": "510523e5dd47b4024059f44421133a6e4840f00101f90122ad720000000000c0020192030d4c6f75767265204d757365756d"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 68.4,
+        "matchedDistanceMeters": 68.4,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-louvre",
+      "group": "global",
+      "kind": "poi",
+      "query": "Louvre Museum",
+      "city": "Paris",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 454,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-colosseum",
+      "group": "global",
+      "kind": "poi",
+      "query": "Colosseum",
+      "city": "Rome",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 466,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Colosseum",
+          "addressParts": [
+            "Colosseum, Piazza del Colosseo, 00184 Rome RM, Italy",
+            "Colosseum",
+            "Piazza del Colosseo, 00184 Rome RM, Italy",
+            "Colosseum",
+            "Piazza del Colosseo",
+            "Municipio Roma I",
+            "Rome",
+            "Lazio",
+            "00184",
+            "Italy"
+          ],
+          "coordinates": {
+            "lat": 41.8902572,
+            "lon": 12.4923841
+          },
+          "placeId": "510b24cdc419fc284059a783abf2f3f14440f00101f90142ff1b0000000000c00201920309436f6c6f737365756d"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 16.5,
+        "matchedDistanceMeters": 16.5,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-colosseum",
+      "group": "global",
+      "kind": "poi",
+      "query": "Colosseum",
+      "city": "Rome",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 387,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-sagrada-familia",
+      "group": "global",
+      "kind": "poi",
+      "query": "Sagrada Família",
+      "city": "Barcelona",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2372,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Sagrada Família",
+          "addressParts": [
+            "Sagrada Família, Carrer de Provença, 08013 Barcelona, Espanya",
+            "Sagrada Família",
+            "Carrer de Provença, 08013 Barcelona, Espanya",
+            "Sagrada Família",
+            "Carrer de Provença",
+            "l'Eixample",
+            "Barcelona",
+            "Catalunya",
+            "08013",
+            "Espanya"
+          ],
+          "coordinates": {
+            "lat": 41.4040337,
+            "lon": 2.1738819
+          },
+          "placeId": "5145ee8e311c64014059aefd5360b7b34440f00103f901c9c56e3c01000000c00201920310536167726164612046616dc3ad6c6961"
+        },
+        {
+          "name": "Sagrada Família",
+          "addressParts": [
+            "Sagrada Família, Carrer de la Marina, 08013 Barcelona, Espanya",
+            "Sagrada Família",
+            "Carrer de la Marina, 08013 Barcelona, Espanya",
+            "Sagrada Família",
+            "Carrer de la Marina",
+            "l'Eixample",
+            "Barcelona",
+            "Catalunya",
+            "08013",
+            "Espanya"
+          ],
+          "coordinates": {
+            "lat": 41.4039801,
+            "lon": 2.1751136
+          },
+          "placeId": "51b9ad88f5a1660140590edeb29eb5b34440f00103f9010f686f3c01000000c00201920310536167726164612046616dc3ad6c6961"
+        },
+        {
+          "name": "Basílica de la Sagrada Família",
+          "addressParts": [
+            "Basílica de la Sagrada Família, Carrer de Mallorca, 401, 08013 Barcelona, Espanya",
+            "Basílica de la Sagrada Família",
+            "Carrer de Mallorca, 401, 08013 Barcelona, Espanya",
+            "Basílica de la Sagrada Família",
+            "401",
+            "Carrer de Mallorca",
+            "l'Eixample",
+            "Barcelona",
+            "Catalunya",
+            "08013",
+            "Espanya"
+          ],
+          "coordinates": {
+            "lat": 41.4035046,
+            "lon": 2.1744283
+          },
+          "placeId": "519bf91faa3a650140598d64ea09a6b34440f00101f901e34c8c0000000000c00201920320426173c3ad6c696361206465206c6120536167726164612046616dc3ad6c6961"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 64.8,
+        "matchedDistanceMeters": 64.8,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-sagrada-familia",
+      "group": "global",
+      "kind": "poi",
+      "query": "Sagrada Família",
+      "city": "Barcelona",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 839,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Escoles de la Sagrada Família",
+          "addressParts": [
+            "Escoles de la Sagrada Família, Carrer de Sardenya, 08013 Barcelona, Espanya",
+            "Escoles de la Sagrada Família",
+            "Carrer de Sardenya, 08013 Barcelona, Espanya",
+            "Escoles de la Sagrada Família",
+            "Carrer de Sardenya",
+            "l'Eixample",
+            "Barcelona",
+            "Catalunya",
+            "08013",
+            "Espanya"
+          ],
+          "coordinates": {
+            "lat": 41.4029873,
+            "lon": 2.1742067
+          },
+          "placeId": "516b1c90dec0640140593bb3f44795b34440f00102f90183ffe5070000000092031e4573636f6c6573206465206c6120536167726164612046616dc3ad6c6961"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 70,
+        "matchedDistanceMeters": 70,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-statue-of-liberty",
+      "group": "global",
+      "kind": "poi",
+      "query": "Statue of Liberty",
+      "city": "New York",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2062,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Statue of Liberty",
+          "addressParts": [
+            "Statue of Liberty, Flagpole Plaza, New York, NY 10004, United States of America",
+            "Statue of Liberty",
+            "Flagpole Plaza, New York, NY 10004, United States of America",
+            "Statue of Liberty",
+            "Flagpole Plaza",
+            "Manhattan",
+            "New York",
+            "New York",
+            "10004",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 40.6892532,
+            "lon": -74.0445482
+          },
+          "placeId": "511f86b1e0d98252c059e954e87239584440f00102f9012403f70100000000c00201920311537461747565206f66204c696265727479"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 7.2,
+        "matchedDistanceMeters": 7.2,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-statue-of-liberty",
+      "group": "global",
+      "kind": "poi",
+      "query": "Statue of Liberty",
+      "city": "New York",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 438,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Statue of Liberty",
+          "addressParts": [
+            "Statue of Liberty, Flagpole Plaza, New York, NY 10004, United States of America",
+            "Statue of Liberty",
+            "Flagpole Plaza, New York, NY 10004, United States of America",
+            "Statue of Liberty",
+            "Flagpole Plaza",
+            "Manhattan",
+            "New York",
+            "New York",
+            "10004",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 40.6892532,
+            "lon": -74.0445482
+          },
+          "placeId": "51093958c8d98252c059b1e70e1b39584440f00102f9012403f70100000000920311537461747565206f66204c696265727479"
+        },
+        {
+          "name": "Statue Of Liberty",
+          "addressParts": [
+            "Statue Of Liberty, Flagpole Plaza, New York, NY 07303, United States of America",
+            "Statue Of Liberty",
+            "Flagpole Plaza, New York, NY 07303, United States of America",
+            "Statue Of Liberty",
+            "Flagpole Plaza",
+            "Manhattan",
+            "New York",
+            "New York",
+            "07303",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 40.689248,
+            "lon": -74.0445351
+          },
+          "placeId": "518b81bfa9d98252c059ad6a494739584440f00103f901472d572c03000000920311537461747565204f66204c696265727479"
+        },
+        {
+          "name": "The Five Founders of the Statue of Liberty",
+          "addressParts": [
+            "The Five Founders of the Statue of Liberty, Flagpole Plaza, New York, NY 07303, United States of America",
+            "The Five Founders of the Statue of Liberty",
+            "Flagpole Plaza, New York, NY 07303, United States of America",
+            "The Five Founders of the Statue of Liberty",
+            "Flagpole Plaza",
+            "Manhattan",
+            "New York",
+            "New York",
+            "07303",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 40.6897667,
+            "lon": -74.0438937
+          },
+          "placeId": "5107808527cf8252c059572f75464a584440f00103f901c0dea68d0200000092032a546865204669766520466f756e64657273206f662074686520537461747565206f66204c696265727479"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 7.2,
+        "matchedDistanceMeters": 7.2,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-sydney-opera-house",
+      "group": "global",
+      "kind": "poi",
+      "query": "Sydney Opera House",
+      "city": "Sydney",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1232,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Sydney Opera House",
+          "addressParts": [
+            "Sydney Opera House, 2 Macquarie Street, Sydney CBD, Sydney NSW 2000, Australia",
+            "Sydney Opera House",
+            "2 Macquarie Street, Sydney CBD, Sydney NSW 2000, Australia",
+            "Sydney Opera House",
+            "2",
+            "Macquarie Street",
+            "Sydney CBD",
+            "Sydney",
+            "Sydney",
+            "New South Wales",
+            "2000",
+            "Australia"
+          ],
+          "coordinates": {
+            "lat": -33.857198,
+            "lon": 151.2151234
+          },
+          "placeId": "5157f3774ae2e66240592a1900aab8ed40c0f00101f901c86f920000000000c002019203125379646e6579204f7065726120486f757365"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 47.2,
+        "matchedDistanceMeters": 47.2,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-sydney-opera-house",
+      "group": "global",
+      "kind": "poi",
+      "query": "Sydney Opera House",
+      "city": "Sydney",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 368,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-tokyo-tower",
+      "group": "global",
+      "kind": "poi",
+      "query": "東京タワー",
+      "city": "Tokyo",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1292,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "東京タワー",
+          "addressParts": [
+            "東京タワー通り, 芝公園, 東京, TK 106-0041, 日本",
+            "東京タワー通り",
+            "芝公園, 東京, TK 106-0041, 日本",
+            "東京タワー",
+            "東京タワー通り",
+            "港区",
+            "芝公園",
+            "東京",
+            "東京",
+            "106-0041",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.658458,
+            "lon": 139.745435
+          },
+          "placeId": "516649809ada7761405911e50b5a48d44140f00101f90110cf400000000000c0020192030fe69db1e4baace382bfe383afe383bce203246f70656e7374726565746d61703a76656e75653a72656c6174696f6e2f34323437333132"
+        },
+        {
+          "name": "東京タワー",
+          "addressParts": [
+            "東京タワー, 209-1 会津西街道, 鬼怒川温泉大原, 日光市, 321-2522, 日本",
+            "東京タワー",
+            "209-1 会津西街道, 鬼怒川温泉大原, 日光市, 321-2522, 日本",
+            "東京タワー",
+            "209-1",
+            "会津西街道",
+            "鬼怒川温泉大原",
+            "日光市",
+            "321-2522",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 36.8070434,
+            "lon": 139.71183
+          },
+          "placeId": "51f949b54fc776614059f0b9b8324d674240f00103f901d366370602000000c0020192030fe69db1e4baace382bfe383afe383bc"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 16.1,
+        "matchedDistanceMeters": 16.1,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-tokyo-tower",
+      "group": "global",
+      "kind": "poi",
+      "query": "東京タワー",
+      "city": "Tokyo",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 373,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-cn-tower",
+      "group": "global",
+      "kind": "poi",
+      "query": "CN Tower",
+      "city": "Toronto",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1172,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "CN Tower",
+          "addressParts": [
+            "CN Tower, 290 Bremner Boulevard, Toronto, ON M5V 3L9, Canada",
+            "CN Tower",
+            "290 Bremner Boulevard, Toronto, ON M5V 3L9, Canada",
+            "CN Tower",
+            "290",
+            "Bremner Boulevard",
+            "Harbourfront-CityPlace",
+            "Downtown",
+            "Toronto",
+            "Ontario",
+            "M5V 3L9",
+            "Canada"
+          ],
+          "coordinates": {
+            "lat": 43.6425637,
+            "lon": -79.3870872
+          },
+          "placeId": "51d02c6409c6d853c059628cfe863fd24540f00102f901969af30100000000c00201920308434e20546f776572"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 4.2,
+        "matchedDistanceMeters": 4.2,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-cn-tower",
+      "group": "global",
+      "kind": "poi",
+      "query": "CN Tower",
+      "city": "Toronto",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 390,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "CN Tower Edge Walk",
+          "addressParts": [
+            "CN Tower Edge Walk, 301 Front Street West, Toronto, ON M5V 2W6, Canada",
+            "CN Tower Edge Walk",
+            "301 Front Street West, Toronto, ON M5V 2W6, Canada",
+            "CN Tower Edge Walk",
+            "301",
+            "Front Street West",
+            "Downtown",
+            "Toronto",
+            "Ontario",
+            "M5V 2W6",
+            "Canada"
+          ],
+          "coordinates": {
+            "lat": 43.6425012,
+            "lon": -79.3871153
+          },
+          "placeId": "510052407fc6d853c05904d2b47a3dd24540f00103f9016c1df51500000000920312434e20546f77657220456467652057616c6b"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 11.1,
+        "matchedDistanceMeters": 11.1,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-fushimi-inari",
+      "group": "global",
+      "kind": "poi",
+      "query": "伏見稲荷大社",
+      "city": "Kyoto",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1259,
+      "resultCount": 4,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "伏見稲荷大社 境内案内図",
+          "addressParts": [
+            "伏見稲荷大社 境内案内図, 十石橋, 伏見区, 京都市, KY 612-0807, 日本",
+            "伏見稲荷大社 境内案内図",
+            "十石橋, 伏見区, 京都市, KY 612-0807, 日本",
+            "伏見稲荷大社 境内案内図",
+            "十石橋",
+            "深草開土口町",
+            "伏見区",
+            "京都市",
+            "京都",
+            "612-0807",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 34.9672545,
+            "lon": 135.7737731
+          },
+          "placeId": "51c9e0cdbfc2f86040595534d6fece7b4140f00103f9013e4e509e00000000c00201920322e4bc8fe8a68be7a8b2e88db7e5a4a7e7a4be20e5a283e58685e6a188e58685e59bb3e203236f70656e7374726565746d61703a76656e75653a6e6f64652f32363536303633303338"
+        },
+        {
+          "name": "伏見稲荷大社　楼門",
+          "addressParts": [
+            "伏見稲荷大社　楼門, 表参道, 伏見区, 京都市, KY 612-0807, 日本",
+            "伏見稲荷大社　楼門",
+            "表参道, 伏見区, 京都市, KY 612-0807, 日本",
+            "伏見稲荷大社　楼門",
+            "表参道",
+            "深草稲荷御前町",
+            "伏見区",
+            "京都市",
+            "京都",
+            "612-0807",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 34.9670758,
+            "lon": 135.7725433
+          },
+          "placeId": "51ce07baacb8f860405964e0ca23c97b4140f00103f901be6e8e8d02000000c0020192031be4bc8fe8a68be7a8b2e88db7e5a4a7e7a4bee38080e6a5bce99680e203246f70656e7374726565746d61703a76656e75653a6e6f64652f3130393634383536353130"
+        },
+        {
+          "name": "伏見稲荷大社　神田",
+          "addressParts": [
+            "伏見稲荷大社　神田, 十石橋, 伏見区, 京都市, KY 612-0807, 日本",
+            "伏見稲荷大社　神田",
+            "十石橋, 伏見区, 京都市, KY 612-0807, 日本",
+            "伏見稲荷大社　神田",
+            "十石橋",
+            "深草開土口町",
+            "伏見区",
+            "京都市",
+            "京都",
+            "612-0807",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 34.9682298,
+            "lon": 135.7746957
+          },
+          "placeId": "5142fba24ecaf86040599e013ff4ee7b4140f00103f9016ac24cc102000000c0020192031be4bc8fe8a68be7a8b2e88db7e5a4a7e7a4bee38080e7a59ee794b0e203246f70656e7374726565746d61703a76656e75653a6e6f64652f3131383332393637373836"
+        },
+        {
+          "name": "伏見稲荷大社 御旅所",
+          "addressParts": [
+            "伏見稲荷大社 御旅所, 東寺道, 南区, 京都市, KY 601-8421, 日本",
+            "伏見稲荷大社 御旅所",
+            "東寺道, 南区, 京都市, KY 601-8421, 日本",
+            "伏見稲荷大社 御旅所",
+            "東寺道",
+            "東寺東門前町",
+            "南区",
+            "京都市",
+            "京都",
+            "601-8421",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 34.9819565,
+            "lon": 135.7532005
+          },
+          "placeId": "51965aef371af86040591dcc26c0b07d4140f00103f901035a757702000000c0020192031ce4bc8fe8a68be7a8b2e88db7e5a4a7e7a4be20e5bea1e69785e68980e203246f70656e7374726565746d61703a76656e75653a6e6f64652f3130353934313134303531"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 99.3,
+        "matchedDistanceMeters": 99.3,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-fushimi-inari",
+      "group": "global",
+      "kind": "poi",
+      "query": "伏見稲荷大社",
+      "city": "Kyoto",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 398,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "伏見稲荷大社",
+          "addressParts": [
+            "伏見稲荷大社, 千本鳥居, 伏見区, 京都市, 深草石峰寺山町 612-0807, 日本",
+            "伏見稲荷大社",
+            "千本鳥居, 伏見区, 京都市, 深草石峰寺山町 612-0807, 日本",
+            "伏見稲荷大社",
+            "千本鳥居",
+            "深草石峰寺山町",
+            "伏見区",
+            "京都市",
+            "612-0807",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 34.966983,
+            "lon": 135.7747604
+          },
+          "placeId": "518c8752d6caf8604059dc645419c67b4140f00103f9019de3349901000000920312e4bc8fe8a68be7a8b2e88db7e5a4a7e7a4be"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 188.2,
+        "matchedDistanceMeters": 188.2,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-hotel-sacher",
+      "group": "global",
+      "kind": "poi",
+      "query": "Hotel Sacher Wien",
+      "city": "Vienna",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1059,
+      "resultCount": 4,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Hotel Sacher",
+          "addressParts": [
+            "Hotel Sacher, Kärntner Straße, 1010 Wien, Österreich",
+            "Hotel Sacher",
+            "Kärntner Straße, 1010 Wien, Österreich",
+            "Hotel Sacher",
+            "Kärntner Straße",
+            "Kärntner Viertel",
+            "Innere Stadt",
+            "Wien",
+            "Wien",
+            "1010",
+            "Österreich"
+          ],
+          "coordinates": {
+            "lat": 48.2040427,
+            "lon": 16.3697708
+          },
+          "placeId": "510904954ca95e30405968be39121e1a4840f00102f90125a27d2500000000c0020192030c486f74656c20536163686572"
+        },
+        {
+          "name": "Friedrich Sacher",
+          "addressParts": [
+            "Friedrich Sacher, Ruckergasse, 1120 Wien, Österreich",
+            "Friedrich Sacher",
+            "Ruckergasse, 1120 Wien, Österreich",
+            "Friedrich Sacher",
+            "Ruckergasse",
+            "Meidling",
+            "Katastralgemeinde Meidling",
+            "Wien",
+            "Wien",
+            "1120",
+            "Österreich"
+          ],
+          "coordinates": {
+            "lat": 48.1807215,
+            "lon": 16.3268825
+          },
+          "placeId": "517d224f92ae533040598f17d2e121174840f00103f901f59b1ce401000000c0020192031046726965647269636820536163686572e203236f70656e7374726565746d61703a76656e75653a6e6f64652f38313232303437343737"
+        },
+        {
+          "name": "Hotel Sacher",
+          "addressParts": [
+            "Hotel Sacher, Schwarzstraße 5-7, 5020 Salzburg, Österreich",
+            "Hotel Sacher",
+            "Schwarzstraße 5-7, 5020 Salzburg, Österreich",
+            "Hotel Sacher",
+            "5-7",
+            "Schwarzstraße",
+            "Wals-Siezenheim",
+            "Altstadt",
+            "Salzburg",
+            "Salzburg",
+            "5020",
+            "Österreich"
+          ],
+          "coordinates": {
+            "lat": 47.8022003,
+            "lon": 13.0432934
+          },
+          "placeId": "51ea43728d2a162a4059b3abda7faee64740f00103f9012adedf0f00000000c0020192030c486f74656c20536163686572e203226f70656e7374726565746d61703a76656e75653a6e6f64652f323636333239363432"
+        },
+        {
+          "name": "Hotel Sacher Baden",
+          "addressParts": [
+            "Hotel Sacher Baden, Helenenstraße 55, 2500 Baden, Österreich",
+            "Hotel Sacher Baden",
+            "Helenenstraße 55, 2500 Baden, Österreich",
+            "Hotel Sacher Baden",
+            "55",
+            "Helenenstraße",
+            "Katastralgemeinde Rauhenstein",
+            "Baden",
+            "Niederösterreich",
+            "2500",
+            "Österreich"
+          ],
+          "coordinates": {
+            "lat": 48.0112003,
+            "lon": 16.2042463
+          },
+          "placeId": "513ad44a7c49343040594a1aed026f014840f00102f9014b61fd0400000000c00201920312486f74656c2053616368657220426164656ee203206f70656e7374726565746d61703a76656e75653a7761792f3833373134333739"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 117.7,
+        "matchedDistanceMeters": 117.7,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-hotel-sacher",
+      "group": "global",
+      "kind": "poi",
+      "query": "Hotel Sacher Wien",
+      "city": "Vienna",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 403,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-raffles-singapore",
+      "group": "global",
+      "kind": "poi",
+      "query": "Raffles Hotel Singapore",
+      "city": "Singapore",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1240,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Raffles Hotel",
+          "addressParts": [
+            "Raffles Hotel, 1 Beach Road, Singapore 189673, Singapore",
+            "Raffles Hotel",
+            "1 Beach Road, Singapore 189673, Singapore",
+            "Raffles Hotel",
+            "1",
+            "Beach Road",
+            "Central Region",
+            "Civic District",
+            "Singapore",
+            "Singapore",
+            "189673",
+            "Singapore"
+          ],
+          "coordinates": {
+            "lat": 1.2946815,
+            "lon": 103.8546412
+          },
+          "placeId": "511cf40071b2f659405993c7d3f203b7f43ff00103f901261f7fae02000000c0020192030d526166666c657320486f74656ce203246f70656e7374726565746d61703a76656e75653a6e6f64652f3131353137353031323232"
+        },
+        {
+          "name": "Raffles Place",
+          "addressParts": [
+            "Raffles Place, Collyer Quay, Singapore 049315, Singapore",
+            "Raffles Place",
+            "Collyer Quay, Singapore 049315, Singapore",
+            "Raffles Place",
+            "Collyer Quay",
+            "Central Region",
+            "Downtown Core",
+            "Singapore",
+            "049315",
+            "Singapore"
+          ],
+          "coordinates": {
+            "lat": 1.2835417,
+            "lon": 103.8514602
+          },
+          "placeId": "511f36ec527ef6594059fdd588056389f43ff00102f90148e1512c00000000c0020192030d526166666c657320506c616365"
+        },
+        {
+          "name": "Raffles Hospital",
+          "addressParts": [
+            "Raffles Hospital, 585 North Bridge Road, Singapore 188770, Singapore",
+            "Raffles Hospital",
+            "585 North Bridge Road, Singapore 188770, Singapore",
+            "Raffles Hospital",
+            "585",
+            "North Bridge Road",
+            "Central Region",
+            "Downtown Core",
+            "Singapore",
+            "188770",
+            "Singapore"
+          ],
+          "coordinates": {
+            "lat": 1.3011361,
+            "lon": 103.8571482
+          },
+          "placeId": "51d1b41f84dbf6594059dc51521674d1f43ff00102f9017d35cf0200000000c00201920310526166666c657320486f73706974616c"
+        },
+        {
+          "name": "After Raffles Hotel",
+          "addressParts": [
+            "After Raffles Hotel, Beach Road, Singapore 189673, Singapore",
+            "After Raffles Hotel",
+            "Beach Road, Singapore 189673, Singapore",
+            "After Raffles Hotel",
+            "Beach Road",
+            "Central Region",
+            "Civic District",
+            "Singapore",
+            "Singapore",
+            "189673",
+            "Singapore"
+          ],
+          "coordinates": {
+            "lat": 1.2952721,
+            "lon": 103.8553569
+          },
+          "placeId": "511cfadd2abef659405968bdce3c6fb9f43ff00103f9014422771800000000c00201920313416674657220526166666c657320486f74656ce203226f70656e7374726565746d61703a76656e75653a6e6f64652f343130343630373430"
+        },
+        {
+          "name": "12 Raffles Hotel",
+          "addressParts": [
+            "12 Raffles Hotel, Beach Road, Singapore 189764, Singapore",
+            "12 Raffles Hotel",
+            "Beach Road, Singapore 189764, Singapore",
+            "12 Raffles Hotel",
+            "Beach Road",
+            "Central Region",
+            "Civic District",
+            "Singapore",
+            "Singapore",
+            "189764",
+            "Singapore"
+          ],
+          "coordinates": {
+            "lat": 1.2941818,
+            "lon": 103.8546905
+          },
+          "placeId": "51ec6cc83fb3f65940592e41a1f9f7b4f43ff00103f90106256c8401000000c00201920310313220526166666c657320486f74656ce203236f70656e7374726565746d61703a76656e75653a6e6f64652f36353136363437313734"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 28.9,
+        "matchedDistanceMeters": 28.9,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-raffles-singapore",
+      "group": "global",
+      "kind": "poi",
+      "query": "Raffles Hotel Singapore",
+      "city": "Singapore",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 340,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-pizzeria-bianco",
+      "group": "global",
+      "kind": "poi",
+      "query": "Pizzeria Bianco",
+      "city": "Phoenix",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1210,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Pizzeria Bianco",
+          "addressParts": [
+            "Pizzeria Bianco, 4743 North 20th Street, Phoenix, AZ 85016, United States of America",
+            "Pizzeria Bianco",
+            "4743 North 20th Street, Phoenix, AZ 85016, United States of America",
+            "Pizzeria Bianco",
+            "4743",
+            "North 20th Street",
+            "Camelback East",
+            "Phoenix",
+            "Arizona",
+            "85016",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 33.5073593,
+            "lon": -112.0375653
+          },
+          "placeId": "51b9bd497867025cc05925694826f1c04040f00103f9015aeac2fc01000000c0020192030f50697a7a65726961204269616e636f"
+        },
+        {
+          "name": "Baird Machine Shop",
+          "addressParts": [
+            "Baird Machine Shop, 623 East Adams Street, Phoenix, AZ 85004, United States of America",
+            "Baird Machine Shop",
+            "623 East Adams Street, Phoenix, AZ 85004, United States of America",
+            "Baird Machine Shop",
+            "623",
+            "East Adams Street",
+            "Central City",
+            "Phoenix",
+            "Arizona",
+            "85004",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 33.449174,
+            "lon": -112.0656515
+          },
+          "placeId": "51bc5b59a233045cc059541b9c887eb94040f00102f9017975350200000000c002019203124261697264204d616368696e652053686f70"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 7331.1,
+        "matchedDistanceMeters": 7331.1,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-pizzeria-bianco",
+      "group": "global",
+      "kind": "poi",
+      "query": "Pizzeria Bianco",
+      "city": "Phoenix",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 414,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-di-fara-pizza",
+      "group": "global",
+      "kind": "poi",
+      "query": "Di Fara Pizza",
+      "city": "New York",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 546,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Di Fara Pizza",
+          "addressParts": [
+            "Di Fara Pizza, 1424 Avenue J, New York, NY 11230, United States of America",
+            "Di Fara Pizza",
+            "1424 Avenue J, New York, NY 11230, United States of America",
+            "Di Fara Pizza",
+            "1424",
+            "Avenue J",
+            "Brooklyn",
+            "New York",
+            "New York",
+            "11230",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 40.625047,
+            "lon": -73.9614948
+          },
+          "placeId": "518a517c21897d52c05941bb438a01504440f00103f90136f2719300000000c0020192030d446920466172612050697a7a61"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 63.9,
+        "matchedDistanceMeters": 63.9,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-di-fara-pizza",
+      "group": "global",
+      "kind": "poi",
+      "query": "Di Fara Pizza",
+      "city": "New York",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 668,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Di Fara Pizza",
+          "addressParts": [
+            "Di Fara Pizza, 1424 Avenue J, New York, NY 11230, United States of America",
+            "Di Fara Pizza",
+            "1424 Avenue J, New York, NY 11230, United States of America",
+            "Di Fara Pizza",
+            "1424",
+            "Avenue J",
+            "Brooklyn",
+            "New York",
+            "New York",
+            "11230",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 40.625047,
+            "lon": -73.9614948
+          },
+          "placeId": "518a517c21897d52c05941bb438a01504440f00103f90136f271930000000092030d446920466172612050697a7a61"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 63.9,
+        "matchedDistanceMeters": 63.9,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-las-du-fallafel",
+      "group": "global",
+      "kind": "poi",
+      "query": "L’As du Fallafel",
+      "city": "Paris",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 403,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "L'As du Fallafel",
+          "addressParts": [
+            "L'As du Fallafel, Rue des Rosiers, 75004 Paris, France",
+            "L'As du Fallafel",
+            "Rue des Rosiers, 75004 Paris, France",
+            "L'As du Fallafel",
+            "Rue des Rosiers",
+            "Paris",
+            "Paris 4e Arrondissement",
+            "Paris",
+            "Île-de-France",
+            "75004",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.857415,
+            "lon": 2.3590682
+          },
+          "placeId": "51c94400265fdf024059c80c54c6bf6d4840f00103f9016265170701000000c002019203104c2741732064752046616c6c6166656c"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 22.7,
+        "matchedDistanceMeters": 22.7,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-las-du-fallafel",
+      "group": "global",
+      "kind": "poi",
+      "query": "L’As du Fallafel",
+      "city": "Paris",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 662,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-dishoom-shoreditch",
+      "group": "global",
+      "kind": "poi",
+      "query": "Dishoom Shoreditch",
+      "city": "London",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 715,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Dishoom",
+          "addressParts": [
+            "Dishoom, 7 Boundary Street, London, E2 7JE, United Kingdom",
+            "Dishoom",
+            "7 Boundary Street, London, E2 7JE, United Kingdom",
+            "Dishoom",
+            "7",
+            "Boundary Street",
+            "London Borough of Tower Hamlets",
+            "Whitechapel",
+            "Greater London",
+            "England",
+            "E2 7JE",
+            "United Kingdom"
+          ],
+          "coordinates": {
+            "lat": 51.5244991,
+            "lon": -0.0768246
+          },
+          "placeId": "51773d87e8c6aab3bf5906a458c922c34940f00102f901d773781000000000c00201920307446973686f6f6de203216f70656e7374726565746d61703a76656e75653a7761792f323736333239343331"
+        },
+        {
+          "name": "Dishoom",
+          "addressParts": [
+            "Dishoom, 12 Upper St Martin's Lane, London, WC2H 9FB, United Kingdom",
+            "Dishoom",
+            "12 Upper St Martin's Lane, London, WC2H 9FB, United Kingdom",
+            "Dishoom",
+            "12",
+            "Upper St Martin's Lane",
+            "Westminster",
+            "Covent Garden",
+            "City of Westminster",
+            "England",
+            "WC2H 9FB",
+            "United Kingdom"
+          ],
+          "coordinates": {
+            "lat": 51.5124271,
+            "lon": -0.126856
+          },
+          "placeId": "517d93a641d13cc0bf59c40a123697c14940f00102f9019d2b580c00000000c00201920307446973686f6f6de203216f70656e7374726565746d61703a76656e75653a7761792f323037313034393235"
+        },
+        {
+          "name": "Dishoom",
+          "addressParts": [
+            "Dishoom, 22 Kingly Street, London, W1B 5QP, United Kingdom",
+            "Dishoom",
+            "22 Kingly Street, London, W1B 5QP, United Kingdom",
+            "Dishoom",
+            "22",
+            "Kingly Street",
+            "Westminster",
+            "Soho",
+            "City of Westminster",
+            "England",
+            "W1B 5QP",
+            "United Kingdom"
+          ],
+          "coordinates": {
+            "lat": 51.5130832,
+            "lon": -0.139712
+          },
+          "placeId": "5196eb6d3315e2c1bf594210d6b5acc14940f00103f90184f2fee400000000c00201920307446973686f6f6de203236f70656e7374726565746d61703a76656e75653a6e6f64652f33383431393133343736"
+        },
+        {
+          "name": "Dishoom",
+          "addressParts": [
+            "Dishoom, 13 Water Street, London, E14 5GX, United Kingdom",
+            "Dishoom",
+            "13 Water Street, London, E14 5GX, United Kingdom",
+            "Dishoom",
+            "13",
+            "Water Street",
+            "London Borough of Tower Hamlets",
+            "Canary Wharf",
+            "Greater London",
+            "England",
+            "E14 5GX",
+            "United Kingdom"
+          ],
+          "coordinates": {
+            "lat": 51.5031149,
+            "lon": -0.0135114
+          },
+          "placeId": "51dc42fc68ddab8bbf59aed0ac1166c04940f00103f901fd86fe6002000000c00201920307446973686f6f6de203246f70656e7374726565746d61703a76656e75653a6e6f64652f3130323137323238303239"
+        },
+        {
+          "name": "Dishoom",
+          "addressParts": [
+            "Dishoom, 42 Electric Boulevard, London, SW11 8BJ, United Kingdom",
+            "Dishoom",
+            "42 Electric Boulevard, London, SW11 8BJ, United Kingdom",
+            "Dishoom",
+            "42",
+            "Electric Boulevard",
+            "London Borough of Wandsworth",
+            "Clapham Junction",
+            "Greater London",
+            "England",
+            "SW11 8BJ",
+            "United Kingdom"
+          ],
+          "coordinates": {
+            "lat": 51.4799914,
+            "lon": -0.1446698
+          },
+          "placeId": "51a103dc3d8a84c2bf593eaeb25b70bd4940f00103f90144b7d6b002000000c00201920307446973686f6f6de203246f70656e7374726565746d61703a76656e75653a6e6f64652f3131353536373936323238"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 71.1,
+        "matchedDistanceMeters": 71.1,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-dishoom-shoreditch",
+      "group": "global",
+      "kind": "poi",
+      "query": "Dishoom Shoreditch",
+      "city": "London",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 663,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-russ-and-daughters-cafe",
+      "group": "global",
+      "kind": "poi",
+      "query": "Russ & Daughters Cafe",
+      "city": "New York",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 429,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Russ & Daughters Cafe",
+          "addressParts": [
+            "Russ & Daughters Cafe, 127 Orchard Street, New York, NY 10002, United States of America",
+            "Russ & Daughters Cafe",
+            "127 Orchard Street, New York, NY 10002, United States of America",
+            "Russ & Daughters Cafe",
+            "127",
+            "Orchard Street",
+            "Lower East Side",
+            "Manhattan",
+            "New York",
+            "New York",
+            "10002",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 40.7196388,
+            "lon": -73.9895629
+          },
+          "placeId": "516f35a1ff547f52c0596277cb1f1d5c4440f00103f90143234c9800000000c00201920315527573732026204461756768746572732043616665"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 348.1,
+        "matchedDistanceMeters": 348.1,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-russ-and-daughters-cafe",
+      "group": "global",
+      "kind": "poi",
+      "query": "Russ & Daughters Cafe",
+      "city": "New York",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 583,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-tacos-no-1-chelsea",
+      "group": "global",
+      "kind": "poi",
+      "query": "Los Tacos No. 1 Chelsea Market",
+      "city": "New York",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 6873,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "addressParts": [
+            "1107 1/2 North Los Robles Avenue, Pasadena, CA 91104, United States of America",
+            "1107 1/2 North Los Robles Avenue",
+            "Pasadena, CA 91104, United States of America",
+            "1107 1/2",
+            "North Los Robles Avenue",
+            "West Central",
+            "Pasadena",
+            "California",
+            "91104",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 34.164647,
+            "lon": -118.14259
+          },
+          "placeId": "5125afce3120895dc0593831242713154140c00203e203496f70656e6164647265737365733a616464726573733a75732f63612f6c6f735f616e67656c65732d6164647265737365732d636f756e74793a61393737643337616138613831376636"
+        },
+        {
+          "addressParts": [
+            "1105 1/2 North Los Robles Avenue, Pasadena, CA 91104, United States of America",
+            "1105 1/2 North Los Robles Avenue",
+            "Pasadena, CA 91104, United States of America",
+            "1105 1/2",
+            "North Los Robles Avenue",
+            "West Central",
+            "Pasadena",
+            "California",
+            "91104",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 34.164732,
+            "lon": -118.142442
+          },
+          "placeId": "51ebe40cc51d895dc059664d2cf015154140c00203e203496f70656e6164647265737365733a616464726573733a75732f63612f6c6f735f616e67656c65732d6164647265737365732d636f756e74793a31653333343238613737366163383134"
+        },
+        {
+          "addressParts": [
+            "560 1/2 North Los Robles Avenue, Pasadena, CA 91101, United States of America",
+            "560 1/2 North Los Robles Avenue",
+            "Pasadena, CA 91101, United States of America",
+            "560 1/2",
+            "North Los Robles Avenue",
+            "West Central",
+            "Pasadena",
+            "California",
+            "91101",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 34.155648,
+            "lon": -118.141269
+          },
+          "placeId": "5112bc218d0a895dc0590ad80e46ec134140c00203e203496f70656e6164647265737365733a616464726573733a75732f63612f6c6f735f616e67656c65732d6164647265737365732d636f756e74793a63363665303139393763623066373833"
+        },
+        {
+          "addressParts": [
+            "270 1/2 North Los Robles Avenue, Pasadena, CA 91101, United States of America",
+            "270 1/2 North Los Robles Avenue",
+            "Pasadena, CA 91101, United States of America",
+            "270 1/2",
+            "North Los Robles Avenue",
+            "West Central",
+            "Pasadena",
+            "California",
+            "91101",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 34.151038,
+            "lon": -118.14115
+          },
+          "placeId": "512575029a08895dc059043a933655134140c00203e203496f70656e6164647265737365733a616464726573733a75732f63612f6c6f735f616e67656c65732d6164647265737365732d636f756e74793a66323938643564353838613133373966"
+        },
+        {
+          "addressParts": [
+            "1 North Los Carneros Road, Goleta, CA 93117, United States of America",
+            "1 North Los Carneros Road",
+            "Goleta, CA 93117, United States of America",
+            "1",
+            "North Los Carneros Road",
+            "Goleta",
+            "California",
+            "93117",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 34.437313,
+            "lon": -119.85314
+          },
+          "placeId": "5134ba83d899f65dc059ce8e54dff9374140c00203e2034b6f70656e6164647265737365733a616464726573733a75732f63612f73616e74615f626172626172612d6164647265737365732d636f756e74793a31623332343039626131633136343561"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": 3921940.1,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-tacos-no-1-chelsea",
+      "group": "global",
+      "kind": "poi",
+      "query": "Los Tacos No. 1 Chelsea Market",
+      "city": "New York",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 652,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-la-banquise",
+      "group": "global",
+      "kind": "poi",
+      "query": "La Banquise",
+      "city": "Montreal",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 406,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "La Banquise",
+          "addressParts": [
+            "La Banquise, 994 Rue Rachel Est, Montréal, QC H2J 2J3, Canada",
+            "La Banquise",
+            "994 Rue Rachel Est, Montréal, QC H2J 2J3, Canada",
+            "La Banquise",
+            "994",
+            "Rue Rachel Est",
+            "Le Plateau-Mont-Royal",
+            "Montréal",
+            "Québec",
+            "H2J 2J3",
+            "Canada"
+          ],
+          "coordinates": {
+            "lat": 45.5253345,
+            "lon": -73.5747528
+          },
+          "placeId": "5134d2f7bfc86452c059f27a30293ec34640f00103f901e648a93701000000c0020192030b4c612042616e7175697365"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 334.5,
+        "matchedDistanceMeters": 334.5,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-la-banquise",
+      "group": "global",
+      "kind": "poi",
+      "query": "La Banquise",
+      "city": "Montreal",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 368,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "La Banquise",
+          "addressParts": [
+            "La Banquise, 994 Rue Rachel Est, Montréal, QC H2J 2J3, Canada",
+            "La Banquise",
+            "994 Rue Rachel Est, Montréal, QC H2J 2J3, Canada",
+            "La Banquise",
+            "994",
+            "Rue Rachel Est",
+            "Le Plateau-Mont-Royal",
+            "Montréal",
+            "Québec",
+            "H2J 2J3",
+            "Canada"
+          ],
+          "coordinates": {
+            "lat": 45.5253345,
+            "lon": -73.5747528
+          },
+          "placeId": "5134d2f7bfc86452c059f27a30293ec34640f00103f901e648a9370100000092030b4c612042616e7175697365"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 334.5,
+        "matchedDistanceMeters": 334.5,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-cafe-de-flore",
+      "group": "global",
+      "kind": "poi",
+      "query": "Café de Flore",
+      "city": "Paris",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 723,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Café de Flore",
+          "addressParts": [
+            "Café de Flore, Rue Saint-Benoît, 75006 Paris, France",
+            "Café de Flore",
+            "Rue Saint-Benoît, 75006 Paris, France",
+            "Café de Flore",
+            "Rue Saint-Benoît",
+            "Paris",
+            "Paris 6e Arrondissement",
+            "Paris",
+            "Île-de-France",
+            "75006",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.8541444,
+            "lon": 2.3326307
+          },
+          "placeId": "512a2ad1483aa9024059e1078c9a546d4840f00103f90140a2000f00000000c0020192030e436166c3a920646520466c6f7265"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 18.7,
+        "matchedDistanceMeters": 18.7,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-cafe-de-flore",
+      "group": "global",
+      "kind": "poi",
+      "query": "Café de Flore",
+      "city": "Paris",
+      "method": "places",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 417,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Café de Flore",
+          "addressParts": [
+            "Café de Flore, Rue Saint-Benoît, 75006 Paris, France",
+            "Café de Flore",
+            "Rue Saint-Benoît, 75006 Paris, France",
+            "Café de Flore",
+            "Rue Saint-Benoît",
+            "Paris",
+            "Paris 6e Arrondissement",
+            "Paris",
+            "Île-de-France",
+            "75006",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.8541444,
+            "lon": 2.3326307
+          },
+          "placeId": "512a2ad1483aa9024059e1078c9a546d4840f00103f90140a2000f0000000092030e436166c3a920646520466c6f7265"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 18.7,
+        "matchedDistanceMeters": 18.7,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-sushi-dai",
+      "group": "global",
+      "kind": "poi",
+      "query": "寿司大 豊洲市場",
+      "city": "Tokyo",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 5143,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "寿司大",
+          "addressParts": [
+            "寿司大, 屋上プロムナード, 豊洲, 江東区, TK 135-0061, 日本",
+            "寿司大",
+            "屋上プロムナード, 豊洲, 江東区, TK 135-0061, 日本",
+            "寿司大",
+            "屋上プロムナード",
+            "豊洲六丁目",
+            "豊洲",
+            "江東区",
+            "東京",
+            "135-0061",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.6444832,
+            "lon": 139.7820936
+          },
+          "placeId": "51264d28e906796140592569ed6c7ed24140f00103f90137beb8a701000000c00201920309e5afbfe58fb8e5a4a7e203236f70656e7374726565746d61703a76656e75653a6e6f64652f37313038383639363837"
+        },
+        {
+          "name": "豊洲市場",
+          "addressParts": [
+            "豊洲市場, さくら通, 松戸市, CH 271-8588, 日本",
+            "豊洲市場",
+            "さくら通, 松戸市, CH 271-8588, 日本",
+            "豊洲市場",
+            "さくら通",
+            "常盤平五丁目",
+            "松戸市",
+            "千葉",
+            "271-8588",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.7969033,
+            "lon": 139.9647277
+          },
+          "placeId": "517321a00cdf7e61405988c965ed00e64140f00103f90105c9d6bd02000000c0020192030ce8b18ae6b4b2e5b882e5a0b4e203246f70656e7374726565746d61703a76656e75653a6e6f64652f3131373734393034353831"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": true,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 417.4,
+        "matchedDistanceMeters": 417.4,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0.5,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "global-sushi-dai",
+      "group": "global",
+      "kind": "poi",
+      "query": "寿司大 豊洲市場",
+      "city": "Tokyo",
+      "method": "places",
+      "status": "not-found",
+      "httpStatus": 200,
+      "latencyMs": 997,
+      "resultCount": 0,
+      "estimatedCredits": 1,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": false,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-white-house",
+      "group": "address",
+      "kind": "address",
+      "query": "1600 Pennsylvania Avenue NW, Washington, DC 20500",
+      "city": "Washington",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 232,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-downing-street",
+      "group": "address",
+      "kind": "address",
+      "query": "10 Downing Street, London SW1A 2AA",
+      "city": "London",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 236,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-baker-street",
+      "group": "address",
+      "kind": "address",
+      "query": "221B Baker Street, London NW1 6XE",
+      "city": "London",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 235,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-rue-de-la-paix",
+      "group": "address",
+      "kind": "address",
+      "query": "5 Rue de la Paix, 75002 Paris",
+      "city": "Paris",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 231,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-chiyoda",
+      "group": "address",
+      "kind": "address",
+      "query": "1-1 Chiyoda, Chiyoda City, Tokyo 100-8111",
+      "city": "Tokyo",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 269,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-queens-road-central",
+      "group": "address",
+      "kind": "address",
+      "query": "100 Queen’s Road Central, Central, Hong Kong",
+      "city": "Hong Kong",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 239,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-huaihai-road",
+      "group": "address",
+      "kind": "address",
+      "query": "303 Middle Huaihai Road, Huangpu, Shanghai",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 239,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-wangfujing-street",
+      "group": "address",
+      "kind": "address",
+      "query": "28 Wangfujing Street, Dongcheng, Beijing",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 238,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-paulista",
+      "group": "address",
+      "kind": "address",
+      "query": "Avenida Paulista, 1578, São Paulo, SP",
+      "city": "São Paulo",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 234,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-apple-park",
+      "group": "address",
+      "kind": "address",
+      "query": "1 Apple Park Way, Cupertino, CA 95014",
+      "city": "Cupertino",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": 400,
+      "errorKind": "http-error",
+      "latencyMs": 232,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    }
+  ]
+}

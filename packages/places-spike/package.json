@@ -1,0 +1,20 @@
+{
+  "name": "@trippy/places-spike",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "benchmark": "node --experimental-strip-types --env-file-if-exists=../../.env src/cli.ts",
+    "benchmark:links": "node --experimental-strip-types --experimental-transform-types src/links-cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trippy/google-maps-links": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5"
+  }
+}
