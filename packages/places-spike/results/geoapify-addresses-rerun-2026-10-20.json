@@ -1,0 +1,1022 @@
+{
+  "schemaVersion": 1,
+  "provider": "Geoapify",
+  "createdAt": "2026-10-20T03:22:47.119Z",
+  "dataset": {
+    "cases": 10,
+    "chinaPois": 0,
+    "globalPois": 0,
+    "addresses": 10,
+    "linkFixtures": 20,
+    "linkFixturesPending": 20,
+    "referencePrecisionUnverified": 10
+  },
+  "parameters": {
+    "resultLimit": 5,
+    "topK": 5,
+    "maxRequests": 120,
+    "delayMs": 1100,
+    "timeoutMs": 10000
+  },
+  "plannedRequests": 10,
+  "executedRequests": 10,
+  "requestLimitReached": false,
+  "summary": {
+    "total": {
+      "calls": 10,
+      "successful": 9,
+      "notFound": 0,
+      "errors": 1,
+      "validResponses": 9,
+      "absences": 0,
+      "top1Hits": 5,
+      "top1Denominator": 9,
+      "top1HitRate": 0.556,
+      "topKHits": 5,
+      "topKDenominator": 9,
+      "topKHitRate": 0.556,
+      "localAddressCompleteCount": 8,
+      "localAddressCompletenessRate": 0.889,
+      "matchedCoordinateCount": 8,
+      "coordinateWithinToleranceCount": 5,
+      "coordinateWithinToleranceRate": 0.625,
+      "missingCoordinates": 0,
+      "medianMatchedDistanceMeters": 35.4,
+      "p95MatchedDistanceMeters": 2758.4,
+      "duplicateCount": 0,
+      "estimatedCredits": 9,
+      "meanLatencyMs": 2811.2,
+      "medianLatencyMs": 1644,
+      "p95LatencyMs": 10005,
+      "maxLatencyMs": 10005
+    },
+    "byGroup": {
+      "china": {
+        "calls": 0,
+        "successful": 0,
+        "notFound": 0,
+        "errors": 0,
+        "validResponses": 0,
+        "absences": 0,
+        "top1Hits": 0,
+        "top1Denominator": 0,
+        "top1HitRate": null,
+        "topKHits": 0,
+        "topKDenominator": 0,
+        "topKHitRate": null,
+        "localAddressCompleteCount": 0,
+        "localAddressCompletenessRate": null,
+        "matchedCoordinateCount": 0,
+        "coordinateWithinToleranceCount": 0,
+        "coordinateWithinToleranceRate": null,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": null,
+        "p95MatchedDistanceMeters": null,
+        "duplicateCount": 0,
+        "estimatedCredits": 0,
+        "meanLatencyMs": null,
+        "medianLatencyMs": null,
+        "p95LatencyMs": null,
+        "maxLatencyMs": null
+      },
+      "global": {
+        "calls": 0,
+        "successful": 0,
+        "notFound": 0,
+        "errors": 0,
+        "validResponses": 0,
+        "absences": 0,
+        "top1Hits": 0,
+        "top1Denominator": 0,
+        "top1HitRate": null,
+        "topKHits": 0,
+        "topKDenominator": 0,
+        "topKHitRate": null,
+        "localAddressCompleteCount": 0,
+        "localAddressCompletenessRate": null,
+        "matchedCoordinateCount": 0,
+        "coordinateWithinToleranceCount": 0,
+        "coordinateWithinToleranceRate": null,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": null,
+        "p95MatchedDistanceMeters": null,
+        "duplicateCount": 0,
+        "estimatedCredits": 0,
+        "meanLatencyMs": null,
+        "medianLatencyMs": null,
+        "p95LatencyMs": null,
+        "maxLatencyMs": null
+      },
+      "address": {
+        "calls": 10,
+        "successful": 9,
+        "notFound": 0,
+        "errors": 1,
+        "validResponses": 9,
+        "absences": 0,
+        "top1Hits": 5,
+        "top1Denominator": 9,
+        "top1HitRate": 0.556,
+        "topKHits": 5,
+        "topKDenominator": 9,
+        "topKHitRate": 0.556,
+        "localAddressCompleteCount": 8,
+        "localAddressCompletenessRate": 0.889,
+        "matchedCoordinateCount": 8,
+        "coordinateWithinToleranceCount": 5,
+        "coordinateWithinToleranceRate": 0.625,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": 35.4,
+        "p95MatchedDistanceMeters": 2758.4,
+        "duplicateCount": 0,
+        "estimatedCredits": 9,
+        "meanLatencyMs": 2811.2,
+        "medianLatencyMs": 1644,
+        "p95LatencyMs": 10005,
+        "maxLatencyMs": 10005
+      }
+    },
+    "byMethod": {
+      "geocoding": {
+        "calls": 10,
+        "successful": 9,
+        "notFound": 0,
+        "errors": 1,
+        "validResponses": 9,
+        "absences": 0,
+        "top1Hits": 5,
+        "top1Denominator": 9,
+        "top1HitRate": 0.556,
+        "topKHits": 5,
+        "topKDenominator": 9,
+        "topKHitRate": 0.556,
+        "localAddressCompleteCount": 8,
+        "localAddressCompletenessRate": 0.889,
+        "matchedCoordinateCount": 8,
+        "coordinateWithinToleranceCount": 5,
+        "coordinateWithinToleranceRate": 0.625,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": 35.4,
+        "p95MatchedDistanceMeters": 2758.4,
+        "duplicateCount": 0,
+        "estimatedCredits": 9,
+        "meanLatencyMs": 2811.2,
+        "medianLatencyMs": 1644,
+        "p95LatencyMs": 10005,
+        "maxLatencyMs": 10005
+      },
+      "places": {
+        "calls": 0,
+        "successful": 0,
+        "notFound": 0,
+        "errors": 0,
+        "validResponses": 0,
+        "absences": 0,
+        "top1Hits": 0,
+        "top1Denominator": 0,
+        "top1HitRate": null,
+        "topKHits": 0,
+        "topKDenominator": 0,
+        "topKHitRate": null,
+        "localAddressCompleteCount": 0,
+        "localAddressCompletenessRate": null,
+        "matchedCoordinateCount": 0,
+        "coordinateWithinToleranceCount": 0,
+        "coordinateWithinToleranceRate": null,
+        "missingCoordinates": 0,
+        "medianMatchedDistanceMeters": null,
+        "p95MatchedDistanceMeters": null,
+        "duplicateCount": 0,
+        "estimatedCredits": 0,
+        "meanLatencyMs": null,
+        "medianLatencyMs": null,
+        "p95LatencyMs": null,
+        "maxLatencyMs": null
+      }
+    }
+  },
+  "results": [
+    {
+      "caseId": "address-white-house",
+      "group": "address",
+      "kind": "address",
+      "query": "1600 Pennsylvania Avenue NW, Washington, DC 20500",
+      "city": "Washington",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1341,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "White House",
+          "addressParts": [
+            "White House, 1600 Pennsylvania Avenue Northwest, Washington, DC 20500, United States of America",
+            "White House",
+            "1600 Pennsylvania Avenue Northwest, Washington, DC 20500, United States of America",
+            "White House",
+            "1600",
+            "Pennsylvania Avenue Northwest",
+            "Ward 2",
+            "Washington",
+            "District of Columbia",
+            "20500",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 38.8976387,
+            "lon": -77.0365528
+          },
+          "placeId": "51f1248ee1564253c059de0f2ed3e5724340f00101f9011e882d0100000000c0020192030b576869746520486f757365"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 8.2,
+        "matchedDistanceMeters": 8.2,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-downing-street",
+      "group": "address",
+      "kind": "address",
+      "query": "10 Downing Street, London SW1A 2AA",
+      "city": "London",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1195,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "10 Downing Street",
+          "addressParts": [
+            "10 Downing Street, London, SW1A 2AA, United Kingdom",
+            "10 Downing Street",
+            "London, SW1A 2AA, United Kingdom",
+            "10 Downing Street",
+            "10",
+            "Downing Street",
+            "Covent Garden",
+            "City of Westminster",
+            "England",
+            "SW1A 2AA",
+            "United Kingdom"
+          ],
+          "coordinates": {
+            "lat": 51.5034878,
+            "lon": -0.1276965
+          },
+          "placeId": "512426a8e15b58c0bf59ae77c94972c04940f00101f90122af1c0000000000c00201920311313020446f776e696e6720537472656574"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 11.8,
+        "matchedDistanceMeters": 11.8,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-baker-street",
+      "group": "address",
+      "kind": "address",
+      "query": "221B Baker Street, London NW1 6XE",
+      "city": "London",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1726,
+      "resultCount": 1,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "221B Baker Street",
+          "addressParts": [
+            "221B Baker Street, 221b Baker Street, London, NW1 6XE, United Kingdom",
+            "221B Baker Street",
+            "221b Baker Street, London, NW1 6XE, United Kingdom",
+            "221B Baker Street",
+            "221b",
+            "Baker Street",
+            "Marylebone",
+            "City of Westminster",
+            "England",
+            "NW1 6XE",
+            "United Kingdom"
+          ],
+          "coordinates": {
+            "lat": 51.5237629,
+            "lon": -0.1584743
+          },
+          "placeId": "51c2d4e0c7e248c4bf59d72da7a90ac34940f00103f9011f96ec4b01000000c00201920311323231422042616b657220537472656574"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 9.6,
+        "matchedDistanceMeters": 9.6,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-rue-de-la-paix",
+      "group": "address",
+      "kind": "address",
+      "query": "5 Rue de la Paix, 75002 Paris",
+      "city": "Paris",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2730,
+      "resultCount": 3,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "addressParts": [
+            "5 Rue de la Paix, 75002 Paris, France",
+            "5 Rue de la Paix",
+            "75002 Paris, France",
+            "5",
+            "Rue de la Paix",
+            "Paris",
+            "Paris 2e Arrondissement",
+            "Paris",
+            "Île-de-France",
+            "75002",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.8688109,
+            "lon": 2.3305891
+          },
+          "placeId": "510650e7e50ba502405944f41032356f4840f00103f9017f80132900000000c00203"
+        },
+        {
+          "name": "Park Hyatt Paris-Vendôme",
+          "addressParts": [
+            "Park Hyatt Paris-Vendôme, 5 Rue de la Paix, 75002 Paris, France",
+            "Park Hyatt Paris-Vendôme",
+            "5 Rue de la Paix, 75002 Paris, France",
+            "Park Hyatt Paris-Vendôme",
+            "5",
+            "Rue de la Paix",
+            "Paris",
+            "Paris 2e Arrondissement",
+            "Paris",
+            "Île-de-France",
+            "75002",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.8690233,
+            "lon": 2.330489
+          },
+          "placeId": "518080b56ad7a4024059237bce273c6f4840f00102f901cd1f430300000000c002019203195061726b2048796174742050617269732d56656e64c3b46d65"
+        },
+        {
+          "name": "Montblanc",
+          "addressParts": [
+            "Montblanc, 5 Rue de la Paix, 75002 Paris, France",
+            "Montblanc",
+            "5 Rue de la Paix, 75002 Paris, France",
+            "Montblanc",
+            "5",
+            "Rue de la Paix",
+            "Paris",
+            "Paris 2e Arrondissement",
+            "Paris",
+            "Île-de-France",
+            "75002",
+            "France"
+          ],
+          "coordinates": {
+            "lat": 48.8689426,
+            "lon": 2.3306549
+          },
+          "placeId": "51e2186e652ea5024059f48cd882396f4840f00103f901d46ba6d500000000c002019203094d6f6e74626c616e63"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 75.2,
+        "matchedDistanceMeters": 75.2,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-chiyoda",
+      "group": "address",
+      "kind": "address",
+      "query": "1-1 Chiyoda, Chiyoda City, Tokyo 100-8111",
+      "city": "Tokyo",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 2432,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "Residence Group 1/3",
+          "addressParts": [
+            "Residence Group 1/3, 東京, TK 101-0021, 日本",
+            "Residence Group 1/3",
+            "東京, TK 101-0021, 日本",
+            "Residence Group 1/3",
+            "千代田区",
+            "東京",
+            "東京",
+            "101-0021",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.704165,
+            "lon": 139.77249
+          },
+          "placeId": "5196cff23cb87861405972fe261422da4140f00103f901c413b52a01000000c002019203135265736964656e63652047726f757020312f33e203236f70656e7374726565746d61703a76656e75653a6e6f64652f35303131343737343434"
+        },
+        {
+          "addressParts": [
+            "1, 東京, TK 162-0823, 日本",
+            "1",
+            "東京, TK 162-0823, 日本",
+            "1",
+            "千代田区",
+            "東京",
+            "東京",
+            "162-0823",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.701254,
+            "lon": 139.744501
+          },
+          "placeId": "51dcdac2f3d2776140593718eab0c2d94140f00102f90110c09b0300000000c00201e203206f70656e7374726565746d61703a76656e75653a7761792f3630353338383936"
+        },
+        {
+          "name": "1",
+          "addressParts": [
+            "1, 牛込橋, 富士見, 千代田区, 富士見二丁目 102-0071, 日本",
+            "1",
+            "牛込橋, 富士見, 千代田区, 富士見二丁目 102-0071, 日本",
+            "1",
+            "牛込橋",
+            "富士見二丁目",
+            "富士見",
+            "千代田区",
+            "102-0071",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.7008106,
+            "lon": 139.7440137
+          },
+          "placeId": "51d5a8d1f5ce7761405956d86729b4d94140f00102f90110c09b0300000000c0020192030131"
+        },
+        {
+          "name": "Residence Group 1/3",
+          "addressParts": [
+            "Residence Group 1/3, 11, 外神田, 千代田区, 外神田五丁目 101-0021, 日本",
+            "Residence Group 1/3",
+            "11, 外神田, 千代田区, 外神田五丁目 101-0021, 日本",
+            "Residence Group 1/3",
+            "11",
+            "外神田五丁目",
+            "外神田",
+            "千代田区",
+            "101-0021",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.7041645,
+            "lon": 139.77249
+          },
+          "placeId": "5196cff23cb8786140598940f50f22da4140f00103f901c413b52a01000000c002019203135265736964656e63652047726f757020312f33"
+        },
+        {
+          "name": "2-1-1",
+          "addressParts": [
+            "2-1-1, あたご一息坂, 多摩市, TK 206-0014, 日本",
+            "2-1-1",
+            "あたご一息坂, 多摩市, TK 206-0014, 日本",
+            "2-1-1",
+            "あたご一息坂",
+            "多摩市",
+            "東京",
+            "206-0014",
+            "日本"
+          ],
+          "coordinates": {
+            "lat": 35.6345135,
+            "lon": 139.4413779
+          },
+          "placeId": "51abb58bc41f6e6140596caf05bd37d14140f00102f90192bcf31d00000000c00201920305322d312d31e203216f70656e7374726565746d61703a76656e75653a7761792f353032353132373836"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 2758.4,
+        "matchedDistanceMeters": 2758.4,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-queens-road-central",
+      "group": "address",
+      "kind": "address",
+      "query": "100 Queen’s Road Central, Central, Hong Kong",
+      "city": "Hong Kong",
+      "method": "geocoding",
+      "status": "error",
+      "httpStatus": null,
+      "errorKind": "timeout",
+      "latencyMs": 10005,
+      "resultCount": 0,
+      "estimatedCredits": null,
+      "candidates": [],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": null,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-huaihai-road",
+      "group": "address",
+      "kind": "address",
+      "query": "303 Middle Huaihai Road, Huangpu, Shanghai",
+      "city": "Shanghai",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 4052,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "淮海中路",
+          "addressParts": [
+            "淮海中路, 瑞金二路街道, 200003 上海市, 中国",
+            "淮海中路",
+            "瑞金二路街道, 200003 上海市, 中国",
+            "淮海中路",
+            "淮海中路",
+            "瑞金二路街道",
+            "上海市",
+            "上海市",
+            "200003",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2218997,
+            "lon": 121.4621545
+          },
+          "placeId": "51c0cc77f0935d5e4059027e326bce383f40f00102f901b9bbe30000000000c0020492030ce6b7aee6b5b7e4b8ade8b7af"
+        },
+        {
+          "name": "淮海中路",
+          "addressParts": [
+            "淮海中路, 湖南路街道, 200003 上海市, 中国",
+            "淮海中路",
+            "湖南路街道, 200003 上海市, 中国",
+            "淮海中路",
+            "淮海中路",
+            "湖南路街道",
+            "徐汇区",
+            "上海市",
+            "200003",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2181803,
+            "lon": 121.4533405
+          },
+          "placeId": "51f25cdf87035d5e4059a82105aada373f40f00102f901981bda4e00000000c0020492030ce6b7aee6b5b7e4b8ade8b7af"
+        },
+        {
+          "name": "淮海中路",
+          "addressParts": [
+            "淮海中路, 淮海中路街道, 200021 上海市, 中国",
+            "淮海中路",
+            "淮海中路街道, 200021 上海市, 中国",
+            "淮海中路",
+            "淮海中路",
+            "淮海中路街道",
+            "上海市",
+            "上海市",
+            "200021",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2259735,
+            "lon": 121.4719238
+          },
+          "placeId": "510fcde1ff335e5e40593d433866d9393f40f00102f9015c2da20000000000c0020492030ce6b7aee6b5b7e4b8ade8b7af"
+        },
+        {
+          "name": "黄浦区",
+          "addressParts": [
+            "豫园街道, 上海市, SH, 中华人民共和国",
+            "豫园街道",
+            "上海市, SH, 中华人民共和国",
+            "黄浦区",
+            "豫园街道",
+            "上海市",
+            "上海",
+            "200021",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 31.224,
+            "lon": 121.47923
+          },
+          "placeId": "51c6504eb4ab5e5e4059d34d621058393f40c00206920309e9bb84e6b5a6e58cbae2032077686f736f6e66697273743a6c6f63616c61646d696e3a383930353134333533"
+        },
+        {
+          "addressParts": [
+            "303 淮海中路927弄, 瑞金二路街道, 200003 上海市, 中国",
+            "303 淮海中路927弄",
+            "瑞金二路街道, 200003 上海市, 中国",
+            "303",
+            "淮海中路927弄",
+            "瑞金二路街道",
+            "上海市",
+            "上海市",
+            "200003",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 31.2177899,
+            "lon": 121.4559273
+          },
+          "placeId": "51a1b6b2e92d5d5e40592ce63114c1373f40c00203"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": null,
+        "top1DistanceMeters": 923.1,
+        "matchedDistanceMeters": null,
+        "localAddressComplete": false,
+        "localAddressCompleteness": 0,
+        "coordinateQuality": "unmatched",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-wangfujing-street",
+      "group": "address",
+      "kind": "address",
+      "query": "28 Wangfujing Street, Dongcheng, Beijing",
+      "city": "Beijing",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1641,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "name": "王府井大街",
+          "addressParts": [
+            "王府井大街, 东华门街道, 100010 东城区, 中国",
+            "王府井大街",
+            "东华门街道, 100010 东城区, 中国",
+            "王府井大街",
+            "王府井大街",
+            "东华门街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9156422,
+            "lon": 116.4048141
+          },
+          "placeId": "516b1d6679e8195d405933eb7bc333f54340f00102f901db8db65000000000c0020192030fe78e8be5ba9ce4ba95e5a4a7e8a197"
+        },
+        {
+          "addressParts": [
+            "28 王府井大街, 东华门街道, 100010 东城区, 中国",
+            "28 王府井大街",
+            "东华门街道, 100010 东城区, 中国",
+            "28",
+            "王府井大街",
+            "东华门街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.9194107,
+            "lon": 116.4046784
+          },
+          "placeId": "5172593b40e6195d4059d60bf43faff54340c00203"
+        },
+        {
+          "name": "东城区",
+          "addressParts": [
+            "东城区, BJ, 中华人民共和国",
+            "东城区",
+            "BJ, 中华人民共和国",
+            "东城区",
+            "东城区",
+            "北京",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.93264,
+            "lon": 116.41834
+          },
+          "placeId": "51f4a62215c61a5d405981785dbf60f74340c00206920309e4b89ce59f8ee58cbae2032077686f736f6e66697273743a6c6f63616c61646d696e3a383930353134313933"
+        },
+        {
+          "name": "东城",
+          "addressParts": [
+            "景山街道, 东城区, BJ, 中华人民共和国",
+            "景山街道",
+            "东城区, BJ, 中华人民共和国",
+            "东城",
+            "景山街道",
+            "东城区",
+            "北京",
+            "100010",
+            "中华人民共和国"
+          ],
+          "coordinates": {
+            "lat": 39.929017,
+            "lon": 116.400585
+          },
+          "placeId": "512a91442fa3195d4059ca367007eaf64340c00205920306e4b89ce59f8ee2032277686f736f6e66697273743a6e65696768626f7572686f6f643a3835393033353937"
+        },
+        {
+          "name": "王府井大街",
+          "addressParts": [
+            "王府井大街, 景山街道, 100010 东城区, 中国",
+            "王府井大街",
+            "景山街道, 100010 东城区, 中国",
+            "王府井大街",
+            "王府井大街",
+            "景山街道",
+            "东城区",
+            "100010",
+            "中国"
+          ],
+          "coordinates": {
+            "lat": 39.922955,
+            "lon": 116.4045869
+          },
+          "placeId": "51f6f873c0e4195d40590057b26323f64340f00102f901da8db65000000000c0020492030fe78e8be5ba9ce4ba95e5a4a7e8a197"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 500.3,
+        "matchedDistanceMeters": 500.3,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-paulista",
+      "group": "address",
+      "kind": "address",
+      "query": "Avenida Paulista, 1578, São Paulo, SP",
+      "city": "São Paulo",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1346,
+      "resultCount": 2,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "addressParts": [
+            "Avenida Paulista 1578, Bela Vista, São Paulo - SP, 01310-200, Brasil",
+            "Avenida Paulista 1578",
+            "Bela Vista, São Paulo - SP, 01310-200, Brasil",
+            "1578",
+            "Avenida Paulista",
+            "Bela Vista",
+            "São Paulo",
+            "São Paulo",
+            "01310-200",
+            "Brasil"
+          ],
+          "coordinates": {
+            "lat": -23.5615777,
+            "lon": -46.6557115
+          },
+          "placeId": "51390ebc5aee5347c059b4a95f8ec38f37c0f00103f90194f5261801000000c00203"
+        },
+        {
+          "name": "Museu de Arte de São Paulo",
+          "addressParts": [
+            "Museu de Arte de São Paulo, Avenida Paulista 1578, Bela Vista, São Paulo - SP, 01310-200, Brasil",
+            "Museu de Arte de São Paulo",
+            "Avenida Paulista 1578, Bela Vista, São Paulo - SP, 01310-200, Brasil",
+            "Museu de Arte de São Paulo",
+            "1578",
+            "Avenida Paulista",
+            "Bela Vista",
+            "São Paulo",
+            "São Paulo",
+            "01310-200",
+            "Brasil"
+          ],
+          "coordinates": {
+            "lat": -23.5614961,
+            "lon": -46.6559677
+          },
+          "placeId": "51bd5de5bff65347c059e0545a35be8f37c0f00102f901d3c8a95100000000c0020192031b4d7573657520646520417274652064652053c3a36f205061756c6f"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": true,
+        "topKHit": true,
+        "matchedRank": 1,
+        "top1DistanceMeters": 35.4,
+        "matchedDistanceMeters": 35.4,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "within-tolerance",
+        "duplicateCount": 0
+      }
+    },
+    {
+      "caseId": "address-apple-park",
+      "group": "address",
+      "kind": "address",
+      "query": "1 Apple Park Way, Cupertino, CA 95014",
+      "city": "Cupertino",
+      "method": "geocoding",
+      "status": "success",
+      "httpStatus": 200,
+      "latencyMs": 1644,
+      "resultCount": 5,
+      "estimatedCredits": 1,
+      "candidates": [
+        {
+          "addressParts": [
+            "1 Apple Park Way, Cupertino, CA 94087, United States of America",
+            "1 Apple Park Way",
+            "Cupertino, CA 94087, United States of America",
+            "1",
+            "Apple Park Way",
+            "Professorville Historic District",
+            "Cupertino",
+            "California",
+            "94087",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 37.3299485,
+            "lon": -122.010309
+          },
+          "placeId": "51b07614e7a8805ec059a06ea0c03baa4240f00103f901f6d5c12d01000000c00203"
+        },
+        {
+          "addressParts": [
+            "1 Apple Park Way, Cupertino, CA 95014, United States of America",
+            "1 Apple Park Way",
+            "Cupertino, CA 95014, United States of America",
+            "1",
+            "Apple Park Way",
+            "Professorville Historic District",
+            "Cupertino",
+            "California",
+            "95014",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 37.3334581,
+            "lon": -122.0100656
+          },
+          "placeId": "5123b42feaa4805ec0590c0b49c1aeaa4240c00203"
+        },
+        {
+          "name": "Apple Park",
+          "addressParts": [
+            "Apple Park, 1 Apple Park Way, Cupertino, CA 94087, United States of America",
+            "Apple Park",
+            "1 Apple Park Way, Cupertino, CA 94087, United States of America",
+            "Apple Park",
+            "1",
+            "Apple Park Way",
+            "Professorville Historic District",
+            "Cupertino",
+            "California",
+            "94087",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 37.334835,
+            "lon": -122.0113917
+          },
+          "placeId": "5189bc40a4ba805ec05930478fdfdbaa4240f00101f9012e98500000000000c0020192030a4170706c65205061726b"
+        },
+        {
+          "name": "Section 1",
+          "addressParts": [
+            "Section 1, 1 Apple Park Way, Cupertino, CA 94087, United States of America",
+            "Section 1",
+            "1 Apple Park Way, Cupertino, CA 94087, United States of America",
+            "Section 1",
+            "1",
+            "Apple Park Way",
+            "Cupertino",
+            "California",
+            "94087",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 37.3361986,
+            "lon": -122.0074087
+          },
+          "placeId": "512d0d576279805ec05902fb438e08ab4240f00103f901a26188d002000000c0020192030953656374696f6e2031"
+        },
+        {
+          "name": "Section 4",
+          "addressParts": [
+            "Section 4, 1 Apple Park Way, Cupertino, CA 94087, United States of America",
+            "Section 4",
+            "1 Apple Park Way, Cupertino, CA 94087, United States of America",
+            "Section 4",
+            "1",
+            "Apple Park Way",
+            "Cupertino",
+            "California",
+            "94087",
+            "United States"
+          ],
+          "coordinates": {
+            "lat": 37.3331554,
+            "lon": -122.0081417
+          },
+          "placeId": "51f7cec36485805ec0592fbe0dd6a4aa4240f00103f901a56188d002000000c0020192030953656374696f6e2034"
+        }
+      ],
+      "evaluation": {
+        "top1NameMatch": null,
+        "top1Hit": false,
+        "topKHit": false,
+        "matchedRank": 1,
+        "top1DistanceMeters": 562.6,
+        "matchedDistanceMeters": 562.6,
+        "localAddressComplete": true,
+        "localAddressCompleteness": 1,
+        "coordinateQuality": "outside-tolerance",
+        "duplicateCount": 0
+      }
+    }
+  ]
+}

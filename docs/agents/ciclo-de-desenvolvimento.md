@@ -14,7 +14,7 @@ O **orquestrador** (a sessão do Claude Code com o Guilherme) escolhe as issues 
 
 ## Fluxo de uma issue
 
-1. **Worktree.** Uma worktree do Orca por issue, a partir do `develop`, no branch `feat/<nº>-<slug>` (ou `spike/`, `chore/`). Copiar o `.env` da checkout principal (`/Users/guilhermefaglioni/orca/projects/Trippy/.env`); ele nunca entra no Git.
+1. **Worktree.** Uma worktree do Orca por issue, a partir do `develop`, no branch `feat/<nº>-<slug>` (ou `spike/`, `chore/`). Copiar o `.env` da checkout principal (`/Users/guilhermefaglioni/orca/projects/Trippy/.env`); ele nunca entra no Git. Cada worktree usa **um banco próprio** no Postgres local (`docker exec trippy-postgres-1 createdb -U trippy trippy_w<nº>`, com o `DATABASE_URL` do `.env` da worktree apontando para ele); o banco `trippy` fica para a checkout principal. Migrations novas pegam o próximo número livre no `develop` e são renumeradas no rebase se outra entrar antes.
 2. **Plano.** O planejador lê a issue (`gh issue view <nº> --comments`), as specs citadas e os ADRs, e publica o plano como comentário na issue:
    - subtarefas, cada uma com os arquivos que toca e os critérios de aceite que cobre;
    - quais rodam em paralelo (só subtarefas que **não tocam os mesmos arquivos**) e quais dependem de outras.
