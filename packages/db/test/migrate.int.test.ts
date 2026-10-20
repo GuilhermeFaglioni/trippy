@@ -186,10 +186,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
   const failedMigrations = await mkdtemp(join(tmpdir(), 'trippy-db-migrations-'))
   try {
     await writeFile(join(failedMigrations, '0001_usuarios_viagens.sql'), migration)
-    await writeFile(
-      join(failedMigrations, '0002_recaps_render_jobs.sql'),
-      recapMigration,
-    )
+    await writeFile(join(failedMigrations, '0002_recaps_render_jobs.sql'), recapMigration)
     await writeFile(
       join(failedMigrations, '0003_teste_transacao.sql'),
       'CREATE TABLE migration_rollback_probe (id integer);\nINVALID SQL;\n',

@@ -51,15 +51,19 @@ export async function reconcileWorkers(
         continue
       }
 
-      if (leaseExpired && (state.status === 'running' || state.status === 'created' || state.status === 'paused')) {
+      if (
+        leaseExpired &&
+        (state.status === 'running' || state.status === 'created' || state.status === 'paused')
+      ) {
         await runtime.stop(job.executionId)
       }
 
-      const reason = state.status === 'missing'
-        ? 'Container de render não existe mais'
-        : state.status === 'exited'
-          ? `Container de render encerrou com código ${state.exitCode ?? 'desconhecido'}`
-          : 'Lease de render expirou'
+      const reason =
+        state.status === 'missing'
+          ? 'Container de render não existe mais'
+          : state.status === 'exited'
+            ? `Container de render encerrou com código ${state.exitCode ?? 'desconhecido'}`
+            : 'Lease de render expirou'
       const result = await reconcileInterruptedJob(pool, {
         jobId: job.id,
         fencingToken: job.fencingToken,

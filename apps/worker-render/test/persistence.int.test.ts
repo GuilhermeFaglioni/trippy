@@ -203,7 +203,11 @@ describe('createRecap', () => {
     expect(await publishOutboxBatch(database(), sqs, queueUrl!, 10)).toBe(0)
 
     const outboxMessages = await sqs.send(
-      new ReceiveMessageCommand({ QueueUrl: queueUrl, MaxNumberOfMessages: 10, WaitTimeSeconds: 1 }),
+      new ReceiveMessageCommand({
+        QueueUrl: queueUrl,
+        MaxNumberOfMessages: 10,
+        WaitTimeSeconds: 1,
+      }),
     )
     expect(outboxMessages.Messages).toHaveLength(4)
     const jobs = await database().query<{ id: string; generation: number }>(

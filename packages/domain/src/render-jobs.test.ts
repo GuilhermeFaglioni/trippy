@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { claimRenderJob, completeRenderJob, reconcileRenderJob, type RenderJob } from './render-jobs.ts'
+import {
+  claimRenderJob,
+  completeRenderJob,
+  reconcileRenderJob,
+  type RenderJob,
+} from './render-jobs.ts'
 
 const queuedJob = (overrides: Partial<RenderJob> = {}): RenderJob => ({
   id: 'job-1',
@@ -32,9 +37,17 @@ describe('claimRenderJob', () => {
   })
 
   it('does not claim a duplicate message while the job already has an active lease', () => {
-    const active = queuedJob({ status: 'running', attempts: 1, fencingToken: 1, leaseExpiresAt: 31_000 })
+    const active = queuedJob({
+      status: 'running',
+      attempts: 1,
+      fencingToken: 1,
+      leaseExpiresAt: 31_000,
+    })
 
-    expect(claimRenderJob(active, 1, 2_000, 30_000)).toEqual({ claimed: false, reason: 'not-queued' })
+    expect(claimRenderJob(active, 1, 2_000, 30_000)).toEqual({
+      claimed: false,
+      reason: 'not-queued',
+    })
   })
 
   it('ignores an outbox message from an older dispatch generation', () => {

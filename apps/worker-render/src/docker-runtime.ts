@@ -109,9 +109,7 @@ export class DockerRuntime {
     const knownStatuses = new Set(['running', 'exited', 'created', 'paused'])
     return {
       id: id ?? null,
-      status: knownStatuses.has(status ?? '')
-        ? (status as ContainerState['status'])
-        : 'other',
+      status: knownStatuses.has(status ?? '') ? (status as ContainerState['status']) : 'other',
       exitCode: exitCode ? Number(exitCode) : null,
     }
   }
@@ -122,12 +120,7 @@ export class DockerRuntime {
     if (state.status === 'foreign') {
       throw new Error('Recusado parar container sem a etiqueta deste ensaio')
     }
-    await runCommand(this.executable, [
-      'stop',
-      '--time',
-      '10',
-      state.id ?? containerId,
-    ])
+    await runCommand(this.executable, ['stop', '--time', '10', state.id ?? containerId])
   }
 
   async remove(containerId: string): Promise<void> {

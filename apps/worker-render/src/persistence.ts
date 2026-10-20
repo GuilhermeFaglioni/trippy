@@ -303,10 +303,7 @@ export async function getJobRenderInput(
   return result.rows[0] ?? null
 }
 
-async function updateRecapStatus(
-  client: PoolClient,
-  recapId: string,
-): Promise<void> {
+async function updateRecapStatus(client: PoolClient, recapId: string): Promise<void> {
   const summary = await client.query<{
     hasFailed: boolean | null
     allSucceeded: boolean | null
@@ -480,7 +477,12 @@ export async function reconcileExpiredJobs(
 
       const clock = await client.query<{ now: Date }>('SELECT clock_timestamp() AS now')
       const job = toRenderJob(row)
-      const transition = reconcileRenderJobState(job, clock.rows[0]!.now.getTime(), false, row.maxAttempts)
+      const transition = reconcileRenderJobState(
+        job,
+        clock.rows[0]!.now.getTime(),
+        false,
+        row.maxAttempts,
+      )
       if (!transition.reconciled) {
         await client.query('COMMIT')
         continue

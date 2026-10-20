@@ -9,12 +9,13 @@ export type StorageConfig = Readonly<{
   leaseDurationMs: number
 }>
 
-export type DispatcherConfig = StorageConfig & Readonly<{
-  sqsEndpoint: string
-  queueUrl: string
-  runId: string
-  renderImage: string
-}>
+export type DispatcherConfig = StorageConfig &
+  Readonly<{
+    sqsEndpoint: string
+    queueUrl: string
+    runId: string
+    renderImage: string
+  }>
 
 export function loadStorageConfig(env: NodeJS.ProcessEnv = process.env): StorageConfig {
   const leaseDurationMs = Number(env.RENDER_LEASE_DURATION_MS ?? '120000')

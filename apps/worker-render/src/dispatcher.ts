@@ -66,7 +66,8 @@ export async function dispatchOne(
         executionName: claim.executionId,
       })
     } catch (error) {
-      const reason = error instanceof Error ? error.message : 'Falha desconhecida ao iniciar o container'
+      const reason =
+        error instanceof Error ? error.message : 'Falha desconhecida ao iniciar o container'
       try {
         await runtime.stop(claim.executionId)
         await runtime.remove(claim.executionId)
