@@ -1,7 +1,7 @@
 # Spike 18 — benchmark Geoapify
 
 **Execução:** 19–20/out/2026
-**Escopo:** amostra rotulada e benchmark real de Geocoding e Places. Os 20 links ficam pendentes da integração sequencial com `@trippy/google-maps-links`.
+**Escopo:** amostra rotulada e benchmark real de Geocoding e Places, mais avaliação do parser de links Google Maps. O ADR 0001 não foi alterado.
 
 ## Resultado
 
@@ -16,6 +16,8 @@ O relatório auditável por caso está em [`geoapify-final-2026-10-20.json`](../
 
 `Top-5` examina os cinco primeiros candidatos e exige correspondência de identidade e coordenada dentro da tolerância. Um caso apareceu apenas no top-5: Geocoding de Da Dong Jinbao, no rank 3, a 896,1 m da referência; o resultado de rank 1 ficava a 1.916,4 m. Endereço completo significa que todos os tokens esperados aparecem no endereço do candidato correspondente; não significa igualdade de endereço postal completo. Distância é haversine entre coordenada retornada e referência rotulada, apenas nos candidatos correspondentes. A proporção dentro da tolerância usa candidatos correspondentes como denominador.
 
+As métricas top-1, top-5 e endereço da tabela usam **chamadas** como denominador, não lugares únicos. Um POI consultado por Geocoding e Places pode contar duas vezes. A união por caso informada abaixo mede disponibilidade de pelo menos um candidato top-1 entre os métodos; não representa taxa de acerto de uma estratégia de busca combinada.
+
 ### Resultado por método
 
 | Método | Chamadas | Acerto top-1 | Acerto top-5 | Ausências válidas | Endereço completo | Coordenadas avaliáveis dentro da tolerância | Distância mediana / p95 | Latência mediana / p95 | Créditos estimados |
@@ -23,19 +25,21 @@ O relatório auditável por caso está em [`geoapify-final-2026-10-20.json`](../
 | Geocoding | 60 | 40/60 (66,7%) | 41/60 (68,3%) | 6 | 17/60 (28,3%) | 41/50 (82%) | 324,4 / 2.758,4 m | 1.791 / 5.284 ms | 60 |
 | Places | 50 | 14/50 (28%) | 14/50 (28%) | 35 | 3/50 (6%) | 14/15 (93,3%) | 334,5 / 896,1 m | 387 / 668 ms | 50 |
 
-Nos 50 POIs, Geocoding acertou top-1 em 20/30 casos da China (66,7%) e 15/20 globais (75%). Places acertou 8/30 casos da China (26,7%) e 6/20 globais (30%). Em pelo menos um dos dois resultados por caso, houve acerto top-1 em 21/30 casos chineses e 15/20 globais; essa união mede disponibilidade de um candidato, não uma estratégia final de mesclagem ou ordenação.
+Nos 50 POIs, Geocoding acertou top-1 em 20/30 casos da China (66,7%) e 15/20 globais (75%). Places acertou 8/30 casos da China (26,7%) e 6/20 globais (30%). Separadamente, houve acerto top-1 em pelo menos um dos dois resultados por caso em 21/30 casos chineses e 15/20 globais. Essa união por lugar mede disponibilidade de candidato, não uma estratégia final de mesclagem, ordenação ou taxa de precisão por lugar.
 
 ## Amostra e regra de avaliação
 
 - 30 POIs na China: 15 em Pequim e 15 em Xangai, com atrações, hotéis, restaurantes e filiais; inclui nomes locais e aliases.
 - 20 POIs globais, incluindo restaurantes menores.
 - 10 endereços sem POI, em diferentes países e idiomas.
-- 20 fixtures sintéticas de formatos variados de link do Google Maps. Fixtures não representam links reais resolvidos e não foram chamadas neste estágio. `targetCaseId` registra o rótulo conhecido nos links com nome ou coordenada; fica `null` nos links opacos ou de busca por lista sem destino único.
-- Cada caso define nomes esperados, tokens do endereço, coordenada de referência, tolerância, fontes e `referencePrecision: unverified`. Esses rótulos foram codificados antes das chamadas Geoapify. A precisão da referência não foi confirmada; tolerância geográfica não deve ser lida como precisão conhecida.
+- 20 fixtures sintéticas de formatos variados de link do Google Maps; foram avaliadas pelo parser, sem requisição de rede. Elas não representam redirects reais. Quatro links públicos complementares têm URLs e referências de origem no artefato de links.
+- Cada caso Geoapify define nomes esperados, tokens do endereço, coordenada de referência, tolerância, fontes e `referencePrecision: unverified`. Os 60/60 rótulos de referência seguem não verificados; foram codificados antes das chamadas Geoapify. Tolerância geográfica não deve ser lida como precisão conhecida.
 - Tolerância padrão para POIs chineses: 1.000 m; POIs globais: 250 m. Endereços: 100 m, exceto Queen’s Road Central (150 m) e os dois endereços chineses (500 m). São limites operacionais desta avaliação, não garantias de acurácia.
 - As fontes por item ficam no JSON. Há links de artigos da Wikipédia quando disponíveis e buscas do OpenStreetMap para todos os casos. As buscas OSM não são uma fonte independente para avaliar Places: a documentação declara OpenStreetMap como fonte dessa API. O relatório não preserva o campo `datasource` de cada resposta de Geocoding, então a origem específica desses candidatos não foi verificada. Parte das coordenadas não tem uma referência documental direta. Isso cria risco de circularidade e impede tratar os números como ground truth.
 
 Acerto top-1 exige candidato correspondente em primeiro lugar e distância dentro da tolerância. Para POIs, correspondência usa nome/alias normalizado; para endereços, usa todos os tokens esperados. Acerto top-5 aplica a mesma regra aos cinco primeiros. Resposta HTTP válida sem candidatos conta como ausência; erros HTTP e timeout ficam separados. Duplicata é repetição de `place_id` ou de nome e posição normalizados entre os cinco primeiros.
+
+O endereço local completo é um **proxy por tokens**: todos os tokens esperados aparecem no texto de endereço retornado. Não verifica igualdade postal, ordem, formato ou completude semântica do endereço.
 
 O dado chinês usa as coordenadas de referência fornecidas pela amostra, sem transformação de datum. A diferença entre WGS-84 e GCJ-02 pode contribuir para as distâncias e requer avaliação específica antes de usar esse limiar como garantia de localização na China.
 
@@ -53,7 +57,27 @@ Foram feitas 122 chamadas: 110 na inicial, 1 teste de fumaça após a correção
 
 Geoapify documenta 1 crédito por solicitação de Geocoding e 1 crédito para Places com até 20 resultados. Como o limite usado foi 5, a amostra avaliada estima 110 créditos; somado o teste de fumaça HTTP 200, há 111 créditos estimados em respostas válidas. As 10 respostas HTTP 400 e a primeira tentativa expirada não entram na estimativa. Não foi consultado o painel de faturamento; cobrança dessas tentativas é desconhecida e pode elevar o uso real.
 
+Esses valores são estimativas pela regra publicada, não consumo confirmado nem fatura. O consumo real não foi consultado no painel de billing.
+
 O relatório não inclui chave nem URL de chamada da API. O CLI lê `GEOAPIFY_API_KEY` do ambiente ou do `.env` local, que fica ignorado pelo Git.
+
+### Links Google Maps
+
+O relatório reproduzível do parser está em [`google-maps-links-2026-10-20.json`](../../packages/places-spike/results/google-maps-links-2026-10-20.json). Foram avaliados 24 links rotulados: 20 fixtures sintéticas e quatro URLs públicas com referências de origem. Saída: 24/24 correspondências com o resultado esperado — 5 extrações de coordenadas, 11 consultas por texto e 8 fallbacks. O JSON detalha contagens por formato, origem, resultado esperado e real.
+
+O lote teve um redirect público curto expandido por HTTP usando `expandGoogleMapsUrl`; 21 links não precisaram de expansão e as duas fixtures curtas sintéticas nunca fizeram rede. O redirect simulado usado no teste de integração está marcado como `simulated` e não entra no artefato. O artefato registra `expansionEvidence: http`, o URL de entrada e o URL final do único redirect real. Nenhuma página foi aberta ou lida; nenhuma API Google ou chamada Geoapify foi feita nesta avaliação.
+
+O campo `linkFixturesPending: 20` no JSON do benchmark Geoapify descreve aquele lote de chamadas: links não foram enviados ao fornecedor. O entregável de links foi concluído separadamente e está no artefato acima.
+
+O teste compara apenas campos que o parser extraiu do texto das URLs com rótulos pré-definidos, ou confirma o fallback esperado para viewport, ID opaco e rota/lista. Isso não confirma que o lugar existe, que o link aponta para a filial correta, nem que um provedor de geocoding retornaria esse local. Para a URL curta pública, a referência declarada identifica Eiffel Tower; o redirect foi verificado pelo resultado de coordenadas e nome extraído, sem ler conteúdo da página.
+
+Com Node >=22, rode sem rede:
+
+```sh
+pnpm --filter @trippy/places-spike benchmark:links -- --output results/google-maps-links-latest.json
+```
+
+Para repetir a expansão HTTP real dos links curtos públicos, acrescente `--resolve-public-redirects`. Essa opção afeta somente URLs marcadas públicas e usa allowlist, validação DNS/IP, timeout e limite de saltos do parser. A expansão fica desligada por padrão; fixture sintética nunca é expandida. O comando não lê `.env` nem exige chave.
 
 ## Conclusão para ADR 0001
 
@@ -61,9 +85,9 @@ O relatório não inclui chave nem URL de chamada da API. O CLI lê `GEOAPIFY_AP
 
 As coordenadas de referência não foram verificadas, a amostra pequena tem viés de seleção, as fontes OSM podem se sobrepor ao fornecedor e os resultados foram coletados em execuções separadas. Portanto, esta é evidência exploratória, não validação de produção ou de licença/armazenamento.
 
-## Pendente da etapa 3
+## Etapa 3 — integração de links
 
-Integrar o parser `@trippy/google-maps-links` e executar os 20 casos com ele; medir resolução correta e fallback. A subtarefa atual deixou a etapa sem alteração de arquivos do parser, lockfile ou configuração raiz. Também continuam pendentes a validação de termos/licença de armazenamento, comparação com Google e testes de atribuição indicados no ADR.
+Integração concluída: `@trippy/places-spike` depende de `@trippy/google-maps-links`, expõe o CLI `benchmark:links` e grava o artefato de 24 links acima. O run usou Node 22.22.3 e não repetiu as chamadas Geoapify. Também continuam pendentes a validação de termos/licença de armazenamento, comparação com Google e testes de atribuição indicados no ADR.
 
 ## Referências oficiais
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseGoogleMapsUrl } from './parse.js'
+import { parseGoogleMapsUrl } from './parse.ts'
 
 describe('parseGoogleMapsUrl', () => {
   it('usa coordenadas do lugar em vez de coordenadas de câmera', () => {

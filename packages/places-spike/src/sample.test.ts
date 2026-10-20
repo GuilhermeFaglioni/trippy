@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { linkFixtures, sampleCases } from './sample.ts'
+import { evaluateGoogleMapsLinks } from './links.ts'
+import { allLinkFixtures, linkFixtures, publicLinkFixtures, sampleCases } from './sample.ts'
 
 describe('amostra do spike 18', () => {
   it('tem os tamanhos e grupos definidos pela issue', () => {
@@ -32,38 +33,63 @@ describe('amostra do spike 18', () => {
     }
   })
 
-  it('mantém 20 links como fixtures rotuladas, sem pedir expansão ou chamadas de rede', () => {
+  it('mantém 20 fixtures sintéticas variadas e separa referências públicas verificáveis', async () => {
     expect(linkFixtures).toHaveLength(20)
     expect(new Set(linkFixtures.map((fixture) => fixture.format)).size).toBe(20)
+    expect(publicLinkFixtures).toHaveLength(4)
+    expect(allLinkFixtures).toHaveLength(24)
     for (const fixture of linkFixtures) {
       expect(fixture.url.startsWith('https://')).toBe(true)
       expect(fixture.synthetic).toBe(true)
+      expect(fixture.source).toBe('fixture')
+      expect(fixture.expected.kind).toMatch(/^(coordinates|query|fallback)$/)
       if (fixture.targetCaseId !== null) {
         expect(sampleCases.some((item) => item.id === fixture.targetCaseId)).toBe(true)
       }
+    }
+    for (const fixture of publicLinkFixtures) {
+      expect(fixture.synthetic).toBe(false)
+      expect(fixture.source).toBe('public')
+      expect(fixture.sourceReferenceUrl).toMatch(/^https:\/\//)
     }
 
     expect(linkFixtures.map((fixture) => fixture.targetCaseId)).toEqual([
       'cn-beijing-forbidden-city',
       'cn-beijing-tiananmen-square',
       'cn-beijing-temple-of-heaven',
-      'cn-beijing-summer-palace',
+      null,
       'cn-beijing-summer-palace',
       null,
       null,
       'cn-beijing-national-museum',
       'cn-shanghai-bund',
-      'cn-beijing-yonghe-temple',
+      null,
       'cn-beijing-national-stadium',
       null,
       'cn-shanghai-bund',
       'cn-shanghai-oriental-pearl',
       'cn-shanghai-jia-jia-tang-bao',
       'global-eiffel-tower',
-      'global-dishoom-shoreditch',
-      'global-russ-and-daughters-cafe',
+      null,
+      null,
       'global-di-fara-pizza',
       null,
     ])
+
+    const report = await evaluateGoogleMapsLinks(linkFixtures, {
+      resolvePublicRedirects: true,
+      now: () => new Date('2026-10-20T00:00:00.000Z'),
+    })
+    expect(report.results.filter((result) => result.correct === false)).toEqual([])
+    expect(report.summary).toMatchObject({
+      total: 20,
+      executed: 20,
+      correct: 20,
+      incorrect: 0,
+      pending: 0,
+    })
+    expect(report.dataset.byExpectedOutcome).toEqual({ coordinates: 2, query: 10, fallback: 8 })
+    expect(report.parameters.expansionEvidence).toBe('none')
+    expect(report.summary.expansion['synthetic-not-expanded']).toBe(2)
   })
 })

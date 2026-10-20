@@ -1,4 +1,4 @@
-import { googleMapsAllowedHosts } from './hosts.js'
+import { googleMapsAllowedHosts } from './hosts.ts'
 
 /** Coordenada WGS-84 extraída do texto de um link do Google Maps. */
 export interface GoogleMapsCoordinates {

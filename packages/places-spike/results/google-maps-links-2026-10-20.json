@@ -1,0 +1,814 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "Google Maps links",
+  "createdAt": "2026-10-20T03:47:48.895Z",
+  "scope": "Parser de texto de URL e fallback; sem scraping, API Google, consultas Geoapify ou validação de existência do lugar.",
+  "dataset": {
+    "total": 24,
+    "synthetic": 20,
+    "public": 4,
+    "byFormat": {
+      "query-api": 1,
+      "place-path-camera": 1,
+      "search-q": 1,
+      "camera-coordinate": 1,
+      "data-coordinates": 1,
+      "short-app-link": 1,
+      "short-goo-link": 1,
+      "maps-google-q-name": 1,
+      "maps-google-q-coordinates": 1,
+      "directions-query": 1,
+      "data-place-token": 1,
+      "opaque-place-id": 1,
+      "encoded-name-path": 1,
+      "place-camera-viewport": 1,
+      "localized-query": 1,
+      "entry-ttu": 1,
+      "directions-path": 1,
+      "map-action-center": 1,
+      "data-opaque-id": 1,
+      "list-search": 1,
+      "public-query-name": 1,
+      "public-query-coordinates": 1,
+      "public-place-coordinates": 1,
+      "public-short-place": 1
+    },
+    "byExpectedOutcome": {
+      "coordinates": 5,
+      "query": 11,
+      "fallback": 8
+    }
+  },
+  "parameters": {
+    "resolvePublicRedirects": true,
+    "expansionEvidence": "http"
+  },
+  "summary": {
+    "total": 24,
+    "executed": 24,
+    "correct": 24,
+    "incorrect": 0,
+    "pending": 0,
+    "byFormat": {
+      "query-api": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "place-path-camera": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "search-q": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "camera-coordinate": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "data-coordinates": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "short-app-link": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "short-goo-link": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "maps-google-q-name": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "maps-google-q-coordinates": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "directions-query": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "data-place-token": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "opaque-place-id": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "encoded-name-path": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "place-camera-viewport": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "localized-query": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "entry-ttu": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "directions-path": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "map-action-center": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "data-opaque-id": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "list-search": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "public-query-name": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "public-query-coordinates": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "public-place-coordinates": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "public-short-place": {
+        "total": 1,
+        "executed": 1,
+        "correct": 1,
+        "incorrect": 0,
+        "pending": 0
+      }
+    },
+    "byExpectedOutcome": {
+      "coordinates": {
+        "total": 5,
+        "executed": 5,
+        "correct": 5,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "query": {
+        "total": 11,
+        "executed": 11,
+        "correct": 11,
+        "incorrect": 0,
+        "pending": 0
+      },
+      "fallback": {
+        "total": 8,
+        "executed": 8,
+        "correct": 8,
+        "incorrect": 0,
+        "pending": 0
+      }
+    },
+    "byActualOutcome": {
+      "coordinates": 5,
+      "query": 11,
+      "fallback": 8
+    },
+    "expansion": {
+      "not-needed": 21,
+      "synthetic-not-expanded": 2,
+      "not-requested": 0,
+      "resolved": 1,
+      "failed": 0
+    }
+  },
+  "results": [
+    {
+      "id": "google-maps-link-01",
+      "format": "query-api",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/search/?api=1&query=Forbidden+City+Beijing",
+      "targetCaseId": "cn-beijing-forbidden-city",
+      "expected": {
+        "kind": "query",
+        "query": "Forbidden City Beijing",
+        "reason": "query"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "Forbidden City Beijing",
+        "reason": "query"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-02",
+      "format": "place-path-camera",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/Tiananmen+Square/@39.9055,116.3976,16z",
+      "targetCaseId": "cn-beijing-tiananmen-square",
+      "expected": {
+        "kind": "query",
+        "query": "Tiananmen Square",
+        "reason": "viewport"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "Tiananmen Square",
+        "reason": "viewport"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-03",
+      "format": "search-q",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/search/?api=1&q=Temple+of+Heaven,+Beijing",
+      "targetCaseId": "cn-beijing-temple-of-heaven",
+      "expected": {
+        "kind": "query",
+        "query": "Temple of Heaven, Beijing",
+        "reason": "query"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "Temple of Heaven, Beijing",
+        "reason": "query"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-04",
+      "format": "camera-coordinate",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/@39.9999,116.2750,16z",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "viewport"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "viewport"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-05",
+      "format": "data-coordinates",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/Summer+Palace/data=!3m1!4b1!4m6!3m5!1sfixture!8m2!3d39.9999!4d116.2750",
+      "targetCaseId": "cn-beijing-summer-palace",
+      "expected": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 39.9999,
+          "longitude": 116.275
+        },
+        "source": "place",
+        "query": "Summer Palace"
+      },
+      "actual": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 39.9999,
+          "longitude": 116.275
+        },
+        "source": "place",
+        "query": "Summer Palace"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-06",
+      "format": "short-app-link",
+      "source": "fixture",
+      "url": "https://maps.app.goo.gl/fixture-beijing-01",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "unsupported"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "unsupported"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "synthetic-not-expanded"
+      }
+    },
+    {
+      "id": "google-maps-link-07",
+      "format": "short-goo-link",
+      "source": "fixture",
+      "url": "https://goo.gl/maps/fixture-beijing-02",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "unsupported"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "unsupported"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "synthetic-not-expanded"
+      }
+    },
+    {
+      "id": "google-maps-link-08",
+      "format": "maps-google-q-name",
+      "source": "fixture",
+      "url": "https://maps.google.com/?q=National+Museum+of+China",
+      "targetCaseId": "cn-beijing-national-museum",
+      "expected": {
+        "kind": "query",
+        "query": "National Museum of China",
+        "reason": "query"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "National Museum of China",
+        "reason": "query"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-09",
+      "format": "maps-google-q-coordinates",
+      "source": "fixture",
+      "url": "https://maps.google.com/?q=31.2400,121.4900",
+      "targetCaseId": "cn-shanghai-bund",
+      "expected": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 31.24,
+          "longitude": 121.49
+        },
+        "source": "query"
+      },
+      "actual": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 31.24,
+          "longitude": 121.49
+        },
+        "source": "query"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-10",
+      "format": "directions-query",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/dir/?api=1&destination=Yonghe+Temple,+Beijing",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "list"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "list"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-11",
+      "format": "data-place-token",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/Beijing+National+Stadium/data=!4m2!3m1!1sfixture-place-token",
+      "targetCaseId": "cn-beijing-national-stadium",
+      "expected": {
+        "kind": "query",
+        "query": "Beijing National Stadium",
+        "reason": "opaque_id"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "Beijing National Stadium",
+        "reason": "opaque_id"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-12",
+      "format": "opaque-place-id",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/ChIJaaaaaaaaaaaaaaaa",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "opaque_id"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "opaque_id"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-13",
+      "format": "encoded-name-path",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/%E5%A4%96%E6%BB%A9,+Shanghai",
+      "targetCaseId": "cn-shanghai-bund",
+      "expected": {
+        "kind": "query",
+        "query": "外滩, Shanghai",
+        "reason": "place_name"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "外滩, Shanghai",
+        "reason": "place_name"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-14",
+      "format": "place-camera-viewport",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/Oriental+Pearl/@31.2397,121.4998,15z/data=!3m1!4b1",
+      "targetCaseId": "cn-shanghai-oriental-pearl",
+      "expected": {
+        "kind": "query",
+        "query": "Oriental Pearl",
+        "reason": "viewport"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "Oriental Pearl",
+        "reason": "viewport"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-15",
+      "format": "localized-query",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/search/?api=1&query=%E4%BD%B3%E5%AE%B6%E6%B1%A4%E5%8C%85,+Shanghai&hl=zh-CN",
+      "targetCaseId": "cn-shanghai-jia-jia-tang-bao",
+      "expected": {
+        "kind": "query",
+        "query": "佳家汤包, Shanghai",
+        "reason": "query"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "佳家汤包, Shanghai",
+        "reason": "query"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-16",
+      "format": "entry-ttu",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/Eiffel+Tower/?entry=ttu&g_ep=fixture",
+      "targetCaseId": "global-eiffel-tower",
+      "expected": {
+        "kind": "query",
+        "query": "Eiffel Tower",
+        "reason": "place_name"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "Eiffel Tower",
+        "reason": "place_name"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-17",
+      "format": "directions-path",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/dir/Dishoom+Shoreditch,+London/Old+Street,+London",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "list"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "list"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-18",
+      "format": "map-action-center",
+      "source": "fixture",
+      "url": "https://www.google.com/maps?map_action=map&center=40.7227,-73.9887&zoom=16",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "unsupported"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "unsupported"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-19",
+      "format": "data-opaque-id",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/place/Di+Fara+Pizza/data=!4m2!3m1!1sfixture-opaque-id",
+      "targetCaseId": "global-di-fara-pizza",
+      "expected": {
+        "kind": "query",
+        "query": "Di Fara Pizza",
+        "reason": "opaque_id"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "Di Fara Pizza",
+        "reason": "opaque_id"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-link-20",
+      "format": "list-search",
+      "source": "fixture",
+      "url": "https://www.google.com/maps/search/restaurants/@31.1434,121.6570,14z/data=!5m2!1sfixture-list!2e1",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "fallback",
+        "reason": "opaque_id"
+      },
+      "actual": {
+        "kind": "fallback",
+        "reason": "opaque_id"
+      },
+      "correct": true,
+      "fallbackApplied": true,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-public-01",
+      "format": "public-query-name",
+      "source": "public",
+      "sourceReferenceUrl": "https://developers.google.com/maps/documentation/urls/get-started",
+      "url": "https://www.google.com/maps/search/?api=1&query=lumen+field",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "query",
+        "query": "lumen field",
+        "reason": "query"
+      },
+      "actual": {
+        "kind": "query",
+        "query": "lumen field",
+        "reason": "query"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-public-02",
+      "format": "public-query-coordinates",
+      "source": "public",
+      "sourceReferenceUrl": "https://developers.google.com/maps/documentation/urls/get-started",
+      "url": "https://www.google.com/maps/search/?api=1&query=47.5951518%2C-122.3316393",
+      "targetCaseId": null,
+      "expected": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 47.5951518,
+          "longitude": -122.3316393
+        },
+        "source": "query"
+      },
+      "actual": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 47.5951518,
+          "longitude": -122.3316393
+        },
+        "source": "query"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-public-03",
+      "format": "public-place-coordinates",
+      "source": "public",
+      "sourceReferenceUrl": "https://stackoverflow.com/questions/77430461/finding-place-id-or-gps-coordinates-with-a-google-maps-url",
+      "url": "https://www.google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=!3m1!4b1!4m6!3m5!1s0x47e66e2964e34e2d:0x8ddca9ee380ef7e0!8m2!3d48.8583701!4d2.2944813!16zL20vMDJqODE?hl=en-FR&entry=ttu",
+      "targetCaseId": "global-eiffel-tower",
+      "expected": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 48.8583701,
+          "longitude": 2.2944813
+        },
+        "source": "place",
+        "query": "Eiffel Tower"
+      },
+      "actual": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 48.8583701,
+          "longitude": 2.2944813
+        },
+        "source": "place",
+        "query": "Eiffel Tower"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "not-needed"
+      }
+    },
+    {
+      "id": "google-maps-public-04",
+      "format": "public-short-place",
+      "source": "public",
+      "sourceReferenceUrl": "https://realeasyhub.com/the-profile/730-eiffel-tower",
+      "url": "https://maps.app.goo.gl/jWw5LWjvyikX2oSE9",
+      "targetCaseId": "global-eiffel-tower",
+      "expected": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 48.8583701,
+          "longitude": 2.2944813
+        },
+        "source": "place",
+        "query": "Eiffel Tower"
+      },
+      "actual": {
+        "kind": "coordinates",
+        "coordinates": {
+          "latitude": 48.8583701,
+          "longitude": 2.2944813
+        },
+        "source": "place",
+        "query": "Eiffel Tower"
+      },
+      "correct": true,
+      "fallbackApplied": false,
+      "expansion": {
+        "status": "resolved",
+        "evidence": "http",
+        "finalUrl": "https://www.google.com/maps/place/Eiffel+Tower/@48.8582146,2.2920969,17z/data=!4m7!3m6!1s0x47e66e2964e34e2d:0x8ddca9ee380ef7e0!8m2!3d48.8583701!4d2.2944813!15sCgxlaWZmZWwgdG93ZXJaDiIMZWlmZmVsIHRvd2VykgETaGlzdG9yaWNhbF9sYW5kbWFya5oBI0NoWkRTVWhOTUc5blMwVkpRMEZuU1VOS2JHVmhNV1JuRUFF4AEA!16zL20vMDJqODE?entry=tts"
+      }
+    }
+  ]
+}

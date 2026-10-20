@@ -101,7 +101,7 @@ Opções:
   --output <arquivo>  JSON dentro do pacote (padrão: results/geoapify-latest.json)
   --help              Exibe esta ajuda
 
-Chave: GEOAPIFY_API_KEY no ambiente ou no .env da raiz. Links Google ficam fora do benchmark.`)
+Chave: GEOAPIFY_API_KEY no ambiente ou no .env da raiz. Links Google Maps usam o comando benchmark:links e não geram chamadas Geoapify.`)
 }
 
 async function main(): Promise<void> {

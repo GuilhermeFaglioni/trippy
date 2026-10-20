@@ -4,8 +4,8 @@ import type { RequestOptions } from 'node:https'
 import { lookup } from 'node:dns/promises'
 import { request } from 'node:https'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { expandGoogleMapsUrl } from './expand.js'
-import { parseGoogleMapsUrl } from './parse.js'
+import { expandGoogleMapsUrl } from './expand.ts'
+import { parseGoogleMapsUrl } from './parse.ts'
 
 vi.mock('node:dns/promises', () => ({ lookup: vi.fn() }))
 vi.mock('node:https', () => ({ request: vi.fn() }))

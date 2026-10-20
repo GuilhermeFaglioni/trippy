@@ -5,9 +5,22 @@ export interface LinkFixture {
   format: string
   url: string
   targetCaseId: string | null
-  synthetic: true
-  source: 'fixture'
+  synthetic: boolean
+  source: 'fixture' | 'public'
+  sourceReferenceUrl?: string
+  requiresExpansion: boolean
+  expected: LinkExpectation
 }
+
+export type LinkExpectation =
+  | {
+      kind: 'coordinates'
+      coordinates: { latitude: number; longitude: number }
+      source: 'query' | 'place'
+      query?: string
+    }
+  | { kind: 'query'; query: string; reason?: 'query' | 'place_name' | 'viewport' | 'opaque_id' }
+  | { kind: 'fallback'; reason: 'opaque_id' | 'list' | 'viewport' | 'unsupported' }
 
 interface SampleDefinition {
   id: string
@@ -798,111 +811,225 @@ const linkRows = [
     format: 'query-api',
     url: 'https://www.google.com/maps/search/?api=1&query=Forbidden+City+Beijing',
     targetCaseId: 'cn-beijing-forbidden-city',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'Forbidden City Beijing', reason: 'query' },
   },
   {
     format: 'place-path-camera',
     url: 'https://www.google.com/maps/place/Tiananmen+Square/@39.9055,116.3976,16z',
     targetCaseId: 'cn-beijing-tiananmen-square',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'Tiananmen Square', reason: 'viewport' },
   },
   {
     format: 'search-q',
     url: 'https://www.google.com/maps/search/?api=1&q=Temple+of+Heaven,+Beijing',
     targetCaseId: 'cn-beijing-temple-of-heaven',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'Temple of Heaven, Beijing', reason: 'query' },
   },
   {
     format: 'camera-coordinate',
     url: 'https://www.google.com/maps/@39.9999,116.2750,16z',
-    targetCaseId: 'cn-beijing-summer-palace',
+    targetCaseId: null,
+    requiresExpansion: false,
+    expected: { kind: 'fallback', reason: 'viewport' },
   },
   {
     format: 'data-coordinates',
     url: 'https://www.google.com/maps/place/Summer+Palace/data=!3m1!4b1!4m6!3m5!1sfixture!8m2!3d39.9999!4d116.2750',
     targetCaseId: 'cn-beijing-summer-palace',
+    requiresExpansion: false,
+    expected: {
+      kind: 'coordinates',
+      coordinates: { latitude: 39.9999, longitude: 116.275 },
+      source: 'place',
+      query: 'Summer Palace',
+    },
   },
   {
     format: 'short-app-link',
     url: 'https://maps.app.goo.gl/fixture-beijing-01',
     targetCaseId: null,
+    requiresExpansion: true,
+    expected: { kind: 'fallback', reason: 'unsupported' },
   },
   {
     format: 'short-goo-link',
     url: 'https://goo.gl/maps/fixture-beijing-02',
     targetCaseId: null,
+    requiresExpansion: true,
+    expected: { kind: 'fallback', reason: 'unsupported' },
   },
   {
     format: 'maps-google-q-name',
     url: 'https://maps.google.com/?q=National+Museum+of+China',
     targetCaseId: 'cn-beijing-national-museum',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'National Museum of China', reason: 'query' },
   },
   {
     format: 'maps-google-q-coordinates',
     url: 'https://maps.google.com/?q=31.2400,121.4900',
     targetCaseId: 'cn-shanghai-bund',
+    requiresExpansion: false,
+    expected: {
+      kind: 'coordinates',
+      coordinates: { latitude: 31.24, longitude: 121.49 },
+      source: 'query',
+    },
   },
   {
     format: 'directions-query',
     url: 'https://www.google.com/maps/dir/?api=1&destination=Yonghe+Temple,+Beijing',
-    targetCaseId: 'cn-beijing-yonghe-temple',
+    targetCaseId: null,
+    requiresExpansion: false,
+    expected: { kind: 'fallback', reason: 'list' },
   },
   {
     format: 'data-place-token',
     url: 'https://www.google.com/maps/place/Beijing+National+Stadium/data=!4m2!3m1!1sfixture-place-token',
     targetCaseId: 'cn-beijing-national-stadium',
+    requiresExpansion: false,
+    expected: {
+      kind: 'query',
+      query: 'Beijing National Stadium',
+      reason: 'opaque_id',
+    },
   },
   {
     format: 'opaque-place-id',
-    url: 'https://www.google.com/maps/search/?api=1&query_place_id=fixture-place-id',
+    url: 'https://www.google.com/maps/place/ChIJaaaaaaaaaaaaaaaa',
     targetCaseId: null,
+    requiresExpansion: false,
+    expected: { kind: 'fallback', reason: 'opaque_id' },
   },
   {
     format: 'encoded-name-path',
     url: 'https://www.google.com/maps/place/%E5%A4%96%E6%BB%A9,+Shanghai',
     targetCaseId: 'cn-shanghai-bund',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: '外滩, Shanghai', reason: 'place_name' },
   },
   {
-    format: 'data-lat-lon',
+    format: 'place-camera-viewport',
     url: 'https://www.google.com/maps/place/Oriental+Pearl/@31.2397,121.4998,15z/data=!3m1!4b1',
     targetCaseId: 'cn-shanghai-oriental-pearl',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'Oriental Pearl', reason: 'viewport' },
   },
   {
     format: 'localized-query',
-    url: 'https://www.google.com/maps/search/%E4%BD%B3%E5%AE%B6%E6%B1%A4%E5%8C%85/@31.2356,121.4703,17z?hl=zh-CN',
+    url: 'https://www.google.com/maps/search/?api=1&query=%E4%BD%B3%E5%AE%B6%E6%B1%A4%E5%8C%85,+Shanghai&hl=zh-CN',
     targetCaseId: 'cn-shanghai-jia-jia-tang-bao',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: '佳家汤包, Shanghai', reason: 'query' },
   },
   {
     format: 'entry-ttu',
     url: 'https://www.google.com/maps/place/Eiffel+Tower/?entry=ttu&g_ep=fixture',
     targetCaseId: 'global-eiffel-tower',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'Eiffel Tower', reason: 'place_name' },
   },
   {
     format: 'directions-path',
     url: 'https://www.google.com/maps/dir/Dishoom+Shoreditch,+London/Old+Street,+London',
-    targetCaseId: 'global-dishoom-shoreditch',
+    targetCaseId: null,
+    requiresExpansion: false,
+    expected: { kind: 'fallback', reason: 'list' },
   },
   {
     format: 'map-action-center',
     url: 'https://www.google.com/maps?map_action=map&center=40.7227,-73.9887&zoom=16',
-    targetCaseId: 'global-russ-and-daughters-cafe',
+    targetCaseId: null,
+    requiresExpansion: false,
+    expected: { kind: 'fallback', reason: 'unsupported' },
   },
   {
     format: 'data-opaque-id',
     url: 'https://www.google.com/maps/place/Di+Fara+Pizza/data=!4m2!3m1!1sfixture-opaque-id',
     targetCaseId: 'global-di-fara-pizza',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'Di Fara Pizza', reason: 'opaque_id' },
   },
   {
     format: 'list-search',
     url: 'https://www.google.com/maps/search/restaurants/@31.1434,121.6570,14z/data=!5m2!1sfixture-list!2e1',
     targetCaseId: null,
+    requiresExpansion: false,
+    expected: { kind: 'fallback', reason: 'opaque_id' },
   },
 ] as const
 
 export const linkFixtures: readonly LinkFixture[] = linkRows.map(
-  ({ format, url, targetCaseId }, index) => ({
+  ({ format, url, targetCaseId, requiresExpansion, expected }, index) => ({
     id: `google-maps-link-${String(index + 1).padStart(2, '0')}`,
     format,
     url,
     targetCaseId,
     synthetic: true,
     source: 'fixture',
+    requiresExpansion,
+    expected,
   }),
 )
+
+const publicLinkRows = [
+  {
+    format: 'public-query-name',
+    url: 'https://www.google.com/maps/search/?api=1&query=lumen+field',
+    targetCaseId: null,
+    sourceReferenceUrl: 'https://developers.google.com/maps/documentation/urls/get-started',
+    requiresExpansion: false,
+    expected: { kind: 'query', query: 'lumen field', reason: 'query' },
+  },
+  {
+    format: 'public-query-coordinates',
+    url: 'https://www.google.com/maps/search/?api=1&query=47.5951518%2C-122.3316393',
+    targetCaseId: null,
+    sourceReferenceUrl: 'https://developers.google.com/maps/documentation/urls/get-started',
+    requiresExpansion: false,
+    expected: {
+      kind: 'coordinates',
+      coordinates: { latitude: 47.5951518, longitude: -122.3316393 },
+      source: 'query',
+    },
+  },
+  {
+    format: 'public-place-coordinates',
+    url: 'https://www.google.com/maps/place/Eiffel+Tower/@48.8583701,2.2919064,17z/data=!3m1!4b1!4m6!3m5!1s0x47e66e2964e34e2d:0x8ddca9ee380ef7e0!8m2!3d48.8583701!4d2.2944813!16zL20vMDJqODE?hl=en-FR&entry=ttu',
+    targetCaseId: 'global-eiffel-tower',
+    sourceReferenceUrl:
+      'https://stackoverflow.com/questions/77430461/finding-place-id-or-gps-coordinates-with-a-google-maps-url',
+    requiresExpansion: false,
+    expected: {
+      kind: 'coordinates',
+      coordinates: { latitude: 48.8583701, longitude: 2.2944813 },
+      source: 'place',
+      query: 'Eiffel Tower',
+    },
+  },
+  {
+    format: 'public-short-place',
+    url: 'https://maps.app.goo.gl/jWw5LWjvyikX2oSE9',
+    targetCaseId: 'global-eiffel-tower',
+    sourceReferenceUrl: 'https://realeasyhub.com/the-profile/730-eiffel-tower',
+    requiresExpansion: true,
+    expected: {
+      kind: 'coordinates',
+      coordinates: { latitude: 48.8583701, longitude: 2.2944813 },
+      source: 'place',
+      query: 'Eiffel Tower',
+    },
+  },
+] satisfies readonly Omit<LinkFixture, 'id' | 'synthetic' | 'source'>[]
+
+export const publicLinkFixtures: readonly LinkFixture[] = publicLinkRows.map((fixture, index) => ({
+  ...fixture,
+  id: `google-maps-public-${String(index + 1).padStart(2, '0')}`,
+  synthetic: false,
+  source: 'public',
+}))
+
+export const allLinkFixtures: readonly LinkFixture[] = [...linkFixtures, ...publicLinkFixtures]

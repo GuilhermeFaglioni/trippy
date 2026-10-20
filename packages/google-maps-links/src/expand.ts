@@ -3,7 +3,7 @@ import type { LookupAddress } from 'node:dns'
 import { isIP } from 'node:net'
 import { request as httpsRequest } from 'node:https'
 import type { RequestOptions } from 'node:https'
-import { googleMapsAllowedHosts } from './hosts.js'
+import { googleMapsAllowedHosts } from './hosts.ts'
 
 const defaultTimeoutMs = 5_000
 const defaultMaxRedirects = 5

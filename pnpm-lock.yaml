@@ -243,7 +243,15 @@ importers:
         specifier: ^22.20.5
         version: 22.20.5
 
-  packages/places-spike: {}
+  packages/places-spike:
+    dependencies:
+      '@trippy/google-maps-links':
+        specifier: workspace:*
+        version: link:../google-maps-links
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
 
 packages:
 

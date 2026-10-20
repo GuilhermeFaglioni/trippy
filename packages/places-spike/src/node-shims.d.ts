@@ -17,6 +17,7 @@ declare module 'node:url' {
 
 declare const process: {
   argv: string[]
+  execPath: string
   env: Record<string, string | undefined>
   exitCode?: number
 }
