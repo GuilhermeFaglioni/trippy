@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @trippy/db migrate",
     "typecheck": "pnpm -r --parallel typecheck",
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration"
