@@ -19,7 +19,7 @@ Todos os arquivos têm 540 × 960 px, H.264 e duração de 30,059 s. `ffprobe` c
 
 ## Limite do spike
 
-As migrations atuais ainda não persistem lugares ou fotos. `createRecap` lê metadados da viagem no Postgres e recebe os lugares/fotos manuais do ensaio como entrada; snapshot, recap, jobs e outbox são gravados na mesma transação. A integração de produção ainda precisa montar o conteúdo a partir dos registros confirmados no servidor e filtrar fotos pendentes/ocultas, conforme `docs/arquitetura.md`.
+As migrations atuais ainda não persistem lugares ou fotos. `createRecap` lê metadados da viagem no Postgres e recebe os lugares/fotos manuais do ensaio como entrada; snapshot, recap, jobs e outbox são gravados na mesma transação. A integração de produção ainda precisa montar o conteúdo a partir dos registros confirmados no servidor e filtrar fotos pendentes/ocultas, conforme `docs/arquitetura.md`; essa etapa depende das tabelas planejadas nas issues #23 (lugares e sync) e #22 (fotos).
 
 O dispatcher criou o worker em modo detached e retornou após 190 ms. Um worker foi interrompido deliberadamente; o job foi retomado com tentativa 2 e fencing token 2. O objeto publicado usa `fence-2.mp4`, demonstrando que a conclusão pertence à geração atual.
 
