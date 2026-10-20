@@ -21,7 +21,7 @@ O dispatcher criou o worker em modo detached e retornou após 190 ms. Um worker 
 
 ## Medições
 
-`render (ms)` mede bundle Remotion e render. `CPU (ms)` é a diferença de `usage_usec` em `cpu.stat` do cgroup durante essa etapa. `Pico de memória (bytes)` vem de `memory.peak` do cgroup do container exclusivo do job, desde a criação do container. São contadores lidos do runtime real, não estimativas. O limite do container foi 4 GiB e nenhum render excedeu 2,24 GB.
+`render (ms)` mede bundle Remotion e render. `CPU (ms)` é a diferença de `usage_usec` em `cpu.stat` do cgroup durante essa etapa. `Pico de memória (bytes)` vem de `memory.peak` do cgroup do container exclusivo do job, desde a criação do container. São contadores lidos do runtime real, não estimativas. Cada container teve limites de 2 CPUs, 4 GiB de memória e swap, 512 processos e 512 MiB de `/dev/shm`; nenhum render excedeu 2,24 GB de pico de memória.
 
 | Cenário | Variante | Render (ms) | CPU (ms) | Pico de memória (bytes) | MP4 (bytes) |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -45,6 +45,7 @@ O dispatcher criou o worker em modo detached e retornou após 190 ms. Um worker 
 - `pnpm typecheck`: passou nos seis pacotes do workspace.
 - `pnpm test`: 6 arquivos e 24 testes passaram.
 - `pnpm test:integration`: 5 arquivos e 10 testes passaram. Foi executado com buckets e filas de integração exclusivos; esses recursos foram removidos após o teste.
+- No teste de integração `publishes outbox jobs and starts one detached worker for duplicate messages`, duas mensagens iguais para o mesmo job produziram uma única chamada de `launchWorker`; a segunda chamada do dispatcher retornou `busy`, sem iniciar outro worker. O teste também verifica uma mensagem restante na fila e a rejeição do fencing token antigo após a recuperação.
 
 Vitest exibiu aviso não bloqueante sobre `configLoader: 'native'` e sintaxe ESM em `vitest.config.ts` CommonJS.
 
