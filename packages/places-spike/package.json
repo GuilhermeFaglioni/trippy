@@ -1,0 +1,13 @@
+{
+  "name": "@trippy/places-spike",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "benchmark": "node --experimental-strip-types --env-file-if-exists=../../.env src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}

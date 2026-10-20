@@ -237,6 +237,14 @@ importers:
 
   packages/domain: {}
 
+  packages/google-maps-links:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+
+  packages/places-spike: {}
+
 packages:
 
   2g@1.0.1:
