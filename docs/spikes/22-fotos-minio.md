@@ -1,5 +1,24 @@
 # Spike de fotos no MinIO — issue #22
 
+## Integração final verificada pelo planejador
+
+Após integrar a #23, fotos usa `0006_photos.sql`, preservando `0005_sync_lugares_convites.sql`. Um banco novo, `trippy_w22_rebase`, aplicou 0001–0006. A tela de lugares da viagem continua disponível; a ação **Fotos da viagem** abre `/trips/[id]/photos`.
+
+Na viagem de ensaio `093a2a83-842a-49f6-adf7-6bf4b10e13e6`, a consulta direta ao Postgres confirmou exatamente cinco fotos. Os metadados recebidos pelo app e persistidos pela API correspondem às fixtures:
+
+| Fixture | Horário original | Fuso | Latitude / longitude |
+| --- | --- | --- | --- |
+| HEIC Pequim | `2026-10-20T08:12:03` | `+08:00` | `39.9042 / 116.4074` |
+| JPEG Paraty | `2026-10-19T20:45:10` | `-03:00` | `-23.2237 / -44.7192` |
+| JPEG Tóquio sem offset | `2026-10-18T14:20:00` | `null` | `35.6762 / 139.6503` |
+| HEIC e JPEG sem EXIF | `null` | `null` | `null / null` |
+
+O planejador leu os cinco objetos diretamente do MinIO e os decodificou com `sharp`: todos são JPEG de 2048 × 1360 px, entre 83.966 e 84.479 bytes. O worker publicou cinco mensagens da outbox e processou cada uma na fila exclusiva `trippy-w22-thumbs`. Depois, o banco mostrou cinco fotos `ready`; os cinco objetos `thumb.jpg` foram lidos e decodificados como JPEG de 512 × 340 px. Os testes de integração cobrem repetição de mensagem, falha após cópia, retry e DLQ; esses cenários não foram todos reproduzidos manualmente no lote do Simulator.
+
+**Decisão do spike:** manter cópia permanente, metadados separados do JPEG e fila SQLite com UUID estável. A implementação retoma com o app aberto ou quando ele volta à execução. Este spike não implementa um serviço nativo de transferência em segundo plano nem comprova envio enquanto o processo está suspenso ou encerrado à força. No Simulator, o lote selecionado chegou ao backend e reapareceu após reabrir; encerramento com itens ainda pendentes e queda de rede durante o PUT continuam sem ensaio manual, embora as fronteiras de retry e persistência estejam cobertas por testes automatizados. Validar execução em segundo plano em iPhone físico antes de assumir qualquer garantia de produto.
+
+Validação da combinação após rebase: lint, formatação e typecheck passaram; 206 testes Vitest e 136 Jest passaram. A suíte de integração teve dois timeouts de 5s sob concorrência local; a repetição com `pnpm exec vitest run --project integration --maxWorkers=1` passou com 17 arquivos e 42 testes, sem mudar timeouts ou expectativas.
+
 Data: 21/10/2026 · Escopo: subtarefa 2, implementação mobile. · Branch: `GuilhermeFaglioni/w22-mobile`.
 
 ## Implementação
