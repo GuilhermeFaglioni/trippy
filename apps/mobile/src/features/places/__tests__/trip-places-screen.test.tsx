@@ -8,8 +8,11 @@ import { TripPlacesScreen } from '../trip-places-screen'
 
 const currentUserId = 'user-1'
 const mockRequest = jest.fn<Promise<Response>, [string, RequestInit?]>()
+const mockPush = jest.fn()
 
-jest.mock('expo-router', () => ({}))
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('expo-image', () => ({ Image: 'Image' }))
+jest.mock('../../sync/use-network-gate', () => ({ useNetworkOffline: () => false }))
 
 jest.spyOn(sessionProvider, 'useSession').mockImplementation(
   () =>
@@ -129,7 +132,7 @@ describe('tela da viagem e lugares locais', () => {
     )
   })
 
-  it('lista SQLite, adiciona só nome, alterna Eu fui e mostra status honesto', async () => {
+  it('lista SQLite, abre Adicionar lugar, alterna Eu fui e mostra status honesto', async () => {
     const fake = createClient()
     const screen = await renderScreen(fake.client)
 
@@ -138,12 +141,11 @@ describe('tela da viagem e lugares locais', () => {
     expect(screen.getByTestId('trip-sync-status')).toHaveTextContent(/1 pendentes/)
     expect(screen.getByTestId('trip-sync-not-sent')).toHaveTextContent(/1 operações não enviadas/)
 
-    await fireEvent.changeText(screen.getByTestId('add-place-name'), 'Museu Nacional')
     await fireEvent.press(screen.getByTestId('add-place-button'))
-    await waitFor(() =>
-      expect(fake.client.addPlace).toHaveBeenCalledWith('trip-1', 'Museu Nacional'),
-    )
-    expect(fake.getPlaces().map((place) => place.name)).toContain('Museu Nacional')
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/trips/[id]/add-place',
+      params: { id: 'trip-1', tripName: 'Fim de semana', role: 'member' },
+    })
 
     await fireEvent.press(screen.getByTestId('place-visit-cafe-do-porto'))
     await waitFor(() => expect(fake.client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1'))

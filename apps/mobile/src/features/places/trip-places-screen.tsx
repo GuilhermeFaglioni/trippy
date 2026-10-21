@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Platform, ScrollView, Share, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useRouter } from 'expo-router'
 
-import { canRemovePlace, validatePlaceName } from '@trippy/domain'
+import { canRemovePlace } from '@trippy/domain'
 import type { LivePlace, SyncClientStatus } from '@trippy/sync'
-import { Button, Card, Notice, TextField } from '../../components'
+import { Button, Card, Notice } from '../../components'
 import {
   createTypographyTokens,
   normalizeFontPlatform,
@@ -15,6 +16,7 @@ import { useSession } from '../auth/session-provider'
 import { createInviteClient, getInviteErrorMessage } from '../invites/invite-client'
 import { useSync } from '../sync/sync-provider'
 import type { TripRole } from '../trips/trips-client'
+import { PlaceCard } from './place-card'
 
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
@@ -57,52 +59,6 @@ function syncTime(lastSyncedAt: string | null): string {
   })}`
 }
 
-function PlaceCard({
-  place,
-  testSlug,
-  canRemove,
-  busy,
-  onToggleVisit,
-  onRemove,
-}: {
-  place: LivePlace
-  testSlug: string
-  canRemove: boolean
-  busy: boolean
-  onToggleVisit: () => void
-  onRemove: () => void
-}) {
-  const theme = useTheme()
-  return (
-    <Card testID={`place-${testSlug}`}>
-      <View style={{ gap: theme.spacing.space3 }}>
-        <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
-          {place.name}
-        </TypographyText>
-        <View style={{ flexDirection: 'row', gap: theme.spacing.space2 }}>
-          <Button
-            label={place.visitedByMe ? 'Eu fui ✓' : 'Eu fui'}
-            onPress={onToggleVisit}
-            variant="secondary"
-            selected={place.visitedByMe}
-            disabled={busy}
-            testID={`place-visit-${testSlug}`}
-          />
-          {canRemove ? (
-            <Button
-              label="Remover lugar"
-              onPress={onRemove}
-              variant="secondary"
-              disabled={busy}
-              testID={`place-remove-${testSlug}`}
-            />
-          ) : null}
-        </View>
-      </View>
-    </Card>
-  )
-}
-
 function SyncFooter({ status }: { status: SyncClientStatus }) {
   const theme = useTheme()
   const lastError =
@@ -135,16 +91,14 @@ function SyncFooter({ status }: { status: SyncClientStatus }) {
 
 export function TripPlacesScreen({ tripId, tripName, role }: TripPlacesScreenProps) {
   const theme = useTheme()
+  const router = useRouter()
   const { session, request } = useSession()
   const { client, status, ready, error: syncError } = useSync()
   const inviteClient = useMemo(() => createInviteClient(request), [request])
   const [places, setPlaces] = useState<LivePlace[]>([])
-  const [placeName, setPlaceName] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [busyPlaceId, setBusyPlaceId] = useState<string | null>(null)
-  const [isAdding, setIsAdding] = useState(false)
   const [isCreatingInvite, setIsCreatingInvite] = useState(false)
-  const [inputError, setInputError] = useState<string | null>(null)
   const [screenError, setScreenError] = useState<string | null>(null)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
@@ -177,30 +131,6 @@ export function TripPlacesScreen({ tripId, tripName, role }: TripPlacesScreenPro
     if (client === null) return
     return client.subscribe(() => void loadPlaces())
   }, [client, loadPlaces])
-
-  const addPlace = useCallback(async () => {
-    const validation = validatePlaceName(placeName)
-    if (!validation.success) {
-      setInputError(validation.message)
-      return
-    }
-    if (client === null) return
-
-    setInputError(null)
-    setScreenError(null)
-    setIsAdding(true)
-    try {
-      await client.addPlace(tripId, validation.value)
-      setPlaceName('')
-      await loadPlaces()
-    } catch (writeError) {
-      setScreenError(
-        writeError instanceof Error ? writeError.message : 'Não foi possível salvar o lugar.',
-      )
-    } finally {
-      setIsAdding(false)
-    }
-  }, [client, loadPlaces, placeName, tripId])
 
   const toggleVisit = useCallback(
     async (place: LivePlace) => {
@@ -302,27 +232,17 @@ export function TripPlacesScreen({ tripId, tripName, role }: TripPlacesScreenPro
         ) : null}
 
         <Card testID="add-place-card">
-          <View style={{ gap: theme.spacing.space3 }}>
-            <TextField
-              label="Adicionar lugar"
-              value={placeName}
-              onChangeText={(value) => {
-                setPlaceName(value)
-                setInputError(null)
-              }}
-              error={inputError ?? undefined}
-              maxLength={120}
-              autoCapitalize="words"
-              testID="add-place-name"
-            />
-            <Button
-              label="Adicionar lugar"
-              onPress={() => void addPlace()}
-              loading={isAdding}
-              disabled={client === null || !placeName.trim()}
-              testID="add-place-button"
-            />
-          </View>
+          <Button
+            label="Adicionar lugar"
+            onPress={() =>
+              router.push({
+                pathname: '/trips/[id]/add-place',
+                params: { id: tripId, tripName, role },
+              })
+            }
+            disabled={client === null}
+            testID="add-place-button"
+          />
         </Card>
 
         {isLoading ? (
@@ -338,15 +258,20 @@ export function TripPlacesScreen({ tripId, tripName, role }: TripPlacesScreenPro
                 session !== null &&
                 canRemovePlace({ role, userId: session.user.id, suggestedBy: place.suggestedBy })
               const testSlug = testIds.get(place.id) ?? toTestSlug(place.name)
+              if (client === null) return null
               return (
                 <PlaceCard
                   key={place.id}
                   place={place}
+                  tripId={tripId}
+                  currentUserId={session?.user.id ?? null}
+                  role={role}
+                  syncClient={client}
                   testSlug={testSlug}
-                  canRemove={canRemove}
                   busy={busyPlaceId === place.id}
                   onToggleVisit={() => void toggleVisit(place)}
-                  onRemove={() => void removePlace(place.id)}
+                  onRemove={canRemove ? () => void removePlace(place.id) : undefined}
+                  onRefresh={loadPlaces}
                 />
               )
             })}
