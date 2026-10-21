@@ -37,6 +37,8 @@ Os cinco arquivos foram adicionados com `xcrun simctl addmedia` ao Simulator `Ma
 - Não foi inspecionado o resultado de `ImagePicker` nem o payload EXIF normalizado por fixture no backend. A seleção real comprova compatibilidade do seletor com os formatos, não a preservação dos campos EXIF ao longo do envio.
 - O estado `Enviada` após reabertura está presente nos cinco rótulos acessíveis capturados; a asserção Maestro por texto exato `Enviada` falhou porque buscava elemento separado. Não foi repetido o ensaio.
 - Falta leitura direta da API/banco/MinIO para confirmar correspondência entre cada fixture, metadados, UUID estável e objeto armazenado. A validação combinada pós-rebase do pai foi reportada pelo coordenador como verde; a integração de ponta a ponta será confirmada pelo revisor após cherry-pick.
+- Não foi simulado encerramento do app com itens ainda pendentes nem queda de rede durante envio; reabrir com cinco fotos enviadas não comprova retomada de fila pendente nem ausência de duplicatas após retry.
+- Upload enquanto o app está em segundo plano não foi testado no Simulator.
 - O ensaio criou viagem ID `093a2a83-842a-49f6-adf7-6bf4b10e13e6`; dados de teste não foram apagados.
 
 ## Validação automatizada
