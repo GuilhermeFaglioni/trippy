@@ -5,6 +5,8 @@ import { createApp } from './app.ts'
 import { createAuthRouter } from './auth/router.ts'
 import { loadConfig } from './config.ts'
 import { createHealthChecks, type HealthChecks } from './health.ts'
+import { createInvitesRouter } from './invites/router.ts'
+import { createSyncRouter } from './sync/router.ts'
 import { createTripsRouter } from './trips/router.ts'
 
 export async function startApiServer(
@@ -13,9 +15,12 @@ export async function startApiServer(
 ) {
   const auth = await createAuthRouter(config)
   const trips = createTripsRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
+  const sync = createSyncRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
+  const invites = createInvitesRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const server = serve(
     {
-      fetch: createApp(healthChecks, 1_000, auth.router, trips.router).fetch,
+      fetch: createApp(healthChecks, 1_000, auth.router, trips.router, sync.router, invites.router)
+        .fetch,
       port: config.port,
       hostname: config.host,
     },
@@ -25,7 +30,10 @@ export async function startApiServer(
       console.log(`API em http://${config.host}:${port}`)
     },
   )
-  server.once('close', () => void Promise.all([auth.close(), trips.close()]))
+  server.once(
+    'close',
+    () => void Promise.all([auth.close(), trips.close(), sync.close(), invites.close()]),
+  )
   return server
 }
 
