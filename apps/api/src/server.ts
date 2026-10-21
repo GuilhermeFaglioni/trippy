@@ -2,26 +2,36 @@ import { serve } from '@hono/node-server'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createApp } from './app.ts'
+import { createAuthRouter } from './auth/router.ts'
 import { loadConfig } from './config.ts'
 import { createHealthChecks, type HealthChecks } from './health.ts'
 
-export function startApiServer(
+export async function startApiServer(
   config: ReturnType<typeof loadConfig>,
   healthChecks: HealthChecks = createHealthChecks(config),
 ) {
+  const auth = await createAuthRouter(config)
   const server = serve(
-    { fetch: createApp(healthChecks).fetch, port: config.port, hostname: config.host },
+    {
+      fetch: createApp(healthChecks, 1_000, auth.router).fetch,
+      port: config.port,
+      hostname: config.host,
+    },
     () => {
       const address = server.address()
       const port = address && typeof address !== 'string' ? address.port : config.port
       console.log(`API em http://${config.host}:${port}`)
     },
   )
+  server.once('close', () => void auth.close())
   return server
 }
 
 const currentFile = fileURLToPath(import.meta.url)
 
 if (process.argv[1] && resolve(process.argv[1]) === currentFile) {
-  startApiServer(loadConfig())
+  void startApiServer(loadConfig()).catch((error: unknown) => {
+    console.error(error)
+    process.exitCode = 1
+  })
 }

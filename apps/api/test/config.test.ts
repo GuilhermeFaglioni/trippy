@@ -7,6 +7,8 @@ const validEnvironment: NodeJS.ProcessEnv = {
   SQS_QUEUE_THUMBS: 'trippy-thumbs',
   SMTP_HOST: 'localhost',
   SMTP_PORT: '51025',
+  AUTH_CODE_SECRET: 'segredo-de-teste-com-entropia-suficiente',
+  AUTH_DEV_JWT_PRIVATE_KEY: 'chave-jwk-de-teste',
 }
 
 it('valida configuração obrigatória com o nome da variável ausente', () => {
@@ -28,6 +30,12 @@ it('aplica valores padrão e lê configurações locais', () => {
   ).toEqual({
     port: 3100,
     host: '127.0.0.1',
+    appEnv: 'development',
+    authMode: 'dev',
+    authIssuer: 'trippy-dev-auth',
+    authAudience: 'trippy-dev',
+    authCodeSecret: validEnvironment.AUTH_CODE_SECRET,
+    authDevJwtPrivateKey: validEnvironment.AUTH_DEV_JWT_PRIVATE_KEY,
     databaseUrl: validEnvironment.DATABASE_URL,
     awsRegion: 'us-east-2',
     s3Endpoint: 'http://localhost:59000',
@@ -42,4 +50,30 @@ it('aplica valores padrão e lê configurações locais', () => {
 
 it('permite configurar o endereço de escuta com HOST', () => {
   expect(loadConfig({ ...validEnvironment, HOST: '0.0.0.0' }).host).toBe('0.0.0.0')
+})
+
+it('recusa AUTH_MODE=dev quando APP_ENV=production', () => {
+  expect(() =>
+    loadConfig({ ...validEnvironment, APP_ENV: 'production', AUTH_MODE: 'dev' }),
+  ).toThrow('AUTH_MODE=dev não pode ser usado com APP_ENV=production.')
+})
+
+it('exige issuer, audience e JWKS quando configurada para Cognito', () => {
+  const config = loadConfig({
+    ...validEnvironment,
+    APP_ENV: 'production',
+    AUTH_MODE: 'cognito',
+    AUTH_ISSUER: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_pool',
+    AUTH_AUDIENCE: 'trippy-production-client',
+    AUTH_JWKS_URL:
+      'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_pool/.well-known/jwks.json',
+  })
+
+  expect(config).toMatchObject({
+    appEnv: 'production',
+    authMode: 'cognito',
+    authIssuer: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_pool',
+    authAudience: 'trippy-production-client',
+    authJwksUrl: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_pool/.well-known/jwks.json',
+  })
 })

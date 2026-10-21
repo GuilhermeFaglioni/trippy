@@ -1,0 +1,30 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- evalScript: ${output.email = 'maestro-' + Date.now() + '-' + Math.floor(Math.random() * 1000000) + '@example.test'}
+- tapOn:
+    id: login-email-input
+- inputText: ${output.email}
+- tapOn:
+    id: login-email-submit
+- assertVisible:
+    id: login-code-input
+- runScript:
+    file: scripts/codigo-mailpit.js
+    env:
+      EMAIL: ${output.email}
+- tapOn:
+    id: login-code-input
+- inputText: ${output.codigo}
+- pressKey: enter
+- assertVisible:
+    id: my-trips-screen
+- assertVisible: Minhas viagens
+- stopApp
+- launchApp:
+    clearState: false
+- assertVisible:
+    id: my-trips-screen
+- assertVisible: Minhas viagens

@@ -1,5 +1,5 @@
-import { ApiDiagnosticsScreen } from '../features/diagnostics/api-diagnostics-screen'
+import { MyTripsScreen } from '../features/trips/my-trips-screen'
 
 export default function IndexRoute() {
-  return <ApiDiagnosticsScreen />
+  return <MyTripsScreen />
 }

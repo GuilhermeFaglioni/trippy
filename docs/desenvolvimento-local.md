@@ -54,6 +54,38 @@ O app consulta `GET /health` da API local, disponível por padrão em `http://lo
 
 No iOS Simulator, `localhost` alcança o Mac. Em aparelho físico, use o IP do Mac na rede local. A variável é pública e vai para o bundle do app; não coloque segredos nela.
 
+### Autenticação local por e-mail
+
+O `.env.example` fornece os valores exclusivos do adaptador local: `AUTH_MODE=dev`, o segredo HMAC de `AUTH_CODE_SECRET`, a chave privada ES256 de desenvolvimento em `AUTH_DEV_JWT_PRIVATE_KEY`, e os valores locais de `AUTH_ISSUER` e `AUTH_AUDIENCE`. Copie esses valores para o `.env` local. A chave privada de exemplo é uma JWK EC P-256 de desenvolvimento; não use nenhum desses valores em produção. `AUTH_JWKS_URL` fica vazio nesse modo e só é configurada para o adaptador Cognito.
+
+| Variável | Valor local | Uso |
+|---|---|---|
+| `APP_ENV` | `development` | Identifica execução local; `production` recusa `AUTH_MODE=dev`. |
+| `AUTH_MODE` | `dev` | Ativa login local com código por e-mail e token assinado localmente. |
+| `AUTH_CODE_SECRET` | Valor de desenvolvimento do `.env.example` | Segredo HMAC usado para guardar os códigos sem texto puro. |
+| `AUTH_DEV_JWT_PRIVATE_KEY` | JWK EC P-256 de desenvolvimento do `.env.example` | Assina access tokens ES256 locais. |
+| `AUTH_ISSUER` | `trippy-dev-auth` | Emissor dos tokens locais. |
+| `AUTH_AUDIENCE` | `trippy-dev` | Audiência dos tokens locais. |
+| `AUTH_JWKS_URL` | Vazio | Usada com a verificação JWKS do Cognito, não no modo local. |
+| `SMTP_HOST` / `SMTP_PORT` | `localhost` / `51025` | Envio local via Mailpit; a caixa e API ficam em `http://localhost:58025`. |
+
+Para rodar o primeiro fluxo no iOS Simulator, deixe os serviços locais já iniciados e abra três terminais na raiz do repositório:
+
+```sh
+# Terminal 1: API local
+pnpm --filter @trippy/api dev
+
+# Terminal 2: development build do app iOS e Metro
+EXPO_PUBLIC_API_URL=http://localhost:3000 pnpm --filter @trippy/mobile ios
+
+# Terminal 3: fluxo ponta a ponta, depois que o app estiver instalado no Simulator
+maestro test .maestro/login-ate-home.yaml
+```
+
+O fluxo limpa os dados do app e o keychain na primeira abertura, gera um e-mail de teste único por execução, busca o código mais recente desse endereço pela API do Mailpit, conclui o login e confirma “Minhas viagens”. Em seguida, encerra e reabre o app sem limpar o estado para verificar que a sessão persiste no SecureStore. Como cada execução usa um endereço novo, não é necessário resetar o banco nem a caixa do Mailpit entre execuções.
+
+Instale o Maestro pelo instalador oficial antes da primeira execução: `curl -fsSL https://get.maestro.mobile.dev | bash`. O `.maestro/login-ate-home.yaml` usa o bundle ID `app.trippy.mobile`; mantenha um iOS Simulator iniciado e use o mesmo app instalado pelo comando `pnpm --filter @trippy/mobile ios`. Não derrube nem recrie os contêineres para rodar esse fluxo.
+
 ## Estrutura do repositório
 
 ```

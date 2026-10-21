@@ -47,7 +47,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     migrate({ databaseUrl: testUrl.toString() }),
     migrate({ databaseUrl: testUrl.toString() }),
   ])
-  expect(concurrentRuns.flat()).toEqual(['0001', '0002'])
+  expect(concurrentRuns.flat()).toEqual(['0001', '0002', '0003'])
 
   const client = new pg.Client({ connectionString: testUrl.toString() })
   await client.connect()
@@ -58,12 +58,14 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
        WHERE table_schema = 'public'
          AND table_name IN (
            'users', 'identities', 'trips', 'trip_members', 'schema_migrations',
-           'recaps', 'render_jobs', 'render_outbox'
+           'recaps', 'render_jobs', 'render_outbox', 'email_login_codes', 'refresh_tokens'
          )`,
     )
     expect(tables.rows.map(({ table_name }) => table_name).sort()).toEqual([
+      'email_login_codes',
       'identities',
       'recaps',
+      'refresh_tokens',
       'render_jobs',
       'render_outbox',
       'schema_migrations',
@@ -77,7 +79,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       checksum: string
       applied_at: Date
     }>('SELECT version, checksum, applied_at FROM schema_migrations')
-    expect(migrationBefore.rows.map(({ version }) => version)).toEqual(['0001', '0002'])
+    expect(migrationBefore.rows.map(({ version }) => version)).toEqual(['0001', '0002', '0003'])
 
     await migrate({ databaseUrl: testUrl.toString() })
 
@@ -166,6 +168,8 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
   const migration = await readFile(migrationPath, 'utf8')
   const recapMigrationPath = new URL('../migrations/0002_recaps_render_jobs.sql', import.meta.url)
   const recapMigration = await readFile(recapMigrationPath, 'utf8')
+  const authMigrationPath = new URL('../migrations/0003_auth_email.sql', import.meta.url)
+  const authMigration = await readFile(authMigrationPath, 'utf8')
   const modifiedMigrations = await mkdtemp(join(tmpdir(), 'trippy-db-migrations-'))
   try {
     await writeFile(
@@ -173,6 +177,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       `${migration}\n-- edição`,
     )
     await writeFile(join(modifiedMigrations, '0002_recaps_render_jobs.sql'), recapMigration)
+    await writeFile(join(modifiedMigrations, '0003_auth_email.sql'), authMigration)
     await expect(
       migrate({
         databaseUrl: testUrl.toString(),
@@ -187,8 +192,9 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
   try {
     await writeFile(join(failedMigrations, '0001_usuarios_viagens.sql'), migration)
     await writeFile(join(failedMigrations, '0002_recaps_render_jobs.sql'), recapMigration)
+    await writeFile(join(failedMigrations, '0003_auth_email.sql'), authMigration)
     await writeFile(
-      join(failedMigrations, '0003_teste_transacao.sql'),
+      join(failedMigrations, '0004_teste_transacao.sql'),
       'CREATE TABLE migration_rollback_probe (id integer);\nINVALID SQL;\n',
     )
     await expect(
@@ -208,7 +214,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       const applied = await client.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version',
       )
-      expect(applied.rows.map(({ version }) => version)).toEqual(['0001', '0002'])
+      expect(applied.rows.map(({ version }) => version)).toEqual(['0001', '0002', '0003'])
     } finally {
       await client.end()
     }

@@ -1,4 +1,5 @@
 import { once } from 'node:events'
+import { generateKeyPairSync } from 'node:crypto'
 import type { AddressInfo } from 'node:net'
 import { expect, it } from 'vitest'
 import { loadConfig } from '../src/config.ts'
@@ -11,6 +12,8 @@ const environment: NodeJS.ProcessEnv = {
   SQS_QUEUE_THUMBS: 'trippy-thumbs',
   SMTP_HOST: 'localhost',
   SMTP_PORT: '51025',
+  AUTH_CODE_SECRET: 'segredo-de-teste-com-entropia-suficiente',
+  AUTH_DEV_JWT_PRIVATE_KEY: 'chave-jwk-de-teste',
 }
 
 const healthyChecks: HealthChecks = {
@@ -21,8 +24,12 @@ const healthyChecks: HealthChecks = {
 }
 
 it('escuta em 127.0.0.1 por padrão', async () => {
-  const config = loadConfig(environment)
-  const server = startApiServer({ ...config, port: 0 }, healthyChecks)
+  const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
+  const config = loadConfig({
+    ...environment,
+    AUTH_DEV_JWT_PRIVATE_KEY: JSON.stringify(privateKey.export({ format: 'jwk' })),
+  })
+  const server = await startApiServer({ ...config, port: 0 }, healthyChecks)
 
   try {
     await once(server, 'listening')
