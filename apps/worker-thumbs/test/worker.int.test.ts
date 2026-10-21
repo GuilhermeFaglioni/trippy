@@ -184,7 +184,9 @@ beforeAll(async () => {
     }),
   ).rejects.toThrow('falha simulada após cópia, antes do commit')
   expect(await photoStore.getForWorker(photoId)).toMatchObject({ status: 'pending' })
-  expect(Buffer.from(await storage.readObject(reservation.s3Key))).toEqual(Buffer.from(originalImage))
+  expect(Buffer.from(await storage.readObject(reservation.s3Key))).toEqual(
+    Buffer.from(originalImage),
+  )
   await photoStore.completeForMember(user.rows[0]!.id, tripId, photoId, async (photo) => {
     await storage.promoteUpload(photoUploadKey(tripId, photoId), photo.s3Key)
   })
@@ -203,7 +205,9 @@ beforeAll(async () => {
   })
   if (!repeatedUpload.ok)
     throw new Error(`PUT repetido no MinIO falhou com HTTP ${repeatedUpload.status}`)
-  expect(Buffer.from(await storage.readObject(reservation.s3Key))).toEqual(Buffer.from(originalImage))
+  expect(Buffer.from(await storage.readObject(reservation.s3Key))).toEqual(
+    Buffer.from(originalImage),
+  )
   worker = new ThumbWorker(pool, photoStore, storage, workerConfig, queueUrl)
 })
 
