@@ -58,3 +58,30 @@ CREATE TABLE applied_ops (
 );
 
 CREATE INDEX trip_members_trip_seq_idx ON trip_members (trip_id, seq);
+
+WITH legacy_members AS (
+  SELECT trip_members.trip_id,
+         trip_members.user_id,
+         trips.seq_counter + row_number() OVER (
+           PARTITION BY trip_members.trip_id
+           ORDER BY trip_members.joined_at, trip_members.user_id
+         ) AS next_seq
+  FROM trip_members
+  JOIN trips ON trips.id = trip_members.trip_id
+  WHERE trip_members.seq = 0
+), updated_members AS (
+  UPDATE trip_members
+  SET seq = legacy_members.next_seq
+  FROM legacy_members
+  WHERE trip_members.trip_id = legacy_members.trip_id
+    AND trip_members.user_id = legacy_members.user_id
+  RETURNING trip_members.trip_id
+), backfilled_counts AS (
+  SELECT trip_id, count(*) AS member_count
+  FROM updated_members
+  GROUP BY trip_id
+)
+UPDATE trips
+SET seq_counter = trips.seq_counter + backfilled_counts.member_count
+FROM backfilled_counts
+WHERE trips.id = backfilled_counts.trip_id;

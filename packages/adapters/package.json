@@ -6,6 +6,8 @@
   "exports": {
     "./auth": "./src/auth/index.ts",
     "./email": "./src/email/index.ts",
+    "./invites": "./src/invites/index.ts",
+    "./sync": "./src/sync/index.ts",
     "./trips": "./src/trips/index.ts"
   },
   "scripts": {

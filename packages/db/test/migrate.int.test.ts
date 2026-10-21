@@ -132,8 +132,8 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     ).rejects.toMatchObject({ code: '23505' })
 
     const tripResult = await client.query<{ id: string }>(
-      `INSERT INTO trips (name, destination, start_date, end_date, timezone, organizer_id)
-       VALUES ('Viagem', 'Lisboa', '2026-11-01', '2026-11-05', 'Europe/Lisbon', $1)
+      `INSERT INTO trips (name, destination, start_date, end_date, timezone, organizer_id, seq, seq_counter)
+       VALUES ('Viagem', 'Lisboa', '2026-11-01', '2026-11-05', 'Europe/Lisbon', $1, 1, 1)
        RETURNING id`,
       [organizerId],
     )
@@ -145,16 +145,17 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     )
     expect(syncFloor.rows[0]?.sync_floor_seq).toBe('0')
 
-    await client.query('INSERT INTO trip_members (trip_id, user_id, role) VALUES ($1, $2, $3)', [
-      tripId,
-      organizerId,
-      'organizer',
-    ])
     await client.query(
-      `INSERT INTO trip_members (trip_id, user_id, role, left_at)
-       VALUES ($1, $2, 'organizer', now())`,
+      `INSERT INTO trip_members (trip_id, user_id, role, seq)
+       VALUES ($1, $2, 'organizer', 2)`,
+      [tripId, organizerId],
+    )
+    await client.query(
+      `INSERT INTO trip_members (trip_id, user_id, role, left_at, seq)
+       VALUES ($1, $2, 'organizer', now(), 3)`,
       [tripId, secondOrganizerId],
     )
+    await client.query('UPDATE trips SET seq_counter = 3 WHERE id = $1', [tripId])
 
     const placeId = randomUUID()
     await client.query(
@@ -162,6 +163,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
        VALUES ($1, $2, 'Museu', $3, 4)`,
       [placeId, tripId, organizerId],
     )
+    await client.query('UPDATE trips SET seq_counter = 4 WHERE id = $1', [tripId])
     await expect(
       client.query(
         `INSERT INTO visits (place_id, trip_id, user_id, marked_by, visited_at, visited_tz, seq)
@@ -183,18 +185,18 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     ).rejects.toMatchObject({ code: '23505' })
     const activeOrganizerId = await user('active-organizer@example.test')
     await expect(
-      client.query('INSERT INTO trip_members (trip_id, user_id, role) VALUES ($1, $2, $3)', [
-        tripId,
-        activeOrganizerId,
-        'organizer',
-      ]),
+      client.query(
+        `INSERT INTO trip_members (trip_id, user_id, role, seq)
+         VALUES ($1, $2, 'organizer', 5)`,
+        [tripId, activeOrganizerId],
+      ),
     ).rejects.toMatchObject({ code: '23505' })
     await expect(
-      client.query('INSERT INTO trip_members (trip_id, user_id, role) VALUES ($1, $2, $3)', [
-        tripId,
-        activeOrganizerId,
-        'guest',
-      ]),
+      client.query(
+        `INSERT INTO trip_members (trip_id, user_id, role, seq)
+         VALUES ($1, $2, 'guest', 5)`,
+        [tripId, activeOrganizerId],
+      ),
     ).rejects.toMatchObject({ code: '23514' })
     await expect(
       client.query(
@@ -286,5 +288,113 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     }
   } finally {
     await rm(failedMigrations, { recursive: true, force: true })
+  }
+})
+
+it('atribui sequências únicas a membros legados na migration 0005', async () => {
+  const legacyDatabaseName = `trippy_legacy_backfill_${process.pid}_${randomUUID().replaceAll('-', '').slice(0, 12)}`
+  const legacyAdminUrl = new URL(databaseUrl)
+  legacyAdminUrl.pathname = '/postgres'
+  const legacyDatabaseUrl = new URL(databaseUrl)
+  legacyDatabaseUrl.pathname = `/${legacyDatabaseName}`
+  const migrationsDirectory = await mkdtemp(join(tmpdir(), 'trippy-db-legacy-backfill-'))
+  let legacyDatabaseCreated = false
+
+  try {
+    const admin = new pg.Client({ connectionString: legacyAdminUrl.toString() })
+    await admin.connect()
+    try {
+      await admin.query(`CREATE DATABASE "${legacyDatabaseName}"`)
+      legacyDatabaseCreated = true
+    } finally {
+      await admin.end()
+    }
+
+    const migrationNames = [
+      '0001_usuarios_viagens.sql',
+      '0002_recaps_render_jobs.sql',
+      '0003_auth_email.sql',
+      '0004_trip_members_user_idx.sql',
+      '0005_sync_lugares_convites.sql',
+    ]
+    for (const migrationName of migrationNames.slice(0, 4)) {
+      const contents = await readFile(new URL(`../migrations/${migrationName}`, import.meta.url))
+      await writeFile(join(migrationsDirectory, migrationName), contents)
+    }
+    await migrate({
+      databaseUrl: legacyDatabaseUrl.toString(),
+      migrationsDirectory,
+    })
+
+    const legacyClient = new pg.Client({ connectionString: legacyDatabaseUrl.toString() })
+    await legacyClient.connect()
+    try {
+      const users = await legacyClient.query<{ id: string }>(
+        `INSERT INTO users (email)
+         VALUES ('legacy-organizer@example.test'),
+                ('legacy-member-a@example.test'),
+                ('legacy-member-b@example.test')
+         RETURNING id`,
+      )
+      const trip = await legacyClient.query<{ id: string }>(
+        `INSERT INTO trips (name, destination, start_date, end_date, timezone, organizer_id)
+         VALUES ('Viagem legada', 'Lisboa', '2026-11-01', '2026-11-05', 'Europe/Lisbon', $1)
+         RETURNING id`,
+        [users.rows[0]!.id],
+      )
+      const tripId = trip.rows[0]!.id
+      await legacyClient.query(
+        `INSERT INTO trip_members (trip_id, user_id, role, joined_at)
+         VALUES ($1, $2, 'organizer', '2026-01-01T00:00:00Z'),
+                ($1, $3, 'member', '2026-01-02T00:00:00Z'),
+                ($1, $4, 'member', '2026-01-02T00:00:00Z')`,
+        [tripId, users.rows[0]!.id, users.rows[1]!.id, users.rows[2]!.id],
+      )
+      const legacyRows = await legacyClient.query<{ seq: string }>(
+        'SELECT seq::text AS seq FROM trip_members WHERE trip_id = $1',
+        [tripId],
+      )
+      expect(legacyRows.rows.map(({ seq }) => seq)).toEqual(['0', '0', '0'])
+
+      const syncMigration = await readFile(
+        new URL(`../migrations/${migrationNames[4]}`, import.meta.url),
+      )
+      await writeFile(join(migrationsDirectory, migrationNames[4]!), syncMigration)
+      await migrate({
+        databaseUrl: legacyDatabaseUrl.toString(),
+        migrationsDirectory,
+      })
+
+      const backfilledRows = await legacyClient.query<{ user_id: string; seq: string }>(
+        `SELECT user_id, seq::text AS seq
+         FROM trip_members
+         WHERE trip_id = $1
+         ORDER BY joined_at, user_id`,
+        [tripId],
+      )
+      const sequences = backfilledRows.rows.map(({ seq }) => seq)
+      expect(sequences).toEqual(['1', '2', '3'])
+      expect(new Set(sequences).size).toBe(3)
+      expect(sequences.every((seq) => BigInt(seq) > 0n)).toBe(true)
+
+      const counter = await legacyClient.query<{ seq_counter: string }>(
+        'SELECT seq_counter::text AS seq_counter FROM trips WHERE id = $1',
+        [tripId],
+      )
+      expect(counter.rows[0]?.seq_counter).toBe('3')
+    } finally {
+      await legacyClient.end()
+    }
+  } finally {
+    if (legacyDatabaseCreated) {
+      const admin = new pg.Client({ connectionString: legacyAdminUrl.toString() })
+      await admin.connect()
+      try {
+        await admin.query(`DROP DATABASE "${legacyDatabaseName}"`)
+      } finally {
+        await admin.end()
+      }
+    }
+    await rm(migrationsDirectory, { recursive: true, force: true })
   }
 })
