@@ -267,8 +267,8 @@ class LocalSyncClient implements SyncClient {
       for (const row of localTripRows) tripIds.add(row.trip_id)
       for (const tripId of [...tripIds].sort()) {
         await this.withTripLock(tripId, async () => {
-          const rejectedMembershipOperation = await this.pushTrip(tripId)
-          if (rejectedMembershipOperation) await this.clearTripForBootstrap(tripId)
+          const requiresBootstrap = await this.pushTrip(tripId)
+          if (requiresBootstrap) await this.clearTripForBootstrap(tripId)
           await this.pullTrip(tripId)
           await this.database.transaction(async (transaction) => {
             await this.ensureSyncState(transaction, tripId)
@@ -290,6 +290,7 @@ class LocalSyncClient implements SyncClient {
     }
   }
 
+  /** Indica quando o pull incremental não basta para reconciliar a projeção local. */
   private async pushTrip(tripId: UUID): Promise<boolean> {
     const rows = await this.database.all<OutboxRow>(
       `SELECT position, op_id, trip_id, type, payload, created_at, status, attempts, last_error
@@ -314,7 +315,7 @@ class LocalSyncClient implements SyncClient {
       return { operation: validation.value, row }
     })
 
-    let rejectedMembershipOperation = false
+    let requiresBootstrap = false
     for (let index = 0; index < operations.length; index += this.pushBatchSize) {
       const batch = operations.slice(index, index + this.pushBatchSize)
       const operationIds = batch.map(({ row }) => row.op_id)
@@ -358,8 +359,9 @@ class LocalSyncClient implements SyncClient {
           const result = results.get(opId)!
           if (result.status === 'applied' || result.status === 'duplicate') {
             await transaction.run('DELETE FROM outbox WHERE op_id = ?', [opId])
+            if (result.status === 'duplicate') requiresBootstrap = true
           } else if (result.reason === 'not_member' || result.reason === 'forbidden') {
-            rejectedMembershipOperation = true
+            requiresBootstrap = true
             await transaction.run(
               `UPDATE outbox SET status = 'not_sent', last_error = ? WHERE op_id = ?`,
               [result.reason, opId],
@@ -373,7 +375,7 @@ class LocalSyncClient implements SyncClient {
         }
       })
     }
-    return rejectedMembershipOperation
+    return requiresBootstrap
   }
 
   private matchPushResults(

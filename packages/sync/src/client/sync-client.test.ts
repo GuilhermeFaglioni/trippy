@@ -60,6 +60,27 @@ function createClient(
   })
 }
 
+async function expectDuplicateReconciliation(
+  transport: FakeSyncTransport,
+  performOperation: (client: Awaited<ReturnType<typeof createClient>>) => Promise<unknown>,
+): Promise<void> {
+  const database = createDatabase()
+  const client = await createClient(database, transport)
+  await client.syncNow()
+  const bootstrapCount = transport.pulls.filter((query) => query.mode === 'bootstrap').length
+
+  await performOperation(client)
+  await client.syncNow()
+
+  expect(client.getStatus().pending).toBe(0)
+  expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+    canonicalTripState(transport.state()),
+  )
+  expect(transport.pulls.filter((query) => query.mode === 'bootstrap').length).toBeGreaterThan(
+    bootstrapCount,
+  )
+}
+
 function createPlace(id: UUID, name: string, suggestedBy: UUID, seq: string): SyncPlace {
   return {
     id,
@@ -88,6 +109,19 @@ function createMember(userId: UUID, seq: string): SyncMember {
     userId,
     role: 'member',
     joinedAt: fixedTime,
+    seq,
+    deletedAt: null,
+  }
+}
+
+function createVisit(placeId: UUID, userId: UUID, seq: string, visitedAt = fixedTime): SyncVisit {
+  return {
+    placeId,
+    tripId,
+    userId,
+    markedBy: userId,
+    visitedAt,
+    visitedTz: 'UTC',
     seq,
     deletedAt: null,
   }
@@ -161,6 +195,11 @@ class FakeSyncTransport {
     this.sequence = this.sequence > BigInt(member.seq) ? this.sequence : BigInt(member.seq)
   }
 
+  seedVisit(visit: SyncVisit): void {
+    this.visits.set(`${visit.placeId}:${visit.userId}`, visit)
+    this.sequence = this.sequence > BigInt(visit.seq) ? this.sequence : BigInt(visit.seq)
+  }
+
   deletePlace(id: UUID): void {
     const place = this.places.get(id)
     if (!place) return
@@ -194,8 +233,7 @@ class FakeSyncTransport {
         return rejected
       }
 
-      this.apply(operation)
-      const result = { opId: operation.opId, status: 'applied' as const }
+      const result = this.apply(operation)
       this.applied.set(operation.opId, result)
       return result
     })
@@ -300,7 +338,28 @@ class FakeSyncTransport {
     }
   }
 
-  private apply(operation: SyncOperation): void {
+  private apply(operation: SyncOperation): PushResponse['results'][number] {
+    if (operation.type === 'place.add' && this.places.has(operation.placeId)) {
+      return { opId: operation.opId, status: 'duplicate' }
+    }
+
+    if (operation.type === 'place.remove') {
+      const place = this.places.get(operation.placeId)
+      if (!place || place.deletedAt !== null) {
+        return { opId: operation.opId, status: 'duplicate' }
+      }
+    }
+
+    if (operation.type === 'visit.mark' || operation.type === 'visit.unmark') {
+      const visit = this.visits.get(`${operation.placeId}:${this.userId}`)
+      if (operation.type === 'visit.mark' && visit?.deletedAt === null) {
+        return { opId: operation.opId, status: 'duplicate' }
+      }
+      if (operation.type === 'visit.unmark' && (!visit || visit.deletedAt !== null)) {
+        return { opId: operation.opId, status: 'duplicate' }
+      }
+    }
+
     this.sequence += 1n
     const seq = String(this.sequence)
     if (operation.type === 'place.add') {
@@ -325,6 +384,7 @@ class FakeSyncTransport {
         deletedAt: operation.type === 'visit.mark' ? null : fixedTime,
       })
     }
+    return { opId: operation.opId, status: 'applied' }
   }
 }
 
@@ -396,6 +456,67 @@ describe('SyncClient', () => {
     expect(transport.pushes[1]?.[0]?.opId).toBe(originalOperationId)
     expect(transport.state().places).toHaveLength(1)
     expect(client.getStatus().pending).toBe(0)
+  })
+
+  it('reconcilia visita otimista quando o servidor reconhece marcação sem mudança', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    const authoritativeVisit = createVisit(placeA, userA, '3', '2026-10-20T09:30:00.000Z')
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '2'))
+    transport.seedVisit(authoritativeVisit)
+    const client = await createClient(database, transport)
+
+    await client.syncNow()
+    const bootstrapCount = transport.pulls.filter((query) => query.mode === 'bootstrap').length
+    await client.markVisit(tripId, placeA)
+    await client.syncNow()
+
+    expect(client.getStatus().pending).toBe(0)
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+    expect(transport.pulls.filter((query) => query.mode === 'bootstrap').length).toBeGreaterThan(
+      bootstrapCount,
+    )
+  })
+
+  it('reconcilia unmark quando não existe visita no servidor', async () => {
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '2'))
+
+    await expectDuplicateReconciliation(transport, (client) => client.unmarkVisit(tripId, placeA))
+  })
+
+  it('reconcilia remoção de lugar já removido no servidor', async () => {
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace({ ...createPlace(placeA, 'Removido', userA, '2'), deletedAt: fixedTime })
+
+    await expectDuplicateReconciliation(transport, (client) => client.removePlace(tripId, placeA))
+  })
+
+  it('reconcilia place.add repetido com placeId existente', async () => {
+    const transport = new FakeSyncTransport()
+    const generatedPlaceId = '00000000-0000-4000-8000-000000000001'
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(generatedPlaceId, 'Nome confirmado', userA, '2'))
+
+    await expectDuplicateReconciliation(transport, (client) =>
+      client.addPlace(tripId, 'Nome otimista'),
+    )
+  })
+
+  it('reconcilia resposta duplicate para opId já aplicado', async () => {
+    const transport = new FakeSyncTransport()
+    const repeatedOpId = '00000000-0000-4000-8000-000000000001'
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '2'))
+    transport.seedVisit(createVisit(placeA, userA, '3', '2026-10-20T09:30:00.000Z'))
+    transport.applied.set(repeatedOpId, { opId: repeatedOpId, status: 'applied' })
+
+    await expectDuplicateReconciliation(transport, (client) => client.markVisit(tripId, placeA))
   })
 
   it('faz bootstrap paginado e recebe remoções pelo pull incremental', async () => {

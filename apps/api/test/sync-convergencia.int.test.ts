@@ -411,3 +411,52 @@ it('converge após resposta perdida, fechamento offline, remoção e escritas si
   expect(clientA.getStatus().pending).toBe(0)
   expect(clientB.getStatus().pending).toBe(0)
 })
+
+it('reconcilia uma marcação repetida com o estado confirmado pela API', async () => {
+  const tripResponse = await post(
+    '/trips',
+    {
+      name: `Convergência de duplicata ${randomUUID()}`,
+      destination: 'Lisboa',
+      startDate: '2026-12-01',
+      endDate: '2026-12-05',
+      timezone: 'Europe/Lisbon',
+    },
+    'convergencia-organizador',
+  )
+  expect(tripResponse.status).toBe(201)
+  tripId = ((await tripResponse.json()) as { trip: { id: UUID } }).trip.id
+
+  const controls: ClientControls = {
+    online: true,
+    loseNextPushResponse: false,
+    pullQueries: [],
+    pushRequests: [],
+  }
+  const { database, client } = await openClient(
+    organizerId,
+    'convergencia-organizador',
+    'cliente-marcacao-repetida.sqlite',
+    controls,
+  )
+  await client.syncNow()
+
+  const placeId = await client.addPlace(tripId, 'Miradouro')
+  await client.markVisit(tripId, placeId)
+  await client.syncNow()
+  const firstMark = controls.pushRequests
+    .at(-1)!
+    .operations.find((operation) => operation.type === 'visit.mark')!
+
+  await client.markVisit(tripId, placeId)
+  await client.syncNow()
+  const repeatedMark = controls.pushRequests.at(-1)!.operations[0]!
+  expect(repeatedMark.type).toBe('visit.mark')
+  expect(repeatedMark.opId).not.toBe(firstMark.opId)
+  await client.syncNow()
+
+  expect(client.getStatus()).toMatchObject({ pending: 0, notSent: 0, lastError: null })
+  expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+    canonicalTripState(await readServerState(tripId)),
+  )
+})
