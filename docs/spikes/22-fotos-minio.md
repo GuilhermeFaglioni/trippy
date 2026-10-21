@@ -50,13 +50,15 @@ Os cinco arquivos foram adicionados com `xcrun simctl addmedia` ao Simulator `Ma
 - No seletor real do iOS, foram selecionadas cinco fixtures importadas: HEIC e JPEG com offsets EXIF distintos, JPEG com GPS sem offset e HEIC/JPEG sem EXIF. A tela exibiu `5 fotos`; após envio, linhas exibiam `Enviada`.
 - O fluxo Maestro parou e reabriu o app com `clearState: false`, abriu a mesma viagem (`093a2a83-842a-49f6-adf7-6bf4b10e13e6`) e confirmou a tela e `5 fotos`. A hierarquia capturada contém cinco rótulos `Foto da viagem. Sem lugar. Enviada.`. O fluxo Maestro terminou com falha na asserção de texto isolado `Enviada`; esse texto compõe o rótulo acessível completo de cada foto e não aparece como elemento textual separado.
 - A viagem de ensaio foi criada na API em `localhost:3022`.
-- Depois do ensaio, o coordenador confirmou por consulta somente leitura em `trippy_w22_rebase` cinco fotos `uploaded` para essa viagem: Pequim `2026-10-20T08:12:03` / `+08:00` / `39.9042, 116.4074`; Paraty `2026-10-19T20:45:10` / `-03:00` / `-23.2237, -44.7192`; Tóquio `2026-10-18T14:20:00` / sem fuso / `35.6762, 139.6503`; duas sem EXIF com todos os campos nulos. O coordenador também confirmou leitura dos cinco objetos MinIO e conversão via sharp para JPEG 2048 × 1360 (~84 KB), além de cinco mensagens publicadas na outbox e processamento nas filas exclusivas `trippy-w22-*`.
+- Depois do ensaio, o coordenador confirmou por consulta somente leitura em `trippy_w22_rebase` cinco fotos `uploaded` para essa viagem: Pequim `2026-10-20T08:12:03` / `+08:00` / `39.9042, 116.4074`; Paraty `2026-10-19T20:45:10` / `-03:00` / `-23.2237, -44.7192`; Tóquio `2026-10-18T14:20:00` / sem fuso / `35.6762, 139.6503`; duas sem EXIF com todos os campos nulos. O coordenador também confirmou leitura dos cinco objetos MinIO e validação via sharp como JPEG 2048 × 1360 (~84 KB), além de cinco mensagens publicadas na outbox e encaminhadas às filas exclusivas `trippy-w22-*`; status final `ready` e thumbnails não foram confirmados.
 
 ## Pendente
 
 - A verificação dos metadados persistidos foi feita pelo coordenador no banco/MinIO, não por consulta direta deste worker.
 - O estado `Enviada` após reabertura está presente nos cinco rótulos acessíveis capturados; a asserção Maestro por texto exato `Enviada` falhou porque buscava elemento separado. Não foi repetido o ensaio.
-- Não foi confirmado se uma tentativa interrompida e repetida mantém o mesmo UUID sem criar duplicatas. A validação combinada pós-rebase do pai foi reportada pelo coordenador como verde.
+- Não foi confirmado se uma tentativa interrompida e repetida mantém o mesmo UUID sem criar duplicatas.
+- A consulta confirmou status `uploaded` e bytes dos cinco objetos, mas não status final `ready` nem disponibilidade das thumbnails após processamento assíncrono.
+- A validação combinada pós-rebase do pai foi reportada pelo coordenador como verde.
 - Não foi simulado encerramento do app com itens ainda pendentes nem queda de rede durante envio; reabrir com cinco fotos enviadas não comprova retomada de fila pendente nem ausência de duplicatas após retry.
 - Upload enquanto o app está em segundo plano não foi testado no Simulator.
 - O ensaio criou viagem ID `093a2a83-842a-49f6-adf7-6bf4b10e13e6`; dados de teste não foram apagados.
