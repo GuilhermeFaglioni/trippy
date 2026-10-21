@@ -1,0 +1,2790 @@
+{
+  "method": {
+    "chosenAt": "2026-10-21",
+    "selectionRule": "Amostra estratificada definida antes de qualquer chamada à Geoapify ou ao Google: 15 casos por cidade chinesa (8 atrações, 4 hotéis, 3 restaurantes), 20 globais (6 atrações, 8 restaurantes e 6 hotéis) e 10 consultas de endereço. O recorte essencial desta amostra foi fixado antes dos resultados e inclui: Cidade Proibida, Mutianyu, Badaling, Templo do Céu, Palácio de Verão, Praça Tiananmen, Bund, Jardim Yu, Torre Pérola Oriental, Shanghai Tower e Nanjing Road. Os demais casos cobrem categorias, restaurantes menores, filiais e entradas. Nenhum caso foi reaproveitado por ter acertado em benchmark anterior.",
+    "exclusionRule": "Só casos com verification.status=verified entram em measuredSample25. Casos sem coordenada independente ou com dependência OSM ficam como unverified, com motivo, e não entram nas métricas até nova verificação.",
+    "noProviderCallsBeforeCommit": true
+  },
+  "cases": [
+    {
+      "id": "cn-bj-forbidden-city",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Cidade Proibida",
+        "en": "Forbidden City",
+        "local": "故宫博物院"
+      },
+      "acceptedNames": [
+        "故宫博物院",
+        "Palace Museum",
+        "Forbidden City"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "景山前街"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.91583333,
+        "lon": 116.39083333,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.91583333,
+          "lon": 116.39083333
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q80290",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://en.dpm.org.cn/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "essential": true
+    },
+    {
+      "id": "cn-bj-mutianyu",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Grande Muralha de Mutianyu",
+        "en": "Mutianyu Great Wall",
+        "local": "慕田峪长城"
+      },
+      "acceptedNames": [
+        "慕田峪长城",
+        "Mutianyu Great Wall"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "怀柔区",
+        "慕田峪村"
+      ],
+      "referenceCoordinate": {
+        "lat": 40.43801667,
+        "lon": 116.5619,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 40.43801667,
+          "lon": 116.5619
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q212610",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://en.mutianyugreatwall.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada de visitantes de Mutianyu",
+      "essential": true
+    },
+    {
+      "id": "cn-bj-badaling",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Grande Muralha de Badaling",
+        "en": "Badaling Great Wall",
+        "local": "八达岭长城"
+      },
+      "acceptedNames": [
+        "八达岭长城",
+        "Badaling Great Wall"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "延庆区",
+        "八达岭"
+      ],
+      "referenceCoordinate": {
+        "lat": 40.35428,
+        "lon": 116.00649,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 40.35428,
+          "lon": 116.00649
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q798826",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://english.visitbeijing.com.cn/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada principal de Badaling",
+      "essential": true
+    },
+    {
+      "id": "cn-bj-temple-heaven",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Templo do Céu",
+        "en": "Temple of Heaven",
+        "local": "天坛公园"
+      },
+      "acceptedNames": [
+        "天坛公园",
+        "天坛",
+        "Temple of Heaven"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "天坛东路"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.8822,
+        "lon": 116.4066,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.8822,
+          "lon": 116.4066
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q125445",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.tiantanpark.cn/en/open_page.html",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "essential": true
+    },
+    {
+      "id": "cn-bj-summer-palace",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Palácio de Verão",
+        "en": "Summer Palace",
+        "local": "颐和园"
+      },
+      "acceptedNames": [
+        "颐和园",
+        "Summer Palace"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "海淀区",
+        "新建宫门路"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.9975,
+        "lon": 116.2689,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.9975,
+          "lon": 116.2689
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q4132",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://english.visitbeijing.com.cn/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "essential": true
+    },
+    {
+      "id": "cn-bj-tiananmen-square",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Praça Tiananmen",
+        "en": "Tiananmen Square",
+        "local": "天安门广场"
+      },
+      "acceptedNames": [
+        "天安门广场",
+        "Tiananmen Square"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "长安街"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.904567,
+        "lon": 116.391392,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.904567,
+          "lon": 116.391392
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q164055",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://english.beijing.gov.cn/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada sul pela Zhengyangmen",
+      "essential": true
+    },
+    {
+      "id": "cn-bj-confucius-temple",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Templo de Confúcio de Pequim",
+        "en": "Beijing Confucius Temple",
+        "local": "北京孔庙"
+      },
+      "acceptedNames": [
+        "北京孔庙",
+        "北京孔庙和国子监",
+        "Beijing Confucius Temple"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "国子监街"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.9499,
+        "lon": 116.4076,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.9499,
+          "lon": 116.4076
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Beijing_Confucius_Temple",
+          "type": "wikipedia"
+        },
+        {
+          "url": "https://english.beijing.gov.cn/beijinginfo/culture/culturaltreasures/cityofmuseums/list/202604/t20260423_4605912.html",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "portão principal do Templo de Confúcio"
+    },
+    {
+      "id": "cn-bj-drum-tower",
+      "segment": "china-atracao",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Torre do Tambor de Pequim",
+        "en": "Beijing Drum Tower",
+        "local": "北京鼓楼"
+      },
+      "acceptedNames": [
+        "北京鼓楼",
+        "Beijing Drum Tower"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "鼓楼东大街"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.93935,
+        "lon": 116.38975,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.93935,
+          "lon": 116.38975
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q10397389",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://english.beijing.gov.cn/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial.",
+        "reason": "A coordenada do Wikidata cita OpenStreetMap; o caso fica fora das métricas até confirmar ponto em fonte independente."
+      },
+      "expectedBranchOrEntrance": "entrada sul da torre"
+    },
+    {
+      "id": "cn-bj-peninsula-hotel",
+      "segment": "china-hotel",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Hotel Peninsula Pequim",
+        "en": "The Peninsula Beijing",
+        "local": "北京王府半岛酒店"
+      },
+      "acceptedNames": [
+        "北京王府半岛酒店",
+        "The Peninsula Beijing",
+        "Peninsula Palace Beijing"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "金鱼胡同",
+        "8"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.9135567,
+        "lon": 116.4101712,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.9135567,
+          "lon": 116.4101712
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q30593754",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.peninsula.com/en/global-pages/contact-us",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "cn-bj-beijing-hotel",
+      "segment": "china-hotel",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Hotel de Pequim",
+        "en": "Beijing Hotel",
+        "local": "北京饭店"
+      },
+      "acceptedNames": [
+        "北京饭店",
+        "Beijing Hotel"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "东长安街",
+        "33"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.907745,
+        "lon": 116.403987,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.907745,
+          "lon": 116.403987
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q1306949",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.chinabeijinghotel.com.cn/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "cn-bj-opposite-house",
+      "segment": "china-hotel",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "The Opposite House",
+        "en": "The Opposite House",
+        "local": "瑜舍"
+      },
+      "acceptedNames": [
+        "瑜舍",
+        "The Opposite House"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "朝阳区",
+        "三里屯路",
+        "11"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.9372,
+        "lon": 116.447,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.9372,
+          "lon": 116.447
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q16947066",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.oppositehousebeijing.cn/en",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial.",
+        "reason": "A página oficial confirma o endereço, mas o item independente não fornece coordenada citada; fica fora das métricas até confirmar ponto em mapa oficial."
+      }
+    },
+    {
+      "id": "cn-bj-china-world-summit-wing",
+      "segment": "china-hotel",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "China World Summit Wing",
+        "en": "China World Summit Wing",
+        "local": "北京国贸大酒店"
+      },
+      "acceptedNames": [
+        "北京国贸大酒店",
+        "China World Summit Wing"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "朝阳区",
+        "建国门外大街",
+        "1"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.9083,
+        "lon": 116.461,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.9083,
+          "lon": 116.461
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.shangri-la.com/beijing/chn/worldsummitwing/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "cn-bj-liqun-roast-duck",
+      "segment": "china-restaurante",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Pato assado Li Qun",
+        "en": "Li Qun Roast Duck",
+        "local": "利群烤鸭店"
+      },
+      "acceptedNames": [
+        "利群烤鸭店",
+        "Liqun Roast Duck",
+        "Li Qun"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "东城区",
+        "北翔凤胡同",
+        "11"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.8969,
+        "lon": 116.4031,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.8969,
+          "lon": 116.4031
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://english.visitbeijing.com.cn/article/47ONf32dCKq",
+          "type": "autoridade-turismo"
+        },
+        {
+          "url": "https://r.visitbeijing.com.cn/brand/301",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial do hutong Beixiangfeng, nº 11"
+    },
+    {
+      "id": "cn-bj-taishuxi-huixin",
+      "segment": "china-restaurante",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Restaurante Taishuxi, filial Huixin",
+        "en": "Taishuxi Home-cooking, Huixin Branch",
+        "local": "太熟悉家常菜惠新店"
+      },
+      "acceptedNames": [
+        "太熟悉家常菜",
+        "Taishuxi Home-cooking"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "朝阳区",
+        "惠新东街",
+        "19"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.987,
+        "lon": 116.423,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.987,
+          "lon": 116.423
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://english.visitbeijing.com.cn/article/47ON5WsJGfy",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Huixin, nº 19 Huixindongjie"
+    },
+    {
+      "id": "cn-bj-xin-rong-ji-xinyuan",
+      "segment": "china-restaurante",
+      "city": "Pequim",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Xin Rong Ji, filial Xinyuan Nanlu",
+        "en": "Xin Rong Ji, Xinyuan Nanlu Branch",
+        "local": "新荣记新源南路店"
+      },
+      "acceptedNames": [
+        "新荣记",
+        "Xin Rong Ji"
+      ],
+      "expectedLocalAddressTokens": [
+        "北京市",
+        "朝阳区",
+        "新源南路",
+        "8"
+      ],
+      "referenceCoordinate": {
+        "lat": 39.955,
+        "lon": 116.438,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 39.955,
+          "lon": 116.438
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://english.visitbeijing.com.cn/article/4JR22fw8Nyo",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Xinyuan Nanlu, nº 8"
+    },
+    {
+      "id": "cn-sh-bund",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Bund de Xangai",
+        "en": "The Bund",
+        "local": "外滩"
+      },
+      "acceptedNames": [
+        "外滩",
+        "The Bund",
+        "Waitan"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "黄浦区",
+        "中山东一路"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.2407,
+        "lon": 121.4906,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.2407,
+          "lon": 121.4906
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q125474",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://english.shanghai.gov.cn/en-TravelinShanghai/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "calçadão do Bund, trecho central",
+      "essential": true
+    },
+    {
+      "id": "cn-sh-yuyuan",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Jardim Yu",
+        "en": "Yuyuan Garden",
+        "local": "豫园"
+      },
+      "acceptedNames": [
+        "豫园",
+        "Yuyuan Garden",
+        "Yu Garden"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "黄浦区",
+        "安仁街",
+        "218"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.227,
+        "lon": 121.492,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.227,
+          "lon": 121.492
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://english.shanghai.gov.cn/en-Parks/20241118/3ab0a509201343a59102f9bc63a3aab4.html",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial.",
+        "reason": "A fonte independente confirma nome e endereço, mas não confirma a coordenada de referência; fica fora das métricas até incluir uma fonte independente de coordenadas."
+      },
+      "expectedBranchOrEntrance": "entrada principal pela Anren Street",
+      "essential": true
+    },
+    {
+      "id": "cn-sh-oriental-pearl",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Torre Pérola Oriental",
+        "en": "Oriental Pearl Tower",
+        "local": "东方明珠广播电视塔"
+      },
+      "acceptedNames": [
+        "东方明珠广播电视塔",
+        "东方明珠",
+        "Oriental Pearl Tower"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "浦东新区",
+        "世纪大道",
+        "1"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.24166944,
+        "lon": 121.49471667,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.24166944,
+          "lon": 121.49471667
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q223207",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://english.shanghai.gov.cn/en-ScenicSpots/20231205/19a5f5184eca45728fd57a4d4c8efc61.html",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "essential": true
+    },
+    {
+      "id": "cn-sh-shanghai-tower",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Torre de Xangai",
+        "en": "Shanghai Tower",
+        "local": "上海中心大厦"
+      },
+      "acceptedNames": [
+        "上海中心大厦",
+        "Shanghai Tower"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "浦东新区",
+        "银城中路",
+        "501"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.2355,
+        "lon": 121.501,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.2355,
+          "lon": 121.501
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q18547",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.shanghaitower.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada de visitantes no nível B1",
+      "essential": true
+    },
+    {
+      "id": "cn-sh-nanjing-road",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Rua Nanjing",
+        "en": "Nanjing Road",
+        "local": "南京路步行街"
+      },
+      "acceptedNames": [
+        "南京路步行街",
+        "南京路",
+        "Nanjing Road"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "黄浦区",
+        "南京东路"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.23472222,
+        "lon": 121.47444444,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.23472222,
+          "lon": 121.47444444
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q579977",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://english.shanghai.gov.cn/en-TravelinShanghai/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "trecho pedonal da Nanjing East Road",
+      "essential": true
+    },
+    {
+      "id": "cn-sh-zhujiajiao",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Cidade antiga de Zhujiajiao",
+        "en": "Zhujiajiao Ancient Town",
+        "local": "朱家角古镇"
+      },
+      "acceptedNames": [
+        "朱家角古镇",
+        "Zhujiajiao Ancient Town"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "青浦区",
+        "新溪路",
+        "180"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.11164,
+        "lon": 121.05176,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.11164,
+          "lon": 121.05176
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q198220",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.zhujiajiao.com/en/location/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "centro de visitantes, nº 180 Xinxi Road"
+    },
+    {
+      "id": "cn-sh-ocean-aquarium",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Aquário Oceânico de Xangai",
+        "en": "Shanghai Ocean Aquarium",
+        "local": "上海海洋水族馆"
+      },
+      "acceptedNames": [
+        "上海海洋水族馆",
+        "Shanghai Ocean Aquarium"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "浦东新区",
+        "陆家嘴环路",
+        "1388"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.24255,
+        "lon": 121.49717,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.24255,
+          "lon": 121.49717
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q2859205",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.sh-aquarium.com/en/TransportationOutsideThePark/index.aspx",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada sul do aquário"
+    },
+    {
+      "id": "cn-sh-museum-east",
+      "segment": "china-atracao",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Museu de Xangai, ala leste",
+        "en": "Shanghai Museum East",
+        "local": "上海博物馆东馆"
+      },
+      "acceptedNames": [
+        "上海博物馆东馆",
+        "Shanghai Museum East"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "浦东新区",
+        "世纪大道",
+        "1952"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.222107,
+        "lon": 121.534338,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.222107,
+          "lon": 121.534338
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q124211936",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.shanghaimuseum.cn/mu/frontend/pg/en/service/visit-east",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "portão leste B1, próximo à Dingxiang Road"
+    },
+    {
+      "id": "cn-sh-peace-hotel",
+      "segment": "china-hotel",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Hotel Peace",
+        "en": "Peace Hotel",
+        "local": "和平饭店"
+      },
+      "acceptedNames": [
+        "和平饭店",
+        "Peace Hotel",
+        "Fairmont Peace Hotel"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "黄浦区",
+        "南京东路",
+        "20"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.2411,
+        "lon": 121.4851,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.2411,
+          "lon": 121.4851
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q377875",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.fairmont.com/en/hotels/shanghai/fairmont-peace-hotel.html",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "cn-sh-grand-hyatt",
+      "segment": "china-hotel",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Grand Hyatt Xangai",
+        "en": "Grand Hyatt Shanghai",
+        "local": "上海金茂君悦大酒店"
+      },
+      "acceptedNames": [
+        "上海金茂君悦大酒店",
+        "Grand Hyatt Shanghai"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "浦东新区",
+        "世纪大道",
+        "88"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.23722222,
+        "lon": 121.50138889,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.23722222,
+          "lon": 121.50138889
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q5594663",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.hyatt.com/grand-hyatt/en-US/shagh-grand-hyatt-shanghai/hotel-info",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "cn-sh-peninsula",
+      "segment": "china-hotel",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Hotel Peninsula Xangai",
+        "en": "The Peninsula Shanghai",
+        "local": "上海半岛酒店"
+      },
+      "acceptedNames": [
+        "上海半岛酒店",
+        "The Peninsula Shanghai"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "黄浦区",
+        "中山东一路",
+        "32"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.2434,
+        "lon": 121.4847,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.2434,
+          "lon": 121.4847
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q24911653",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.peninsula.com/en/global-pages/contact-us",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "cn-sh-kerry-hotel",
+      "segment": "china-hotel",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Kerry Hotel Pudong Xangai",
+        "en": "Kerry Hotel Pudong Shanghai",
+        "local": "上海浦东嘉里大酒店"
+      },
+      "acceptedNames": [
+        "上海浦东嘉里大酒店",
+        "Kerry Hotel Pudong"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "浦东新区",
+        "花木路",
+        "1388"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.215,
+        "lon": 121.563,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.215,
+          "lon": 121.563
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.shangri-la.com/shanghai/kerryhotelpudong/about/map-directions/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "cn-sh-jia-jia-tang-bao",
+      "segment": "china-restaurante",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Jia Jia Tang Bao, filial Huanghe Road",
+        "en": "Jia Jia Tang Bao, Huanghe Road Branch",
+        "local": "佳家汤包黄河路店"
+      },
+      "acceptedNames": [
+        "佳家汤包",
+        "Jia Jia Tang Bao",
+        "Jiajia Steamed Dumpling"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "黄浦区",
+        "黄河路",
+        "127"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.2339,
+        "lon": 121.4724,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.2339,
+          "lon": 121.4724
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.meet-in-shanghai.net/en/food/jia-jia-tang-bao-261649/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Huanghe Road, nº 127"
+    },
+    {
+      "id": "cn-sh-nanmen-hotpot",
+      "segment": "china-restaurante",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Nanmen Hotpot, filial Expo Avenue",
+        "en": "Nanmen Hotpot, Expo Avenue Branch",
+        "local": "南门涮肉世博大道店"
+      },
+      "acceptedNames": [
+        "南门涮肉",
+        "Nanmen Hotpot"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "浦东新区",
+        "世博大道",
+        "450"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.199,
+        "lon": 121.5,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.199,
+          "lon": 121.5
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.meet-in-shanghai.net/en/news/hai-lights-shanghais-musttry-copper-pot-hotpots-to-warm-up-this-winter-471029/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Expo Avenue, nº 450"
+    },
+    {
+      "id": "cn-sh-changxinglou",
+      "segment": "china-restaurante",
+      "city": "Xangai",
+      "countryCode": "cn",
+      "queries": {
+        "pt": "Changxinglou, Nanxiang",
+        "en": "Changxinglou Restaurant, Nanxiang",
+        "local": "南翔长兴楼"
+      },
+      "acceptedNames": [
+        "长兴楼",
+        "Changxinglou Restaurant"
+      ],
+      "expectedLocalAddressTokens": [
+        "上海市",
+        "嘉定区",
+        "解放街",
+        "206"
+      ],
+      "referenceCoordinate": {
+        "lat": 31.296,
+        "lon": 121.312,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 31.296,
+          "lon": 121.312
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 150,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.meet-in-shanghai.net/en/guide/jiading-itinerary-for-special-forces-travelers-675656/",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Nanxiang Old Street, nº 206 Jiefang Street"
+    },
+    {
+      "id": "global-sagrada-familia",
+      "segment": "global-atracao",
+      "city": "Barcelona",
+      "countryCode": "es",
+      "queries": {
+        "pt": "Basílica da Sagrada Família",
+        "en": "Sagrada Família",
+        "local": "Basílica de la Sagrada Família"
+      },
+      "acceptedNames": [
+        "Basílica de la Sagrada Família",
+        "Sagrada Família",
+        "Sagrada Familia"
+      ],
+      "expectedLocalAddressTokens": [
+        "Carrer de Mallorca",
+        "401",
+        "Barcelona"
+      ],
+      "referenceCoordinate": {
+        "lat": 41.40369,
+        "lon": 2.17433,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 41.40369,
+          "lon": 2.17433
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q48435",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://sagradafamilia.org/en/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-machu-picchu",
+      "segment": "global-atracao",
+      "city": "Cusco",
+      "countryCode": "pe",
+      "queries": {
+        "pt": "Machu Picchu",
+        "en": "Machu Picchu",
+        "local": "Machu Pikchu"
+      },
+      "acceptedNames": [
+        "Machu Picchu",
+        "Huayna Picchu"
+      ],
+      "expectedLocalAddressTokens": [
+        "Cusco",
+        "Urubamba",
+        "Machu Picchu"
+      ],
+      "referenceCoordinate": {
+        "lat": -13.16333333,
+        "lon": -72.54555556,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": -13.16333333,
+          "lon": -72.54555556
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q676203",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://whc.unesco.org/en/list/274/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-acropolis-athens",
+      "segment": "global-atracao",
+      "city": "Atenas",
+      "countryCode": "gr",
+      "queries": {
+        "pt": "Acrópole de Atenas",
+        "en": "Acropolis of Athens",
+        "local": "Ακρόπολη Αθηνών"
+      },
+      "acceptedNames": [
+        "Ακρόπολη Αθηνών",
+        "Acropolis of Athens",
+        "Acrópole"
+      ],
+      "expectedLocalAddressTokens": [
+        "Αθήνα",
+        "Αττική"
+      ],
+      "referenceCoordinate": {
+        "lat": 37.97166667,
+        "lon": 23.72611111,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 37.97166667,
+          "lon": 23.72611111
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q131013",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://odysseus.culture.gr/h/3/eh351.jsp?obj_id=2384",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada pela Dionysiou Areopagitou"
+    },
+    {
+      "id": "global-golden-gate",
+      "segment": "global-atracao",
+      "city": "São Francisco",
+      "countryCode": "us",
+      "queries": {
+        "pt": "Ponte Golden Gate",
+        "en": "Golden Gate Bridge",
+        "local": "Golden Gate Bridge"
+      },
+      "acceptedNames": [
+        "Golden Gate Bridge",
+        "Ponte Golden Gate"
+      ],
+      "expectedLocalAddressTokens": [
+        "San Francisco",
+        "California"
+      ],
+      "referenceCoordinate": {
+        "lat": 37.81972222,
+        "lon": -122.47861111,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 37.81972222,
+          "lon": -122.47861111
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q44440",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.goldengate.org/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada pedonal sul"
+    },
+    {
+      "id": "global-shibuya-crossing",
+      "segment": "global-atracao",
+      "city": "Tóquio",
+      "countryCode": "jp",
+      "queries": {
+        "pt": "Cruzamento de Shibuya",
+        "en": "Shibuya Crossing",
+        "local": "渋谷スクランブル交差点"
+      },
+      "acceptedNames": [
+        "渋谷スクランブル交差点",
+        "Shibuya Scramble Crossing",
+        "Shibuya Crossing"
+      ],
+      "expectedLocalAddressTokens": [
+        "東京都",
+        "渋谷区",
+        "道玄坂"
+      ],
+      "referenceCoordinate": {
+        "lat": 35.65950278,
+        "lon": 139.70054444,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 35.65950278,
+          "lon": 139.70054444
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q21083961",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.gotokyo.org/en/spot/74/index.html",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "cruzamento junto à saída Hachiko"
+    },
+    {
+      "id": "global-sydney-opera",
+      "segment": "global-atracao",
+      "city": "Sydney",
+      "countryCode": "au",
+      "queries": {
+        "pt": "Ópera de Sydney",
+        "en": "Sydney Opera House",
+        "local": "Sydney Opera House"
+      },
+      "acceptedNames": [
+        "Sydney Opera House",
+        "Ópera de Sydney"
+      ],
+      "expectedLocalAddressTokens": [
+        "Bennelong Point",
+        "Sydney"
+      ],
+      "referenceCoordinate": {
+        "lat": -33.857058,
+        "lon": 151.214897,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": -33.857058,
+          "lon": 151.214897
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q45178",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.sydneyoperahouse.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "entrada voltada ao Circular Quay"
+    },
+    {
+      "id": "global-las-du-fallafel",
+      "segment": "global-restaurante",
+      "city": "Paris",
+      "countryCode": "fr",
+      "queries": {
+        "pt": "L’As du Fallafel",
+        "en": "L’As du Fallafel",
+        "local": "L’As du Fallafel"
+      },
+      "acceptedNames": [
+        "L’As du Fallafel",
+        "L’As du Fallafel Paris"
+      ],
+      "expectedLocalAddressTokens": [
+        "34 rue des Rosiers",
+        "75004 Paris"
+      ],
+      "referenceCoordinate": {
+        "lat": 48.857425,
+        "lon": 2.359072,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 48.857425,
+          "lon": 2.359072
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q6455605",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://parisjetaime.com/eng/restaurant/l-as-du-fallafel-p455",
+          "type": "autoridade-turismo"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-katzs",
+      "segment": "global-restaurante",
+      "city": "Nova York",
+      "countryCode": "us",
+      "queries": {
+        "pt": "Katz’s Delicatessen",
+        "en": "Katz’s Delicatessen",
+        "local": "Katz’s Delicatessen"
+      },
+      "acceptedNames": [
+        "Katz’s Delicatessen",
+        "Katz’s"
+      ],
+      "expectedLocalAddressTokens": [
+        "205 East Houston Street",
+        "New York"
+      ],
+      "referenceCoordinate": {
+        "lat": 40.7223,
+        "lon": -73.9874,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 40.7223,
+          "lon": -73.9874
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q2611788",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://katzsdelicatessen.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-pizzeria-bianco",
+      "segment": "global-restaurante",
+      "city": "Phoenix",
+      "countryCode": "us",
+      "queries": {
+        "pt": "Pizzaria Bianco",
+        "en": "Pizzeria Bianco",
+        "local": "Pizzeria Bianco"
+      },
+      "acceptedNames": [
+        "Pizzeria Bianco",
+        "Pizzeria Bianco Downtown"
+      ],
+      "expectedLocalAddressTokens": [
+        "623 East Adams Street",
+        "Phoenix"
+      ],
+      "referenceCoordinate": {
+        "lat": 33.44921,
+        "lon": -112.06564,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 33.44921,
+          "lon": -112.06564
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q7199997",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.pizzeriabianco.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Downtown Phoenix"
+    },
+    {
+      "id": "global-cafe-de-flore",
+      "segment": "global-restaurante",
+      "city": "Paris",
+      "countryCode": "fr",
+      "queries": {
+        "pt": "Café de Flore",
+        "en": "Café de Flore",
+        "local": "Café de Flore"
+      },
+      "acceptedNames": [
+        "Café de Flore"
+      ],
+      "expectedLocalAddressTokens": [
+        "172 boulevard Saint-Germain",
+        "75006 Paris"
+      ],
+      "referenceCoordinate": {
+        "lat": 48.854152,
+        "lon": 2.332634,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 48.854152,
+          "lon": 2.332634
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://fr.wikipedia.org/wiki/Caf%C3%A9_de_Flore",
+          "type": "wikipedia"
+        },
+        {
+          "url": "https://parisjetaime.com/eng/restaurant/cafe-de-flore-p674",
+          "type": "autoridade-turismo"
+        },
+        {
+          "url": "https://cafedeflore.fr/en/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-din-tai-fung-xinyi",
+      "segment": "global-restaurante",
+      "city": "Taipei",
+      "countryCode": "tw",
+      "queries": {
+        "pt": "Din Tai Fung, filial Xinyi",
+        "en": "Din Tai Fung, Xinyi Branch",
+        "local": "鼎泰豐信義店"
+      },
+      "acceptedNames": [
+        "鼎泰豐信義店",
+        "Din Tai Fung Xinyi Branch"
+      ],
+      "expectedLocalAddressTokens": [
+        "台北市",
+        "信義路二段",
+        "194"
+      ],
+      "referenceCoordinate": {
+        "lat": 25.0339,
+        "lon": 121.5303,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 25.0339,
+          "lon": 121.5303
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.dintaifung.com.tw/eng/store.php",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Xinyi, nº 194, Section 2, Xinyi Road"
+    },
+    {
+      "id": "global-shake-shack-madison",
+      "segment": "global-restaurante",
+      "city": "Nova York",
+      "countryCode": "us",
+      "queries": {
+        "pt": "Shake Shack, Madison Square Park",
+        "en": "Shake Shack, Madison Square Park",
+        "local": "Shake Shack, Madison Square Park"
+      },
+      "acceptedNames": [
+        "Shake Shack",
+        "Madison Square Park Shack"
+      ],
+      "expectedLocalAddressTokens": [
+        "23rd Street and Madison Avenue",
+        "New York"
+      ],
+      "referenceCoordinate": {
+        "lat": 40.741,
+        "lon": -73.988,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 40.741,
+          "lon": -73.988
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://shakeshack.com/locations",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Madison Square Park"
+    },
+    {
+      "id": "global-ippudo-shinjuku",
+      "segment": "global-restaurante",
+      "city": "Tóquio",
+      "countryCode": "jp",
+      "queries": {
+        "pt": "Ippudo, filial Shinjuku",
+        "en": "Ippudo, Shinjuku Branch",
+        "local": "一風堂 新宿店"
+      },
+      "acceptedNames": [
+        "一風堂",
+        "Ippudo"
+      ],
+      "expectedLocalAddressTokens": [
+        "東京都",
+        "渋谷区",
+        "千駄ヶ谷",
+        "5"
+      ],
+      "referenceCoordinate": {
+        "lat": 35.6915,
+        "lon": 139.703,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 35.6915,
+          "lon": 139.703
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.ippudo.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Shinjuku"
+    },
+    {
+      "id": "global-dishoom-covent-garden",
+      "segment": "global-restaurante",
+      "city": "Londres",
+      "countryCode": "gb",
+      "queries": {
+        "pt": "Dishoom, Covent Garden",
+        "en": "Dishoom Covent Garden",
+        "local": "Dishoom Covent Garden"
+      },
+      "acceptedNames": [
+        "Dishoom Covent Garden",
+        "Dishoom"
+      ],
+      "expectedLocalAddressTokens": [
+        "12 Upper St Martin’s Lane",
+        "London"
+      ],
+      "referenceCoordinate": {
+        "lat": 51.513,
+        "lon": -0.124,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 51.513,
+          "lon": -0.124
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.dishoom.com/locations/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      },
+      "expectedBranchOrEntrance": "filial Covent Garden"
+    },
+    {
+      "id": "global-savoy",
+      "segment": "global-hotel",
+      "city": "Londres",
+      "countryCode": "gb",
+      "queries": {
+        "pt": "Hotel Savoy",
+        "en": "The Savoy",
+        "local": "The Savoy"
+      },
+      "acceptedNames": [
+        "The Savoy",
+        "Savoy Hotel"
+      ],
+      "expectedLocalAddressTokens": [
+        "The Strand",
+        "WC2R 0EZ"
+      ],
+      "referenceCoordinate": {
+        "lat": 51.5097,
+        "lon": -0.1201,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 51.5097,
+          "lon": -0.1201
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q27081583",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://press.thesavoylondon.com/profile/?lang=en",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-raffles",
+      "segment": "global-hotel",
+      "city": "Singapura",
+      "countryCode": "sg",
+      "queries": {
+        "pt": "Hotel Raffles Singapura",
+        "en": "Raffles Hotel Singapore",
+        "local": "Raffles Hotel Singapore"
+      },
+      "acceptedNames": [
+        "Raffles Hotel",
+        "Raffles Singapore"
+      ],
+      "expectedLocalAddressTokens": [
+        "1 Beach Road",
+        "Singapore"
+      ],
+      "referenceCoordinate": {
+        "lat": 1.294889,
+        "lon": 103.854483,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 1.294889,
+          "lon": 103.854483
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q1538837",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.raffles.com/singapore/about/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-peninsula-tokyo",
+      "segment": "global-hotel",
+      "city": "Tóquio",
+      "countryCode": "jp",
+      "queries": {
+        "pt": "Hotel Peninsula Tóquio",
+        "en": "The Peninsula Tokyo",
+        "local": "ザ・ペニンシュラ東京"
+      },
+      "acceptedNames": [
+        "ザ・ペニンシュラ東京",
+        "The Peninsula Tokyo"
+      ],
+      "expectedLocalAddressTokens": [
+        "東京都",
+        "千代田区",
+        "有楽町",
+        "1-8-1"
+      ],
+      "referenceCoordinate": {
+        "lat": 35.674761,
+        "lon": 139.76047,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 35.674761,
+          "lon": 139.76047
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q3522204",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.peninsula.com/en/tokyo/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-hotel-emma",
+      "segment": "global-hotel",
+      "city": "San Antonio",
+      "countryCode": "us",
+      "queries": {
+        "pt": "Hotel Emma",
+        "en": "Hotel Emma",
+        "local": "Hotel Emma"
+      },
+      "acceptedNames": [
+        "Hotel Emma"
+      ],
+      "expectedLocalAddressTokens": [
+        "136 East Grayson Street",
+        "San Antonio"
+      ],
+      "referenceCoordinate": {
+        "lat": 29.44277778,
+        "lon": -98.48111111,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 29.44277778,
+          "lon": -98.48111111
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q29470724",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://thehotelemma.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-marina-bay-sands",
+      "segment": "global-hotel",
+      "city": "Singapura",
+      "countryCode": "sg",
+      "queries": {
+        "pt": "Hotel Marina Bay Sands",
+        "en": "Marina Bay Sands",
+        "local": "Marina Bay Sands"
+      },
+      "acceptedNames": [
+        "Marina Bay Sands",
+        "MBS"
+      ],
+      "expectedLocalAddressTokens": [
+        "10 Bayfront Avenue",
+        "Singapore"
+      ],
+      "referenceCoordinate": {
+        "lat": 1.282,
+        "lon": 103.858,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 1.282,
+          "lon": 103.858
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q548679",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.marinabaysands.com/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "global-banff-springs",
+      "segment": "global-hotel",
+      "city": "Banff",
+      "countryCode": "ca",
+      "queries": {
+        "pt": "Hotel Fairmont Banff Springs",
+        "en": "Fairmont Banff Springs",
+        "local": "Fairmont Banff Springs"
+      },
+      "acceptedNames": [
+        "Fairmont Banff Springs",
+        "Banff Springs Hotel"
+      ],
+      "expectedLocalAddressTokens": [
+        "405 Spray Avenue",
+        "Banff"
+      ],
+      "referenceCoordinate": {
+        "lat": 51.167,
+        "lon": -115.5615,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 51.167,
+          "lon": -115.5615
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 250,
+      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "references": [
+        {
+          "url": "https://www.wikidata.org/wiki/Q806429",
+          "type": "wikidata"
+        },
+        {
+          "url": "https://www.fairmont.com/banff-springs/",
+          "type": "site-oficial"
+        }
+      ],
+      "verification": {
+        "status": "verified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+      }
+    },
+    {
+      "id": "addr-nyc-broadway-120",
+      "segment": "endereco",
+      "city": "Nova York",
+      "countryCode": "us",
+      "queries": {
+        "pt": "120 Broadway, Nova York",
+        "en": "120 Broadway, New York",
+        "local": "120 Broadway, New York"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "120 Broadway",
+        "New York",
+        "NY"
+      ],
+      "referenceCoordinate": {
+        "lat": 40.7081,
+        "lon": -74.0112,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 40.7081,
+          "lon": -74.0112
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html",
+          "type": "registro-postal"
+        },
+        {
+          "url": "https://www.census.gov/",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-auckland-queen-100",
+      "segment": "endereco",
+      "city": "Auckland",
+      "countryCode": "nz",
+      "queries": {
+        "pt": "100 Queen Street, Auckland",
+        "en": "100 Queen Street, Auckland",
+        "local": "100 Queen Street, Auckland"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "100 Queen Street",
+        "Auckland"
+      ],
+      "referenceCoordinate": {
+        "lat": -36.8488,
+        "lon": 174.7633,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": -36.8488,
+          "lon": 174.7633
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.nzpost.co.nz/tools/address-postcode-finder",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-tokyo-shiba-4",
+      "segment": "endereco",
+      "city": "Tóquio",
+      "countryCode": "jp",
+      "queries": {
+        "pt": "4-1-1 Shiba-koen, Tóquio",
+        "en": "4-1-1 Shiba-koen, Tokyo",
+        "local": "東京都港区芝公園4-1-1"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "東京都",
+        "港区",
+        "芝公園",
+        "4-1-1"
+      ],
+      "referenceCoordinate": {
+        "lat": 35.6586,
+        "lon": 139.7454,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 35.6586,
+          "lon": 139.7454
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.post.japanpost.jp/zipcode/",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-paris-paix-15",
+      "segment": "endereco",
+      "city": "Paris",
+      "countryCode": "fr",
+      "queries": {
+        "pt": "15 rue de la Paix, Paris",
+        "en": "15 rue de la Paix, Paris",
+        "local": "15 rue de la Paix, Paris"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "15 rue de la Paix",
+        "75002 Paris"
+      ],
+      "referenceCoordinate": {
+        "lat": 48.8681,
+        "lon": 2.3316,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 48.8681,
+          "lon": 2.3316
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.laposte.fr/outils/trouver-un-code-postal",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-sao-paulo-paulista-1578",
+      "segment": "endereco",
+      "city": "São Paulo",
+      "countryCode": "br",
+      "queries": {
+        "pt": "Avenida Paulista, 1578, São Paulo",
+        "en": "1578 Avenida Paulista, São Paulo",
+        "local": "Avenida Paulista, 1578, São Paulo"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "Avenida Paulista",
+        "1578",
+        "São Paulo"
+      ],
+      "referenceCoordinate": {
+        "lat": -23.563,
+        "lon": -46.6542,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": -23.563,
+          "lon": -46.6542
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://buscacepinter.correios.com.br/app/endereco/index.php",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-toronto-king-100",
+      "segment": "endereco",
+      "city": "Toronto",
+      "countryCode": "ca",
+      "queries": {
+        "pt": "100 King Street West, Toronto",
+        "en": "100 King Street West, Toronto",
+        "local": "100 King Street West, Toronto"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "100 King Street West",
+        "Toronto"
+      ],
+      "referenceCoordinate": {
+        "lat": 43.6487,
+        "lon": -79.3824,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 43.6487,
+          "lon": -79.3824
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.canadapost-postescanada.ca/cpc/en/tools/find-a-postal-code.page",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-madrid-atocha-9",
+      "segment": "endereco",
+      "city": "Madri",
+      "countryCode": "es",
+      "queries": {
+        "pt": "Calle de Atocha, 9, Madri",
+        "en": "9 Calle de Atocha, Madrid",
+        "local": "9 Calle de Atocha, Madrid"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "Calle de Atocha",
+        "9",
+        "Madrid"
+      ],
+      "referenceCoordinate": {
+        "lat": 40.4156,
+        "lon": -3.7016,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 40.4156,
+          "lon": -3.7016
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.correos.es/es/en/tools/postal-code-finder",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-rome-corso-3",
+      "segment": "endereco",
+      "city": "Roma",
+      "countryCode": "it",
+      "queries": {
+        "pt": "Via del Corso, 3, Roma",
+        "en": "3 Via del Corso, Rome",
+        "local": "3 Via del Corso, Roma"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "Via del Corso",
+        "3",
+        "Roma"
+      ],
+      "referenceCoordinate": {
+        "lat": 41.9006,
+        "lon": 12.4835,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 41.9006,
+          "lon": 12.4835
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.poste.it/cerca/index.html",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-sydney-king-25",
+      "segment": "endereco",
+      "city": "Sydney",
+      "countryCode": "au",
+      "queries": {
+        "pt": "25 King Street, Sydney",
+        "en": "25 King Street, Sydney",
+        "local": "25 King Street, Sydney"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "25 King Street",
+        "Sydney",
+        "NSW"
+      ],
+      "referenceCoordinate": {
+        "lat": -33.8664,
+        "lon": 151.2072,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": -33.8664,
+          "lon": 151.2072
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://auspost.com.au/postcode",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    },
+    {
+      "id": "addr-hk-peking-12",
+      "segment": "endereco",
+      "city": "Hong Kong",
+      "countryCode": "hk",
+      "queries": {
+        "pt": "12 Peking Road, Hong Kong",
+        "en": "12 Peking Road, Hong Kong",
+        "local": "香港尖沙咀北京道12号"
+      },
+      "acceptedNames": [],
+      "expectedLocalAddressTokens": [
+        "香港",
+        "尖沙咀",
+        "北京道",
+        "12"
+      ],
+      "referenceCoordinate": {
+        "lat": 22.2983,
+        "lon": 114.1723,
+        "datum": "WGS-84",
+        "wgs84": {
+          "lat": 22.2983,
+          "lon": 114.1723
+        },
+        "conversion": null
+      },
+      "toleranceMeters": 100,
+      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "references": [
+        {
+          "url": "https://www.hongkongpost.hk/en/locate/index.html",
+          "type": "registro-postal"
+        }
+      ],
+      "verification": {
+        "status": "unverified",
+        "verifiedAt": "2026-10-21",
+        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
+        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+      }
+    }
+  ]
+}
