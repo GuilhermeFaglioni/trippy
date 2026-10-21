@@ -318,6 +318,8 @@ it('converge após resposta perdida, fechamento offline, remoção e escritas si
   const offlinePlaceId = await clientA.addPlace(tripId, 'Lugar offline de A')
   await clientA.markVisit(tripId, offlinePlaceId)
   expect(clientA.getStatus().pending).toBe(2)
+  await expect(clientA.syncNow()).rejects.toThrow('Network request failed')
+  expect(clientA.getStatus().pending).toBe(2)
 
   databaseA.close()
   const closedDatabaseIndex = clients.findIndex(({ database }) => database === databaseA)

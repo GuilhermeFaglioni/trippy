@@ -32,7 +32,7 @@ Execução real do roteiro em 21/out/2026:
   FF614D07-D4B5-40F9-8E67-8C5C786FB41B
 ```
 
-O run usou API em `localhost:4300` e Metro na porta `4400`. A confirmou duas operações pendentes antes do encerramento; após reabrir, o SQLite manteve o lugar e “Eu fui ✓”. O Postgres ainda tinha zero lugares antes da reconexão. A reconectou e B sincronizou.
+O run usou API em `localhost:4300` e Metro na porta `4400`. A tentou sincronizar enquanto offline, recebeu falha de transporte e manteve as duas operações pendentes. Após reabrir, o SQLite manteve o lugar e “Eu fui ✓”. O Postgres ainda tinha zero lugares antes da reconexão. A reconectou e B sincronizou.
 
 ```text
 Estados canônicos iguais: 1 lugares, 1 visitas, 2 membros.
