@@ -14,6 +14,7 @@ import type {
   SyncVisit,
   UUID,
 } from '../types.ts'
+import type { SqlDatabase } from '../database.ts'
 import { createSyncClient } from './sync-client.ts'
 import { NodeSqlDatabase } from './node-sqlite.ts'
 
@@ -40,11 +41,45 @@ function createDatabase(path = ':memory:'): NodeSqlDatabase {
   return database
 }
 
+class CrashAfterReconciliationDatabase extends NodeSqlDatabase {
+  override transaction<T>(operation: (database: SqlDatabase) => Promise<T>): Promise<T> {
+    let closeAfterCommit = false
+    return super
+      .transaction(async (transaction) => {
+        const wrapped: SqlDatabase = {
+          exec: (sql) => transaction.exec(sql),
+          run: async (sql, parameters) => {
+            const result = await transaction.run(sql, parameters)
+            if (sql.includes('SET needs_bootstrap = 1')) closeAfterCommit = true
+            return result
+          },
+          all: (sql, parameters) => transaction.all(sql, parameters),
+          get: (sql, parameters) => transaction.get(sql, parameters),
+          transaction: async () => {
+            throw new Error('Transações SQLite aninhadas não são suportadas.')
+          },
+        }
+        return operation(wrapped)
+      })
+      .then((result) => {
+        if (closeAfterCommit) this.close()
+        return result
+      })
+  }
+}
+
+function createCrashDatabase(path: string): CrashAfterReconciliationDatabase {
+  const database = new CrashAfterReconciliationDatabase(path)
+  databases.push(database)
+  return database
+}
+
 function createClient(
   database: NodeSqlDatabase,
   transport: FakeSyncTransport,
   userId = userA,
   getTripIds: () => readonly UUID[] | Promise<readonly UUID[]> = () => [tripId],
+  options: { pageSize?: number; pushBatchSize?: number } = {},
 ) {
   let id = 0
   return createSyncClient({
@@ -55,8 +90,8 @@ function createClient(
     idGenerator: () => `00000000-0000-4000-8000-${String(++id).padStart(12, '0')}`,
     now: () => fixedTime,
     timeZone: 'UTC',
-    pageSize: 2,
-    pushBatchSize: 2,
+    pageSize: options.pageSize ?? 2,
+    pushBatchSize: options.pushBatchSize ?? 2,
   })
 }
 
@@ -151,6 +186,7 @@ class FakeSyncTransport {
   readonly pushes: SyncOperation[][] = []
   readonly pulls: PullQuery[] = []
   failBeforePushCall: number | null = null
+  failBeforePullCall: number | null = null
   losePushResponseCall: number | null = null
   rejectReason: 'not_member' | 'forbidden' | 'invalid' | null = null
 
@@ -244,7 +280,9 @@ class FakeSyncTransport {
   }
 
   async pull(query: PullQuery): Promise<PullResponse> {
+    const callNumber = this.pulls.length + 1
     this.pulls.push(query)
+    if (this.failBeforePullCall === callNumber) throw new Error('falha de rede durante o pull')
     if (this.requireBootstrapOnce && query.mode === 'incremental') {
       this.requireBootstrapOnce = false
       return { error: 'bootstrap_required' }
@@ -389,6 +427,149 @@ class FakeSyncTransport {
 }
 
 describe('SyncClient', () => {
+  it('persiste reconciliação após duplicate no primeiro lote e falha no segundo, mesmo após reabrir', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
+    temporaryDirectories.push(directory)
+    const path = join(directory, 'client.sqlite')
+    let database = createDatabase(path)
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '2'))
+    transport.seedVisit(createVisit(placeA, userA, '3', '2026-10-20T09:30:00.000Z'))
+    let client = await createClient(database, transport, userA, undefined, { pushBatchSize: 1 })
+    await client.syncNow()
+
+    await client.markVisit(tripId, placeA)
+    await client.addPlace(tripId, 'Lugar novo')
+    transport.failBeforePushCall = transport.pushes.length + 2
+    await expect(client.syncNow()).rejects.toThrow('falha de rede antes do push')
+    expect(client.getStatus().pending).toBe(1)
+    expect(
+      await database.get<{ needs_bootstrap: number } & Record<string, unknown>>(
+        'SELECT needs_bootstrap FROM sync_state WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ needs_bootstrap: 1 })
+
+    database.close()
+    databases.splice(databases.indexOf(database), 1)
+    transport.failBeforePushCall = null
+    database = createDatabase(path)
+    client = await createClient(database, transport, userA, undefined, { pushBatchSize: 1 })
+    await client.syncNow()
+
+    expect(client.getStatus().pending).toBe(0)
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+  })
+
+  it('retoma após fechar o app depois de duplicate confirmado e antes do bootstrap', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
+    temporaryDirectories.push(directory)
+    const path = join(directory, 'client.sqlite')
+    let database: NodeSqlDatabase = createCrashDatabase(path)
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '2'))
+    transport.seedVisit(createVisit(placeA, userA, '3', '2026-10-20T09:30:00.000Z'))
+    let client = await createClient(database, transport)
+    await client.syncNow()
+    const previousPullCount = transport.pulls.length
+    await client.markVisit(tripId, placeA)
+
+    await expect(client.syncNow()).rejects.toThrow()
+    expect(transport.pulls).toHaveLength(previousPullCount)
+    databases.splice(databases.indexOf(database), 1)
+    database = createDatabase(path)
+    client = await createClient(database, transport)
+    expect(client.getStatus().pending).toBe(0)
+    expect(
+      await database.get<{ needs_bootstrap: number } & Record<string, unknown>>(
+        'SELECT needs_bootstrap FROM sync_state WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ needs_bootstrap: 1 })
+    await client.syncNow()
+
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+  })
+
+  it('retoma snapshot parcial após falha de pull durante bootstrap persistido', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
+    temporaryDirectories.push(directory)
+    const path = join(directory, 'client.sqlite')
+    let database = createDatabase(path)
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '2'))
+    transport.seedVisit(createVisit(placeA, userA, '3', '2026-10-20T09:30:00.000Z'))
+    let client = await createClient(database, transport, userA, undefined, { pageSize: 1 })
+    await client.syncNow()
+    await client.markVisit(tripId, placeA)
+    transport.failBeforePullCall = transport.pulls.length + 2
+
+    await expect(client.syncNow()).rejects.toThrow('falha de rede durante o pull')
+    expect(
+      await database.get<
+        { needs_bootstrap: number; snapshot_seq: string | null } & Record<string, unknown>
+      >('SELECT needs_bootstrap, snapshot_seq FROM sync_state WHERE trip_id = ?', [tripId]),
+    ).toMatchObject({ needs_bootstrap: 1, snapshot_seq: '3' })
+
+    database.close()
+    databases.splice(databases.indexOf(database), 1)
+    transport.failBeforePullCall = null
+    database = createDatabase(path)
+    client = await createClient(database, transport, userA, undefined, { pageSize: 1 })
+    await client.syncNow()
+
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+    expect(
+      await database.get<
+        { needs_bootstrap: number; snapshot_seq: string | null } & Record<string, unknown>
+      >('SELECT needs_bootstrap, snapshot_seq FROM sync_state WHERE trip_id = ?', [tripId]),
+    ).toMatchObject({ needs_bootstrap: 0, snapshot_seq: null })
+  })
+
+  it('retoma reconciliação persistida após not_sent e falha do pull', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
+    temporaryDirectories.push(directory)
+    const path = join(directory, 'client.sqlite')
+    let database = createDatabase(path)
+    const transport = new FakeSyncTransport()
+    transport.rejectReason = 'not_member'
+    let client = await createClient(database, transport)
+    await client.addPlace(tripId, 'Otimista')
+    transport.failBeforePullCall = 1
+
+    await expect(client.syncNow()).rejects.toThrow('falha de rede durante o pull')
+    expect(client.getStatus()).toMatchObject({ pending: 0, notSent: 1 })
+    expect(
+      await database.get<{ needs_bootstrap: number } & Record<string, unknown>>(
+        'SELECT needs_bootstrap FROM sync_state WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ needs_bootstrap: 1 })
+
+    database.close()
+    databases.splice(databases.indexOf(database), 1)
+    transport.failBeforePullCall = null
+    transport.rejectReason = null
+    database = createDatabase(path)
+    client = await createClient(database, transport)
+    await client.syncNow()
+
+    expect(client.getStatus()).toMatchObject({ pending: 0, notSent: 1 })
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+    expect(transport.pushes).toHaveLength(1)
+  })
+
   it('persiste escrita offline e outbox ao fechar e reabrir o arquivo', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
     temporaryDirectories.push(directory)

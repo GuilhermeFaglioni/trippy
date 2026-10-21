@@ -41,6 +41,7 @@ interface SyncStateRow extends Record<string, unknown> {
   cursor: string | null
   snapshot_seq: string | null
   last_synced_at: string | null
+  needs_bootstrap: number
 }
 
 interface OutboxRow extends Record<string, unknown> {
@@ -267,15 +268,15 @@ class LocalSyncClient implements SyncClient {
       for (const row of localTripRows) tripIds.add(row.trip_id)
       for (const tripId of [...tripIds].sort()) {
         await this.withTripLock(tripId, async () => {
-          const requiresBootstrap = await this.pushTrip(tripId)
-          if (requiresBootstrap) await this.clearTripForBootstrap(tripId)
+          await this.pushTrip(tripId)
           await this.pullTrip(tripId)
           await this.database.transaction(async (transaction) => {
             await this.ensureSyncState(transaction, tripId)
-            await transaction.run('UPDATE sync_state SET last_synced_at = ? WHERE trip_id = ?', [
-              this.now(),
-              tripId,
-            ])
+            await transaction.run(
+              `UPDATE sync_state SET last_synced_at = ?
+               WHERE trip_id = ? AND needs_bootstrap = 0 AND snapshot_seq IS NULL`,
+              [this.now(), tripId],
+            )
           })
         })
       }
@@ -290,8 +291,8 @@ class LocalSyncClient implements SyncClient {
     }
   }
 
-  /** Indica quando o pull incremental não basta para reconciliar a projeção local. */
-  private async pushTrip(tripId: UUID): Promise<boolean> {
+  /** Envia pendências e persiste quando a projeção exige reconciliação completa. */
+  private async pushTrip(tripId: UUID): Promise<void> {
     const rows = await this.database.all<OutboxRow>(
       `SELECT position, op_id, trip_id, type, payload, created_at, status, attempts, last_error
        FROM outbox WHERE trip_id = ? AND status = 'pending' ORDER BY position`,
@@ -315,7 +316,6 @@ class LocalSyncClient implements SyncClient {
       return { operation: validation.value, row }
     })
 
-    let requiresBootstrap = false
     for (let index = 0; index < operations.length; index += this.pushBatchSize) {
       const batch = operations.slice(index, index + this.pushBatchSize)
       const operationIds = batch.map(({ row }) => row.op_id)
@@ -355,13 +355,15 @@ class LocalSyncClient implements SyncClient {
         throw error
       }
       await this.database.transaction(async (transaction) => {
+        await this.ensureSyncState(transaction, tripId)
+        let needsBootstrap = false
         for (const opId of operationIds) {
           const result = results.get(opId)!
           if (result.status === 'applied' || result.status === 'duplicate') {
             await transaction.run('DELETE FROM outbox WHERE op_id = ?', [opId])
-            if (result.status === 'duplicate') requiresBootstrap = true
+            if (result.status === 'duplicate') needsBootstrap = true
           } else if (result.reason === 'not_member' || result.reason === 'forbidden') {
-            requiresBootstrap = true
+            needsBootstrap = true
             await transaction.run(
               `UPDATE outbox SET status = 'not_sent', last_error = ? WHERE op_id = ?`,
               [result.reason, opId],
@@ -373,9 +375,13 @@ class LocalSyncClient implements SyncClient {
             ])
           }
         }
+        if (needsBootstrap) {
+          await transaction.run('UPDATE sync_state SET needs_bootstrap = 1 WHERE trip_id = ?', [
+            tripId,
+          ])
+        }
       })
     }
-    return requiresBootstrap
   }
 
   private matchPushResults(
@@ -411,9 +417,13 @@ class LocalSyncClient implements SyncClient {
 
   private async pullTrip(tripId: UUID): Promise<void> {
     for (let resetCount = 0; resetCount < 2; resetCount += 1) {
-      const state = await this.getSyncState(tripId)
+      let state = await this.getSyncState(tripId)
+      if (state.needs_bootstrap !== 0 && state.snapshot_seq === null) {
+        await this.clearTripForBootstrap(tripId)
+        state = await this.getSyncState(tripId)
+      }
       let needsReset = false
-      if (state.snapshot_seq !== null || state.cursor === null) {
+      if (state.needs_bootstrap !== 0 || state.snapshot_seq !== null || state.cursor === null) {
         needsReset = await this.pullBootstrap(tripId, state)
       }
       if (!needsReset) needsReset = await this.pullIncremental(tripId)
@@ -455,7 +465,8 @@ class LocalSyncClient implements SyncClient {
           )
         } else {
           await transaction.run(
-            'UPDATE sync_state SET cursor = ?, snapshot_seq = NULL WHERE trip_id = ?',
+            `UPDATE sync_state SET cursor = ?, snapshot_seq = NULL, needs_bootstrap = 0
+             WHERE trip_id = ?`,
             [snapshotSeq, tripId],
           )
         }
@@ -690,7 +701,8 @@ class LocalSyncClient implements SyncClient {
       this.ensureSyncState(transaction, tripId),
     )
     const state = await this.database.get<SyncStateRow>(
-      'SELECT trip_id, cursor, snapshot_seq, last_synced_at FROM sync_state WHERE trip_id = ?',
+      `SELECT trip_id, cursor, snapshot_seq, last_synced_at, needs_bootstrap
+       FROM sync_state WHERE trip_id = ?`,
       [tripId],
     )
     if (!state) throw new Error(`Estado de sync ausente para ${tripId}.`)

@@ -41,6 +41,7 @@ testDatabaseUrl.pathname = `/${testDatabaseName}`
 
 type ClientControls = {
   online: boolean
+  failPushCall: number | null
   loseNextPushResponse: boolean
   pullQueries: PullQuery[]
   pushRequests: PushRequest[]
@@ -81,7 +82,9 @@ async function jsonResponse<T>(response: Response): Promise<T> {
 function createTransport(token: string, controls: ClientControls): SyncTransport {
   return {
     async push(request) {
+      const callNumber = controls.pushRequests.length + 1
       controls.pushRequests.push(request)
+      if (controls.failPushCall === callNumber) throw new TypeError('Network request failed')
       if (!controls.online) throw new TypeError('Network request failed')
 
       const response = await apiRequest('/sync/push', token, {
@@ -125,7 +128,13 @@ function isBootstrapRequired(value: unknown): boolean {
   )
 }
 
-async function openClient(userId: UUID, token: string, fileName: string, controls: ClientControls) {
+async function openClient(
+  userId: UUID,
+  token: string,
+  fileName: string,
+  controls: ClientControls,
+  pushBatchSize = 50,
+) {
   const database = new NodeSqlDatabase(join(sqliteDirectory!, fileName))
   const client = await createSyncClient({
     database,
@@ -134,6 +143,7 @@ async function openClient(userId: UUID, token: string, fileName: string, control
     getTripIds: () => [tripId],
     idGenerator: randomUUID,
     pageSize: 1,
+    pushBatchSize,
   })
   clients.push({ database, client })
   return { database, client }
@@ -288,12 +298,14 @@ it('converge após resposta perdida, fechamento offline, remoção e escritas si
 
   const controlsA: ClientControls = {
     online: true,
+    failPushCall: null,
     loseNextPushResponse: false,
     pullQueries: [],
     pushRequests: [],
   }
   const controlsB: ClientControls = {
     online: true,
+    failPushCall: null,
     loseNextPushResponse: false,
     pullQueries: [],
     pushRequests: [],
@@ -429,6 +441,7 @@ it('reconcilia uma marcação repetida com o estado confirmado pela API', async 
 
   const controls: ClientControls = {
     online: true,
+    failPushCall: null,
     loseNextPushResponse: false,
     pullQueries: [],
     pushRequests: [],
@@ -459,4 +472,75 @@ it('reconcilia uma marcação repetida com o estado confirmado pela API', async 
   expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
     canonicalTripState(await readServerState(tripId)),
   )
+})
+
+it('mantém reconciliação da API quando duplicate é seguido por falha em outro lote', async () => {
+  const tripResponse = await post(
+    '/trips',
+    {
+      name: `Convergência após lote falho ${randomUUID()}`,
+      destination: 'Lisboa',
+      startDate: '2026-12-01',
+      endDate: '2026-12-05',
+      timezone: 'Europe/Lisbon',
+    },
+    'convergencia-organizador',
+  )
+  expect(tripResponse.status).toBe(201)
+  tripId = ((await tripResponse.json()) as { trip: { id: UUID } }).trip.id
+
+  const controls: ClientControls = {
+    online: true,
+    failPushCall: null,
+    loseNextPushResponse: false,
+    pullQueries: [],
+    pushRequests: [],
+  }
+  let { database, client } = await openClient(
+    organizerId,
+    'convergencia-organizador',
+    'cliente-lotes-reconciliacao.sqlite',
+    controls,
+    1,
+  )
+  await client.syncNow()
+
+  const existingPlaceId = await client.addPlace(tripId, 'Lugar já confirmado')
+  await client.markVisit(tripId, existingPlaceId)
+  await client.syncNow()
+  const previousVisitedAt = (
+    await pool.query<{ visited_at: Date }>(
+      'SELECT visited_at FROM visits WHERE trip_id = $1 AND place_id = $2 AND user_id = $3',
+      [tripId, existingPlaceId, organizerId],
+    )
+  ).rows[0]!.visited_at
+
+  await client.markVisit(tripId, existingPlaceId)
+  await client.addPlace(tripId, 'Lugar do lote seguinte')
+  controls.failPushCall = controls.pushRequests.length + 2
+  await expect(client.syncNow()).rejects.toThrow('Network request failed')
+  expect(client.getStatus().pending).toBe(1)
+  expect(controls.pushRequests.at(-2)!.operations[0]!.type).toBe('visit.mark')
+
+  database.close()
+  const closedDatabaseIndex = clients.findIndex(({ database: current }) => current === database)
+  if (closedDatabaseIndex >= 0) clients.splice(closedDatabaseIndex, 1)
+  controls.failPushCall = null
+  const reopened = await openClient(
+    organizerId,
+    'convergencia-organizador',
+    'cliente-lotes-reconciliacao.sqlite',
+    controls,
+    1,
+  )
+  database = reopened.database
+  client = reopened.client
+  await client.syncNow()
+
+  expect(client.getStatus()).toMatchObject({ pending: 0, notSent: 0, lastError: null })
+  const local = canonicalTripState(await readLocalState(database, tripId))
+  const server = canonicalTripState(await readServerState(tripId))
+  expect(local).toEqual(server)
+  expect(local.visits[0]?.visitedAt).toEqual(previousVisitedAt.toISOString())
+  expect(local.visits[0]?.seq).not.toBe('0')
 })

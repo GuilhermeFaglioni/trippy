@@ -11,6 +11,7 @@ Um cliente pode registrar operações no SQLite enquanto está sem transporte, f
 ## O que foi construído
 
 - Teste de integração com dois clientes reais de `@trippy/sync`, cada um usando arquivo `node:sqlite` próprio, contra as rotas Hono em `app.fetch` e um Postgres descartável.
+- Necessidade de reconciliação por `duplicate` ou `not_sent` persistida atomicamente em `sync_state`; bootstrap parcial retoma pelo `snapshot_seq` após falha ou reabertura.
 - Cenário de viagem e convite, aceite do membro, escrita offline de lugar e visita, fechamento e reabertura do mesmo SQLite, perda de resposta de push e reenvio do mesmo lote.
 - Verificação de remoção propagada de B para A, escritas offline simultâneas dos dois membros, cursor de pull com limite 1 e igualdade de `canonicalTripState` em A, B e Postgres.
 - Roteiro Maestro e script `scripts/sync-dois-simuladores.sh` que instala o mesmo development build em dois Simulators, dirige os dois usuários via Mailpit, confere que o lugar não chegou ao Postgres antes da reconexão e compara os estados canônicos no final.

@@ -70,6 +70,10 @@ const migrations: readonly Migration[] = [
       )`,
     ],
   },
+  {
+    version: 2,
+    statements: ['ALTER TABLE sync_state ADD COLUMN needs_bootstrap INTEGER NOT NULL DEFAULT 0'],
+  },
 ]
 
 export async function migrateSyncDatabase(
