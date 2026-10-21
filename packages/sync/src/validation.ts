@@ -26,6 +26,8 @@ export type ValidationResult<T> =
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu
 const sequencePattern = /^(0|[1-9]\d*)$/u
 const maxSyncSequence = '9223372036854775807'
+const maxItineraryDayIndex = 365
+const maxItineraryPlaces = 500
 
 export function isUuid(value: unknown): value is UUID {
   return typeof value === 'string' && uuidPattern.test(value)
@@ -58,6 +60,10 @@ function isNullableString(value: unknown): value is string | null {
 
 function isNullableNumber(value: unknown): value is number | null {
   return value === null || (typeof value === 'number' && Number.isFinite(value))
+}
+
+function isNonNegativeSafeInteger(value: unknown): value is number {
+  return Number.isSafeInteger(value) && typeof value === 'number' && value >= 0
 }
 
 function failure<T = never>(path: string, message: string): ValidationResult<T> {
@@ -104,6 +110,94 @@ export function validateSyncOperation(
     }
   }
 
+  if (value.type === 'itinerary.arrange') {
+    if (!isNonNegativeSafeInteger(value.baseVersion)) {
+      return failure('baseVersion', 'Informe uma versão inteira não negativa.')
+    }
+    if (!Array.isArray(value.days) || value.days.length === 0) {
+      return failure('days', 'Informe pelo menos um dia do roteiro.')
+    }
+    if (value.days.length > maxItineraryDayIndex + 1) {
+      return failure('days', 'A operação excede o limite de dias do roteiro.')
+    }
+
+    const days: Array<{ dayIndex: number; placeIds: UUID[] }> = []
+    const dayIndexes = new Set<number>()
+    const placeIds = new Set<string>()
+    let placeCount = 0
+    for (const [index, rawDay] of value.days.entries()) {
+      if (!isRecord(rawDay)) return failure(`days[${index}]`, 'O dia precisa ser um objeto.')
+      if (
+        !isNonNegativeSafeInteger(rawDay.dayIndex) ||
+        rawDay.dayIndex > maxItineraryDayIndex
+      ) {
+        return failure(`days[${index}].dayIndex`, 'Informe um índice de dia entre 0 e 365.')
+      }
+      if (dayIndexes.has(rawDay.dayIndex)) {
+        return failure(`days[${index}].dayIndex`, 'Não repita índices de dia.')
+      }
+      if (!Array.isArray(rawDay.placeIds)) {
+        return failure(`days[${index}].placeIds`, 'Informe a lista de lugares do dia.')
+      }
+      placeCount += rawDay.placeIds.length
+      if (placeCount > maxItineraryPlaces) {
+        return failure('days', 'A operação excede o limite de 500 lugares.')
+      }
+
+      const dayPlaceIds: UUID[] = []
+      for (const [placeIndex, placeId] of rawDay.placeIds.entries()) {
+        if (!isUuid(placeId)) {
+          return failure(`days[${index}].placeIds[${placeIndex}]`, 'Informe um UUID válido.')
+        }
+        const canonicalPlaceId = placeId.toLowerCase()
+        if (placeIds.has(canonicalPlaceId)) {
+          return failure(`days[${index}].placeIds[${placeIndex}]`, 'Não repita lugares no roteiro.')
+        }
+        placeIds.add(canonicalPlaceId)
+        dayPlaceIds.push(placeId)
+      }
+
+      dayIndexes.add(rawDay.dayIndex)
+      days.push({ dayIndex: rawDay.dayIndex, placeIds: dayPlaceIds })
+    }
+
+    return {
+      success: true,
+      value: {
+        type: 'itinerary.arrange',
+        opId: value.opId,
+        tripId: value.tripId,
+        baseVersion: value.baseVersion,
+        days,
+      },
+    }
+  }
+
+  if (value.type === 'member.remove') {
+    if (!isUuid(value.userId)) return failure('userId', 'Informe um UUID válido.')
+    return {
+      success: true,
+      value: { type: 'member.remove', opId: value.opId, tripId: value.tripId, userId: value.userId },
+    }
+  }
+
+  if (value.type === 'member.set_role') {
+    if (!isUuid(value.userId)) return failure('userId', 'Informe um UUID válido.')
+    if (value.role !== 'coorganizer' && value.role !== 'member') {
+      return failure('role', 'Informe coorganizer ou member.')
+    }
+    return {
+      success: true,
+      value: {
+        type: 'member.set_role',
+        opId: value.opId,
+        tripId: value.tripId,
+        userId: value.userId,
+        role: value.role,
+      },
+    }
+  }
+
   return failure('type', 'Tipo de operação desconhecido.')
 }
 
@@ -137,6 +231,7 @@ function isRejectedReason(value: unknown): value is RejectedOperationReason {
 function validatePushOperationResult(value: unknown): value is PushOperationResult {
   if (!isRecord(value) || !isUuid(value.opId)) return false
   if (value.status === 'applied' || value.status === 'duplicate') return true
+  if (value.status === 'conflict') return isNonNegativeSafeInteger(value.currentVersion)
   return value.status === 'rejected' && isRejectedReason(value.reason)
 }
 
@@ -231,6 +326,14 @@ function validateMember(value: unknown): value is SyncMember {
   )
 }
 
+function validateItinerary(value: unknown): value is { version: number; atSeq: SyncSequence } {
+  return (
+    isRecord(value) &&
+    isNonNegativeSafeInteger(value.version) &&
+    isSyncSequence(value.atSeq)
+  )
+}
+
 function isStringArrayOf<T>(value: unknown, validate: (item: unknown) => item is T): value is T[] {
   return Array.isArray(value) && value.every(validate)
 }
@@ -239,6 +342,7 @@ function validatePullPageData(value: Record<string, unknown>): value is Record<s
   places: SyncPlace[]
   visits: SyncVisit[]
   members: SyncMember[]
+  itinerary: { version: number; atSeq: SyncSequence }
   nextCursor: SyncSequence
   hasMore: boolean
 } {
@@ -246,12 +350,16 @@ function validatePullPageData(value: Record<string, unknown>): value is Record<s
     isStringArrayOf(value.places, validatePlace) &&
     isStringArrayOf(value.visits, validateVisit) &&
     isStringArrayOf(value.members, validateMember) &&
+    validateItinerary(value.itinerary) &&
     isSyncSequence(value.nextCursor) &&
     typeof value.hasMore === 'boolean'
   )
 }
 
 export function validatePullResponse(value: unknown): ValidationResult<PullResponse> {
+  if (isRecord(value) && value.error === 'not_member') {
+    return { success: true, value: { error: 'not_member' } }
+  }
   if (isRecord(value) && value.error === 'bootstrap_required') {
     return { success: true, value: { error: 'bootstrap_required' } }
   }
@@ -268,6 +376,7 @@ export function validatePullResponse(value: unknown): ValidationResult<PullRespo
         places: value.places,
         visits: value.visits,
         members: value.members,
+        itinerary: value.itinerary,
         nextCursor: value.nextCursor,
         hasMore: value.hasMore,
       },
@@ -281,6 +390,7 @@ export function validatePullResponse(value: unknown): ValidationResult<PullRespo
         places: value.places,
         visits: value.visits,
         members: value.members,
+        itinerary: value.itinerary,
         nextCursor: value.nextCursor,
         hasMore: value.hasMore,
       },

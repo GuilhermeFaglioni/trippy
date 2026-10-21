@@ -352,6 +352,7 @@ class FakeSyncTransport {
       members: page
         .filter((event) => event.kind === 'member')
         .map((event) => event.value as SyncMember),
+      itinerary: { version: 0, atSeq: String(snapshotSeq ?? this.sequence) },
       nextCursor,
       hasMore: events.length > page.length,
     }
@@ -396,6 +397,15 @@ class FakeSyncTransport {
       if (operation.type === 'visit.unmark' && (!visit || visit.deletedAt !== null)) {
         return { opId: operation.opId, status: 'duplicate' }
       }
+    }
+
+    if (
+      operation.type !== 'place.add' &&
+      operation.type !== 'place.remove' &&
+      operation.type !== 'visit.mark' &&
+      operation.type !== 'visit.unmark'
+    ) {
+      throw new Error('Operação não implementada pelo transporte de teste.')
     }
 
     this.sequence += 1n

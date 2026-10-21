@@ -31,8 +31,36 @@ export interface UnmarkVisitOperation extends OperationMetadata {
   placeId: UUID
 }
 
+export interface ItineraryDay {
+  dayIndex: number
+  placeIds: UUID[]
+}
+
+export interface ArrangeItineraryOperation extends OperationMetadata {
+  type: 'itinerary.arrange'
+  baseVersion: number
+  days: ItineraryDay[]
+}
+
+export interface RemoveMemberOperation extends OperationMetadata {
+  type: 'member.remove'
+  userId: UUID
+}
+
+export interface SetMemberRoleOperation extends OperationMetadata {
+  type: 'member.set_role'
+  userId: UUID
+  role: 'coorganizer' | 'member'
+}
+
 export type SyncOperation =
-  AddPlaceOperation | RemovePlaceOperation | MarkVisitOperation | UnmarkVisitOperation
+  | AddPlaceOperation
+  | RemovePlaceOperation
+  | MarkVisitOperation
+  | UnmarkVisitOperation
+  | ArrangeItineraryOperation
+  | RemoveMemberOperation
+  | SetMemberRoleOperation
 
 export interface PushRequest {
   operations: SyncOperation[]
@@ -43,6 +71,7 @@ export type RejectedOperationReason = 'not_member' | 'forbidden' | 'invalid'
 export type PushOperationResult =
   | { opId: UUID; status: 'applied' }
   | { opId: UUID; status: 'duplicate' }
+  | { opId: UUID; status: 'conflict'; currentVersion: number }
   | { opId: UUID; status: 'rejected'; reason: RejectedOperationReason }
 
 export interface PushResponse {
@@ -105,6 +134,7 @@ export interface PullPageData {
   places: SyncPlace[]
   visits: SyncVisit[]
   members: SyncMember[]
+  itinerary: { version: number; atSeq: SyncSequence }
   nextCursor: SyncSequence
   hasMore: boolean
 }
@@ -113,6 +143,7 @@ export type PullResponse =
   | (PullPageData & { mode: 'bootstrap'; snapshotSeq: SyncSequence })
   | (PullPageData & { mode: 'incremental' })
   | { error: 'bootstrap_required' }
+  | { error: 'not_member' }
 
 export interface CreateInviteParams {
   tripId: UUID

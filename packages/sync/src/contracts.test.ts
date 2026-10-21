@@ -19,6 +19,7 @@ const tripId = '58f75ed5-b524-46f8-b387-650d9b43ee36'
 const userId = '3c42531a-085f-4ebc-89ca-d32dd33bc527'
 const otherUserId = 'd109e726-e366-4c6a-b852-d33650af093b'
 const placeId = '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f'
+const secondPlaceId = 'd79c4c77-534c-4c0a-b4e4-06f4e8ec44ca'
 const opId = '88362a44-f59f-437e-a682-79966a68650a'
 
 describe('validação das operações e do push', () => {
@@ -71,11 +72,106 @@ describe('validação das operações e do push', () => {
           { opId, status: 'applied' },
           { opId, status: 'duplicate' },
           { opId, status: 'rejected', reason: 'not_member' },
+          { opId, status: 'conflict', currentVersion: 2 },
         ],
       }),
     ).toMatchObject({ success: true })
     expect(
       validatePushResponse({ results: [{ opId, status: 'rejected', reason: 'unknown' }] }),
+    ).toMatchObject({ success: false })
+    expect(
+      validatePushResponse({ results: [{ opId, status: 'conflict', currentVersion: -1 }] }),
+    ).toMatchObject({ success: false })
+  })
+
+  it('valida arranjo de roteiro como uma operação atômica', () => {
+    const operation = {
+      type: 'itinerary.arrange',
+      opId,
+      tripId,
+      baseVersion: 3,
+      days: [
+        { dayIndex: 0, placeIds: [placeId, secondPlaceId] },
+        { dayIndex: 1, placeIds: [] },
+      ],
+    }
+    expect(validateSyncOperation(operation)).toEqual({ success: true, value: operation })
+    expect(
+      validateSyncOperation({ ...operation, baseVersion: -1 }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({ ...operation, baseVersion: 1.5 }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({
+        ...operation,
+        days: [operation.days[0], { dayIndex: 0, placeIds: [] }],
+      }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({
+        ...operation,
+        days: [
+          { dayIndex: 0, placeIds: [placeId] },
+          { dayIndex: 1, placeIds: [placeId] },
+        ],
+      }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({
+        ...operation,
+        days: [
+          { dayIndex: 0, placeIds: [placeId] },
+          { dayIndex: 1, placeIds: [placeId.toUpperCase()] },
+        ],
+      }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({
+        ...operation,
+        days: [{ dayIndex: 366, placeIds: [] }],
+      }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({
+        ...operation,
+        days: [
+          {
+            dayIndex: 0,
+            placeIds: Array.from(
+              { length: 501 },
+              (_, index) => `10000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+            ),
+          },
+        ],
+      }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({ ...operation, days: [] }),
+    ).toMatchObject({ success: false })
+  })
+
+  it('valida operações de remoção e alteração de papel de membro', () => {
+    expect(
+      validateSyncOperation({ type: 'member.remove', opId, tripId, userId }),
+    ).toEqual({ success: true, value: { type: 'member.remove', opId, tripId, userId } })
+    expect(
+      validateSyncOperation({
+        type: 'member.set_role',
+        opId,
+        tripId,
+        userId,
+        role: 'coorganizer',
+      }),
+    ).toEqual({
+      success: true,
+      value: { type: 'member.set_role', opId, tripId, userId, role: 'coorganizer' },
+    })
+    expect(
+      validateSyncOperation({ type: 'member.set_role', opId, tripId, userId, role: 'organizer' }),
+    ).toMatchObject({ success: false })
+    expect(
+      validateSyncOperation({ type: 'member.remove', opId, tripId, userId: 'inválido' }),
     ).toMatchObject({ success: false })
   })
 })
@@ -117,6 +213,7 @@ describe('validação do pull', () => {
       places: [],
       visits: [],
       members: [],
+      itinerary: { version: 2, atSeq: '42' },
       nextCursor: '42',
       hasMore: false,
     }
@@ -125,9 +222,16 @@ describe('validação do pull', () => {
       success: true,
       value: { error: 'bootstrap_required' },
     })
+    expect(validatePullResponse({ error: 'not_member' })).toEqual({
+      success: true,
+      value: { error: 'not_member' },
+    })
     expect(validatePullResponse({ ...bootstrap, nextCursor: 42 })).toMatchObject({
       success: false,
     })
+    expect(
+      validatePullResponse({ ...bootstrap, itinerary: { version: -1, atSeq: '42' } }),
+    ).toMatchObject({ success: false })
   })
 })
 

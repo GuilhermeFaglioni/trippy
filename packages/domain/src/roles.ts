@@ -7,6 +7,22 @@ export function canEditItinerary(role: Role): boolean {
   return role === 'organizer' || role === 'coorganizer'
 }
 
+/** Organizador remove qualquer pessoa menos a si; coorganizador remove só membro comum. */
+export function canRemoveMember(actor: Member, target: Member): boolean {
+  if (actor.userId === target.userId) return false
+  if (actor.role === 'organizer') return true
+  return actor.role === 'coorganizer' && target.role === 'member'
+}
+
+/** Só organizador muda papel, sem alterar a si mesmo nem outro organizador. */
+export function canSetMemberRole(actor: Member, target: Member): boolean {
+  return (
+    actor.role === 'organizer' &&
+    actor.userId !== target.userId &&
+    target.role !== 'organizer'
+  )
+}
+
 /**
  * Quem assume quando o organizador sai: um coorganizador; se não houver, um membro qualquer
  * (visao-produto.md, "Sucessão"). `pick` escolhe entre os candidatos, para o sorteio ser testável.

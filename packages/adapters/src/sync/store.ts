@@ -40,6 +40,7 @@ interface VisitLookupRow {
 interface PullTripRow {
   seq_counter: string
   sync_floor_seq: string
+  itinerary_version: number
 }
 
 interface PullPlaceRow extends Omit<SyncPlace, 'createdAt' | 'deletedAt'> {
@@ -281,6 +282,8 @@ async function applyNewOperation(
     case 'visit.mark':
     case 'visit.unmark':
       return applyVisit(client, userId, operation, trip.timezone)
+    default:
+      throw new Error('não implementado')
   }
 }
 
@@ -371,6 +374,7 @@ export class PostgresSyncStore implements SyncStore {
   async pull(userId: string, query: PullQuery): Promise<PullResponse | null> {
     const tripResult = await this.pool.query<PullTripRow>(
       `SELECT trips.seq_counter::text AS seq_counter,
+              trips.itinerary_version,
               trips.sync_floor_seq::text AS sync_floor_seq
        FROM trips
        JOIN trip_members ON trip_members.trip_id = trips.id
@@ -488,6 +492,7 @@ export class PostgresSyncStore implements SyncStore {
       places: page.flatMap((record) => (record.kind === 'place' ? [record.value] : [])),
       visits: page.flatMap((record) => (record.kind === 'visit' ? [record.value] : [])),
       members: page.flatMap((record) => (record.kind === 'member' ? [record.value] : [])),
+      itinerary: { version: trip.itinerary_version, atSeq: snapshotSeq },
       nextCursor,
       hasMore,
     }

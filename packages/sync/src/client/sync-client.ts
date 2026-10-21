@@ -16,7 +16,14 @@ import {
   validateSyncOperation,
 } from '../validation.ts'
 import { migrateSyncDatabase } from './schema.ts'
-import type { LivePlace, SyncClient, SyncClientStatus, SyncTransport } from './types.ts'
+import type {
+  ItineraryDraft,
+  LiveMember,
+  LivePlace,
+  SyncClient,
+  SyncClientStatus,
+  SyncTransport,
+} from './types.ts'
 
 const DEFAULT_PAGE_SIZE = 100
 const DEFAULT_PUSH_BATCH_SIZE = 50
@@ -164,6 +171,38 @@ class LocalSyncClient implements SyncClient {
 
   async unmarkVisit(tripId: UUID, placeId: UUID): Promise<void> {
     await this.writeOperation({ type: 'visit.unmark', opId: this.idGenerator(), tripId, placeId })
+  }
+
+  arrangeItinerary(): Promise<void> {
+    throw new Error('não implementado')
+  }
+
+  listItineraryDrafts(): Promise<ItineraryDraft[]> {
+    throw new Error('não implementado')
+  }
+
+  discardItineraryDraft(): Promise<void> {
+    throw new Error('não implementado')
+  }
+
+  reapplyItineraryDraft(): Promise<void> {
+    throw new Error('não implementado')
+  }
+
+  listMembers(): Promise<LiveMember[]> {
+    throw new Error('não implementado')
+  }
+
+  removeMember(): Promise<void> {
+    throw new Error('não implementado')
+  }
+
+  setMemberRole(): Promise<void> {
+    throw new Error('não implementado')
+  }
+
+  listRemovedTrips(): Promise<UUID[]> {
+    throw new Error('não implementado')
   }
 
   syncNow(): Promise<void> {
@@ -362,13 +401,16 @@ class LocalSyncClient implements SyncClient {
           if (result.status === 'applied' || result.status === 'duplicate') {
             await transaction.run('DELETE FROM outbox WHERE op_id = ?', [opId])
             if (result.status === 'duplicate') needsBootstrap = true
-          } else if (result.reason === 'not_member' || result.reason === 'forbidden') {
+          } else if (
+            result.status === 'rejected' &&
+            (result.reason === 'not_member' || result.reason === 'forbidden')
+          ) {
             needsBootstrap = true
             await transaction.run(
               `UPDATE outbox SET status = 'not_sent', last_error = ? WHERE op_id = ?`,
               [result.reason, opId],
             )
-          } else {
+          } else if (result.status === 'rejected') {
             await transaction.run('UPDATE outbox SET last_error = ? WHERE op_id = ?', [
               `rejected: ${result.reason}`,
               opId,
@@ -607,6 +649,8 @@ class LocalSyncClient implements SyncClient {
       )
       return
     }
+
+    if (operation.type !== 'visit.unmark') throw new Error('não implementado')
 
     await transaction.run(
       `INSERT INTO visits (
