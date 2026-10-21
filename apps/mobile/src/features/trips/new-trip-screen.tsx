@@ -11,6 +11,7 @@ import {
   useTheme,
 } from '../../design-system'
 import { getTripsErrorMessage, useTripsClient, type CreateTripInput } from './trips-client'
+import { useSync } from '../sync/sync-provider'
 
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
@@ -106,6 +107,7 @@ export function NewTripScreen() {
   const theme = useTheme()
   const router = useRouter()
   const client = useTripsClient()
+  const { client: syncClient, rememberTripId } = useSync()
   const [values, setValues] = useState<TripFormValues>(() => ({
     name: '',
     destination: '',
@@ -131,14 +133,22 @@ export function NewTripScreen() {
 
     setIsSubmitting(true)
     try {
-      await client.createTrip(validation.input)
+      const trip = await client.createTrip(validation.input)
+      rememberTripId(trip.id)
+      if (syncClient !== null) {
+        try {
+          await syncClient.syncNow()
+        } catch {
+          // A viagem já existe no servidor; a sincronização tenta novamente depois.
+        }
+      }
       router.replace('/')
     } catch (error) {
       setApiError(getTripsErrorMessage(error))
     } finally {
       setIsSubmitting(false)
     }
-  }, [client, router, values])
+  }, [client, rememberTripId, router, syncClient, values])
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.ground }}>

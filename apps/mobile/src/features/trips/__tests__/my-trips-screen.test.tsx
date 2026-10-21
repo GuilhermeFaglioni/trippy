@@ -2,12 +2,16 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import { useEffect as reactUseEffect } from 'react'
 
 import * as sessionProvider from '../../auth/session-provider'
+import * as syncProvider from '../../sync/sync-provider'
 import { DesignSystemProvider } from '../../../design-system'
 import { MyTripsScreen } from '../my-trips-screen'
 import type { TripSummary } from '../trips-client'
 
 const mockPush = jest.fn()
 const mockRequest = jest.fn<Promise<Response>, [string, RequestInit?]>()
+const mockRememberTripIds = jest.fn()
+const mockSyncNow = jest.fn<Promise<void>, []>()
+const mockSyncClient = { syncNow: mockSyncNow }
 const mockUseEffect = reactUseEffect
 let mockFocusCallback: (() => void | (() => void)) | undefined
 
@@ -26,6 +30,17 @@ jest
   .mockImplementation(
     () => ({ request: mockRequest }) as unknown as ReturnType<typeof sessionProvider.useSession>,
   )
+jest.spyOn(syncProvider, 'useSync').mockImplementation(
+  () =>
+    ({
+      client: mockSyncClient,
+      status: { lastSyncedAt: null, pending: 0, notSent: 0 },
+      ready: true,
+      error: null,
+      rememberTripId: jest.fn(),
+      rememberTripIds: mockRememberTripIds,
+    }) as unknown as ReturnType<typeof syncProvider.useSync>,
+)
 
 const trip: TripSummary = {
   id: '58f75ed5-b524-46f8-b387-650d9b43ee36',
@@ -54,6 +69,7 @@ async function renderScreen() {
 describe('tela Minhas viagens', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockSyncNow.mockResolvedValue(undefined)
     mockFocusCallback = undefined
   })
 
@@ -73,6 +89,8 @@ describe('tela Minhas viagens', () => {
     expect(screen.getByTestId('my-trips-screen')).toBeOnTheScreen()
     expect(screen.getByText('Minhas viagens')).toBeOnTheScreen()
     expect(await screen.findByText('Você ainda não tem viagens.')).toBeOnTheScreen()
+    expect(screen.getByTestId('accept-invite-code')).toBeOnTheScreen()
+    expect(screen.getByTestId('accept-invite-button')).toBeOnTheScreen()
 
     const createTripButton = screen.getByTestId('my-trips-empty-create')
     expect(createTripButton).toHaveTextContent('Criar minha primeira viagem')
@@ -112,6 +130,22 @@ describe('tela Minhas viagens', () => {
     expect(screen.getByText('Planejando')).toBeOnTheScreen()
     expect(screen.getByText('Em viagem')).toBeOnTheScreen()
     expect(screen.getByText('Encerrada')).toBeOnTheScreen()
+
+    await fireEvent.press(screen.getByTestId('trip-card-58f75ed5-b524-46f8-b387-650d9b43ee36'))
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/trips/[id]',
+      params: { id: trip.id, tripName: trip.name, role: trip.role },
+    })
+    expect(mockRememberTripIds).toHaveBeenCalledWith([
+      trip.id,
+      '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f',
+      '88362a44-f59f-437e-a682-79966a68650a',
+    ])
+    expect(mockSyncNow).toHaveBeenCalledTimes(1)
+    expect(mockRememberTripIds.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSyncNow.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    )
+    mockPush.mockClear()
 
     await fireEvent.press(screen.getByTestId('my-trips-new-trip'))
     expect(mockPush).toHaveBeenCalledWith('/trips/new')

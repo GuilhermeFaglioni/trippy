@@ -1,12 +1,15 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 
 import * as sessionProvider from '../../auth/session-provider'
+import * as syncProvider from '../../sync/sync-provider'
 import { DesignSystemProvider } from '../../../design-system'
 import { NewTripScreen } from '../new-trip-screen'
 import type { TripSummary } from '../trips-client'
 
 const mockReplace = jest.fn()
 const mockRequest = jest.fn<Promise<Response>, [string, RequestInit?]>()
+const mockSyncNow = jest.fn<Promise<void>, []>()
+const mockRememberTripId = jest.fn()
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace }),
@@ -17,6 +20,17 @@ jest
   .mockImplementation(
     () => ({ request: mockRequest }) as unknown as ReturnType<typeof sessionProvider.useSession>,
   )
+jest.spyOn(syncProvider, 'useSync').mockImplementation(
+  () =>
+    ({
+      client: { syncNow: mockSyncNow },
+      status: { lastSyncedAt: null, pending: 0, notSent: 0 },
+      ready: true,
+      error: null,
+      rememberTripId: mockRememberTripId,
+      rememberTripIds: jest.fn(),
+    }) as unknown as ReturnType<typeof syncProvider.useSync>,
+)
 
 const trip: TripSummary = {
   id: '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f',
@@ -94,6 +108,8 @@ describe('tela Nova viagem', () => {
     await fireEvent.press(screen.getByTestId('new-trip-submit'))
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'))
+    expect(mockRememberTripId).toHaveBeenCalledWith(trip.id)
+    expect(mockSyncNow).toHaveBeenCalledTimes(1)
     expect(mockRequest).toHaveBeenCalledWith('/trips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
