@@ -35,7 +35,7 @@ export interface SyncClient {
   markVisit(tripId: UUID, placeId: UUID): Promise<void>
   unmarkVisit(tripId: UUID, placeId: UUID): Promise<void>
   syncNow(): Promise<void>
-  listPlaces(tripId: UUID, countryCode?: string | null): Promise<LivePlace[]>
+  listPlaces(tripId: UUID, _countryCode?: string | null): Promise<LivePlace[]>
   subscribe(listener: () => void): () => void
   getStatus(): SyncClientStatus
 }

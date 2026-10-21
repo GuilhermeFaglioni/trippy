@@ -73,6 +73,7 @@ export interface SyncPlace {
   tripId: UUID
   provider: string | null
   providerRef: string | null
+  countryCode: string | null
   providerDatasource: string | null
   attribution: string | null
   license: string | null

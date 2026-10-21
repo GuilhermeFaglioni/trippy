@@ -164,9 +164,9 @@ async function applyPlaceAdd(
   const sequence = (BigInt(trip.seq_counter) + 1n).toString()
   const inserted = await client.query(
     `INSERT INTO places (
-       id, trip_id, provider, provider_ref, provider_datasource, attribution, license,
+       id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,
        name, local_name, address, local_address, lat, lng, suggested_by, seq
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
      ON CONFLICT (id) DO NOTHING
      RETURNING id`,
     [
@@ -174,6 +174,7 @@ async function applyPlaceAdd(
       operation.tripId,
       operation.candidate?.provider ?? null,
       operation.candidate?.providerRef ?? null,
+      operation.candidate?.countryCode ?? null,
       operation.candidate?.datasource ?? null,
       operation.candidate?.attribution ?? null,
       operation.candidate?.license ?? null,
@@ -527,6 +528,7 @@ export class PostgresSyncStore implements SyncStore {
         this.pool,
         'places',
         `id, trip_id AS "tripId", provider, provider_ref AS "providerRef",
+         country_code AS "countryCode",
          provider_datasource AS "providerDatasource", attribution, license, name,
          local_name AS "localName", address, local_address AS "localAddress", lat, lng,
          google_place_id AS "googlePlaceId", google_match AS "googleMatch",

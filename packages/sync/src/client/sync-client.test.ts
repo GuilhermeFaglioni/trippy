@@ -146,6 +146,7 @@ function createPlace(
     tripId,
     provider: candidate?.provider ?? null,
     providerRef: candidate?.providerRef ?? null,
+    countryCode: candidate?.countryCode ?? null,
     providerDatasource: candidate?.datasource ?? null,
     attribution: candidate?.attribution ?? null,
     license: candidate?.license ?? null,
@@ -491,11 +492,12 @@ describe('SyncClient', () => {
     const client = await createClient(database, transport)
 
     const placeId = await client.addPlaceFromCandidate(tripId, signedCandidate)
-    expect(await client.listPlaces(tripId, 'CN')).toEqual([
+    expect(await client.listPlaces(tripId)).toEqual([
       expect.objectContaining({
         id: placeId,
         provider: 'geoapify',
         providerRef: 'geo-123',
+        countryCode: 'cn',
         providerDatasource: 'openstreetmap',
         attribution: '© OpenStreetMap contributors',
         license: 'ODbL',
@@ -508,6 +510,13 @@ describe('SyncClient', () => {
       'PRAGMA table_info(places)',
     )
     expect(storedColumns.map(({ name }) => name)).not.toContain('token')
+    expect(storedColumns.map(({ name }) => name)).toContain('country_code')
+    expect(
+      await database.get<{ country_code: string | null } & Record<string, unknown>>(
+        'SELECT country_code FROM places WHERE id = ?',
+        [placeId],
+      ),
+    ).toEqual({ country_code: 'cn' })
 
     await client.syncNow()
     await client.linkGooglePlace(tripId, placeId, 'ChIJgUbEo8cfqokR5lP9_Wh_DaM')
@@ -515,8 +524,9 @@ describe('SyncClient', () => {
       localName: 'Forbidden City',
       localAddress: '4 Jingshan Front St',
     })
-    expect(await client.listPlaces(tripId, 'CN')).toEqual([
+    expect(await client.listPlaces(tripId)).toEqual([
       expect.objectContaining({
+        countryCode: 'cn',
         googlePlaceId: 'ChIJgUbEo8cfqokR5lP9_Wh_DaM',
         googleMatch: 'matched',
         userLocalName: 'Forbidden City',
@@ -540,6 +550,11 @@ describe('SyncClient', () => {
     expect(await client.listPlaces(tripId)).toEqual([
       expect.objectContaining({ googlePlaceId: null, googleMatch: 'no_match' }),
     ])
+
+    const manualPlaceId = await client.addPlace(tripId, 'Lugar manual')
+    expect(await client.listPlaces(tripId)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: manualPlaceId, countryCode: null })]),
+    )
   })
 
   it('persiste reconciliação após duplicate no primeiro lote e falha no segundo, mesmo após reabrir', async () => {
@@ -980,6 +995,7 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
         trip_id: UUID
         provider: string | null
         provider_ref: string | null
+        country_code: string | null
         provider_datasource: string | null
         attribution: string | null
         license: string | null
@@ -1031,6 +1047,7 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
       tripId: row.trip_id,
       provider: row.provider,
       providerRef: row.provider_ref,
+      countryCode: row.country_code,
       providerDatasource: row.provider_datasource,
       attribution: row.attribution,
       license: row.license,

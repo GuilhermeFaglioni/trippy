@@ -208,10 +208,37 @@ describe('validação do pull', () => {
   })
 
   it('valida páginas de bootstrap e o erro bootstrap_required', () => {
+    const place = {
+      id: placeId,
+      tripId,
+      provider: null,
+      providerRef: null,
+      providerDatasource: null,
+      attribution: null,
+      license: null,
+      name: 'Lugar',
+      localName: null,
+      address: null,
+      localAddress: null,
+      countryCode: null,
+      googlePlaceId: null,
+      googleMatch: 'none',
+      userLocalName: null,
+      userLocalAddress: null,
+      lat: null,
+      lng: null,
+      suggestedBy: userId,
+      comment: null,
+      dayIndex: null,
+      position: null,
+      seq: '1',
+      deletedAt: null,
+      createdAt: '2026-10-20T12:00:00.000Z',
+    }
     const bootstrap = {
       mode: 'bootstrap',
       snapshotSeq: '42',
-      places: [],
+      places: [place],
       visits: [],
       members: [],
       nextCursor: '42',
@@ -225,6 +252,12 @@ describe('validação do pull', () => {
     expect(validatePullResponse({ ...bootstrap, nextCursor: 42 })).toMatchObject({
       success: false,
     })
+    const placeWithoutCountryCode = Object.fromEntries(
+      Object.entries(place).filter(([key]) => key !== 'countryCode'),
+    )
+    expect(
+      validatePullResponse({ ...bootstrap, places: [placeWithoutCountryCode] }),
+    ).toMatchObject({ success: false })
   })
 })
 
@@ -252,6 +285,7 @@ describe('canonicalTripState', () => {
     providerDatasource: null,
     attribution: null,
     license: null,
+    countryCode: null,
     name: 'Lugar',
     localName: null,
     address: null,

@@ -31,6 +31,7 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     tripId: 'trip-1',
     provider: null,
     providerRef: null,
+    countryCode: null,
     providerDatasource: null,
     attribution: null,
     license: null,

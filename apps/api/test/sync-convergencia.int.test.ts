@@ -159,6 +159,7 @@ async function post(path: string, body: unknown, token: string): Promise<Respons
 async function readLocalState(database: SqlDatabase, currentTripId: UUID) {
   const places = await database.all<SyncPlace & Record<string, unknown>>(
     `SELECT id, trip_id AS tripId, provider, provider_ref AS providerRef,
+            country_code AS countryCode,
             provider_datasource AS providerDatasource, attribution, license, name,
             local_name AS localName, address, local_address AS localAddress, lat, lng,
             google_place_id AS googlePlaceId, google_match AS googleMatch,
@@ -186,6 +187,7 @@ async function readLocalState(database: SqlDatabase, currentTripId: UUID) {
 async function readServerState(currentTripId: UUID) {
   const placeRows = await pool.query<SyncPlace>(
     `SELECT id, trip_id AS "tripId", provider, provider_ref AS "providerRef",
+            country_code AS "countryCode",
             provider_datasource AS "providerDatasource", attribution, license, name,
             local_name AS "localName", address, local_address AS "localAddress", lat, lng,
             google_place_id AS "googlePlaceId", google_match AS "googleMatch",
@@ -505,6 +507,7 @@ it('sincroniza candidato assinado, vínculo Google e detalhes locais entre clien
       id: placeId,
       provider: 'geoapify',
       providerRef: fields.providerRef,
+      countryCode: fields.countryCode,
       providerDatasource: fields.datasource,
       attribution: fields.attribution,
       license: fields.license,
@@ -513,6 +516,12 @@ it('sincroniza candidato assinado, vínculo Google e detalhes locais entre clien
       googleMatch: 'none',
     }),
   ])
+  expect(
+    await pool.query<{ country_code: string | null }>(
+      'SELECT country_code FROM places WHERE id = $1',
+      [placeId],
+    ),
+  ).toMatchObject({ rows: [{ country_code: 'pt' }] })
 
   const tamperedCandidate = { ...candidate, token: `x${candidate.token.slice(1)}` }
   const tamperedPlaceId = randomUUID()

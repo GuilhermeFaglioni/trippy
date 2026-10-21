@@ -77,6 +77,7 @@ const migrations: readonly Migration[] = [
   {
     version: 3,
     statements: [
+      'ALTER TABLE places ADD COLUMN country_code TEXT',
       'ALTER TABLE places ADD COLUMN provider_datasource TEXT',
       'ALTER TABLE places ADD COLUMN attribution TEXT',
       'ALTER TABLE places ADD COLUMN license TEXT',

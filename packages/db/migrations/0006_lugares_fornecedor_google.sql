@@ -1,4 +1,5 @@
 ALTER TABLE places
+  ADD COLUMN country_code text,
   ADD COLUMN provider_datasource text,
   ADD COLUMN attribution text,
   ADD COLUMN license text,

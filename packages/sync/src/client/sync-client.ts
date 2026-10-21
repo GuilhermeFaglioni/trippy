@@ -63,6 +63,7 @@ interface PlaceRow extends Record<string, unknown> {
   trip_id: UUID
   provider: string | null
   provider_ref: string | null
+  country_code: string | null
   provider_datasource: string | null
   attribution: string | null
   license: string | null
@@ -227,7 +228,8 @@ class LocalSyncClient implements SyncClient {
     return promise
   }
 
-  async listPlaces(tripId: UUID, countryCode: string | null = null): Promise<LivePlace[]> {
+  async listPlaces(tripId: UUID, _countryCode?: string | null): Promise<LivePlace[]> {
+    void _countryCode
     const rows = await this.database.all<PlaceRow & { visited_by_me: number }>(
       `SELECT places.*, EXISTS (
          SELECT 1 FROM visits
@@ -256,13 +258,13 @@ class LocalSyncClient implements SyncClient {
         localNameStatus: classifyLocalDetail({
           userValue: place.userLocalName,
           providerValue: place.localName,
-          countryCode,
+          countryCode: place.countryCode,
           kind: 'name',
         }),
         localAddressStatus: classifyLocalDetail({
           userValue: place.userLocalAddress,
           providerValue: place.localAddress,
-          countryCode,
+          countryCode: place.countryCode,
           kind: 'address',
         }),
       }
@@ -637,14 +639,15 @@ class LocalSyncClient implements SyncClient {
       const candidate = operation.candidate
       await transaction.run(
         `INSERT INTO places (
-           id, trip_id, provider, provider_ref, provider_datasource, attribution, license,
+           id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,
            name, local_name, address, local_address, lat, lng, google_place_id, google_match,
            user_local_name, user_local_address, suggested_by, comment, day_index, position,
            seq, deleted_at, created_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'none', NULL, NULL, ?, NULL, NULL, NULL, '0', NULL, ?)
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'none', NULL, NULL, ?, NULL, NULL, NULL, '0', NULL, ?)
          ON CONFLICT (id) DO UPDATE SET
            trip_id = excluded.trip_id, provider = excluded.provider,
-           provider_ref = excluded.provider_ref, provider_datasource = excluded.provider_datasource,
+           provider_ref = excluded.provider_ref, country_code = excluded.country_code,
+           provider_datasource = excluded.provider_datasource,
            attribution = excluded.attribution, license = excluded.license, name = excluded.name,
            local_name = excluded.local_name, address = excluded.address,
            local_address = excluded.local_address, lat = excluded.lat, lng = excluded.lng,
@@ -657,6 +660,7 @@ class LocalSyncClient implements SyncClient {
           operation.tripId,
           candidate?.provider ?? null,
           candidate?.providerRef ?? null,
+          candidate?.countryCode ?? null,
           candidate?.datasource ?? null,
           candidate?.attribution ?? null,
           candidate?.license ?? null,
@@ -750,13 +754,14 @@ class LocalSyncClient implements SyncClient {
   private async upsertPlace(transaction: SqlDatabase, place: SyncPlace): Promise<void> {
     await transaction.run(
       `INSERT INTO places (
-         id, trip_id, provider, provider_ref, provider_datasource, attribution, license,
+         id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,
          name, local_name, address, local_address, lat, lng, google_place_id, google_match,
          user_local_name, user_local_address, suggested_by, comment, day_index, position,
          seq, deleted_at, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (id) DO UPDATE SET
          trip_id = excluded.trip_id, provider = excluded.provider, provider_ref = excluded.provider_ref,
+         country_code = excluded.country_code,
          provider_datasource = excluded.provider_datasource, attribution = excluded.attribution,
          license = excluded.license,
          name = excluded.name, local_name = excluded.local_name, address = excluded.address,
@@ -771,6 +776,7 @@ class LocalSyncClient implements SyncClient {
         place.tripId,
         place.provider,
         place.providerRef,
+        place.countryCode,
         place.providerDatasource,
         place.attribution,
         place.license,
@@ -893,6 +899,7 @@ class LocalSyncClient implements SyncClient {
       tripId: row.trip_id,
       provider: row.provider,
       providerRef: row.provider_ref,
+      countryCode: row.country_code,
       providerDatasource: row.provider_datasource,
       attribution: row.attribution,
       license: row.license,

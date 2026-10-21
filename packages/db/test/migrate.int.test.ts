@@ -82,6 +82,12 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       'visits',
     ])
 
+    const placeColumns = await client.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'places' AND column_name = 'country_code'`,
+    )
+    expect(placeColumns.rows.map(({ column_name }) => column_name)).toEqual(['country_code'])
+
     const migrationBefore = await client.query<{
       version: string
       checksum: string

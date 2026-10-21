@@ -300,6 +300,7 @@ function validatePlace(value: unknown): value is SyncPlace {
     isUuid(value.tripId) &&
     isNullableString(value.provider) &&
     isNullableString(value.providerRef) &&
+    isNullableString(value.countryCode) &&
     isNullableString(value.providerDatasource) &&
     isNullableString(value.attribution) &&
     isNullableString(value.license) &&
