@@ -12,12 +12,14 @@ export function createApp(
   tripsRouter?: Hono<AuthEnvironment>,
   syncRouter?: Hono<AuthEnvironment>,
   invitesRouter?: Hono<AuthEnvironment>,
+  placesRouter?: Hono<AuthEnvironment>,
 ) {
   const app = new Hono<AuthEnvironment>()
   if (authRouter) app.route('/', authRouter)
   if (tripsRouter) app.route('/', tripsRouter)
   if (syncRouter) app.route('/', syncRouter)
   if (invitesRouter) app.route('/', invitesRouter)
+  if (placesRouter) app.route('/', placesRouter)
   app.get('/health', async (c) => {
     const result = await runHealthChecks(healthChecks, healthTimeoutMs)
     return c.json(result, result.status === 'ok' ? 200 : 503)
