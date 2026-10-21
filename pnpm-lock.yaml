@@ -227,6 +227,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@trippy/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@trippy/sync':
         specifier: workspace:*
         version: link:../../packages/sync

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
-import { Platform, ScrollView, View } from 'react-native'
+import { Platform, ScrollView, Switch, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
@@ -11,6 +11,8 @@ import {
 } from '../../design-system'
 import { Button, Card, Notice, TextField, type NoticeTone } from '../../components'
 import { checkApiHealth, getApiBaseUrl, type HealthCheckResult } from './health-client'
+import { networkGate } from '../sync/network-gate-runtime'
+import { useNetworkOffline } from '../sync/use-network-gate'
 
 type ScreenStatus = Exclude<HealthCheckResult['status'], 'aborted'> | 'checking'
 type NoticeCopy = {
@@ -22,11 +24,15 @@ type NoticeCopy = {
 
 const fontPlatform = normalizeFontPlatform(Platform.OS)
 const typography = createTypographyTokens(fontPlatform)
+const isDevelopmentBuild = typeof __DEV__ !== 'undefined' && __DEV__
 
 export function ApiDiagnosticsScreen() {
   const theme = useTheme()
+  const isOffline = useNetworkOffline()
   const [apiBaseUrl, setApiBaseUrl] = useState(getApiBaseUrl)
   const [status, setStatus] = useState<ScreenStatus>('checking')
+  const [isSavingOffline, setIsSavingOffline] = useState(false)
+  const [offlineError, setOfflineError] = useState<string | null>(null)
   const mountedRef = useRef(false)
   const activeRequestRef = useRef<AbortController | null>(null)
   const apiBaseUrlRef = useRef(apiBaseUrl)
@@ -91,6 +97,18 @@ export function ApiDiagnosticsScreen() {
   }
   const currentNotice = notice[status]
 
+  const changeOfflineMode = useCallback(async (offline: boolean) => {
+    setIsSavingOffline(true)
+    setOfflineError(null)
+    try {
+      await networkGate.setOffline(offline)
+    } catch {
+      setOfflineError('Não foi possível salvar o estado do interruptor.')
+    } finally {
+      setIsSavingOffline(false)
+    }
+  }, [])
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.ground }}>
       <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
@@ -149,6 +167,38 @@ export function ApiDiagnosticsScreen() {
             />
           </View>
         </Card>
+
+        {isDevelopmentBuild ? (
+          <Card testID="offline-network-card">
+            <View style={{ gap: theme.spacing.space3 }}>
+              <View style={{ gap: theme.spacing.space1 }}>
+                <TypographyText
+                  family="sans"
+                  style={[typography.bodyStrong, { color: theme.colors.ink }]}
+                >
+                  Simular sem internet
+                </TypographyText>
+                <TypographyText
+                  family="sans"
+                  style={[typography.bodySm, { color: theme.colors.inkMuted }]}
+                >
+                  Faz os clientes HTTP do app falharem como numa queda de rede.
+                </TypographyText>
+              </View>
+              <Switch
+                testID="simulate-offline-toggle"
+                accessibilityLabel="Simular sem internet"
+                accessibilityRole="switch"
+                value={isOffline}
+                disabled={isSavingOffline}
+                onValueChange={(offline) => void changeOfflineMode(offline)}
+              />
+              {offlineError ? (
+                <Notice tone="danger" message={offlineError} testID="offline-toggle-error" />
+              ) : null}
+            </View>
+          </Card>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   )

@@ -1,4 +1,5 @@
 import { getApiBaseUrl as getConfiguredApiBaseUrl } from '../../features/diagnostics/health-client'
+import { fetchThroughNetworkGate } from '../sync/network-gate-runtime'
 
 export const DEFAULT_AUTH_API_BASE_URL = 'http://localhost:3000'
 
@@ -103,7 +104,7 @@ export function getAuthErrorMessage(error: unknown): string {
 
 export function createAuthClient({
   baseUrl = getAuthApiBaseUrl(),
-  fetcher = fetch,
+  fetcher = fetchThroughNetworkGate,
 }: CreateAuthClientOptions = {}): AuthClient {
   const normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, '')
 

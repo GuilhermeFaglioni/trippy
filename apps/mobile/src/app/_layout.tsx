@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar'
 
 import { customFontAssets, DesignSystemProvider } from '../design-system'
 import { SessionProvider, useSession } from '../features/auth/session-provider'
+import { SyncProvider } from '../features/sync/sync-provider'
 
 function SessionNavigator() {
   const { status } = useSession()
@@ -13,6 +14,7 @@ function SessionNavigator() {
       <Stack.Protected guard={status === 'authenticated'} redirectTo="/login">
         <Stack.Screen name="index" />
         <Stack.Screen name="trips/new" />
+        <Stack.Screen name="trips/[id]" />
       </Stack.Protected>
       <Stack.Protected guard={status !== 'authenticated'} redirectTo="/">
         <Stack.Screen name="login" />
@@ -32,7 +34,9 @@ export default function RootLayout() {
   return (
     <DesignSystemProvider>
       <SessionProvider>
-        <SessionNavigator />
+        <SyncProvider>
+          <SessionNavigator />
+        </SyncProvider>
       </SessionProvider>
       <StatusBar style="auto" />
     </DesignSystemProvider>

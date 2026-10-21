@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@trippy/domain": "workspace:*",
     "expo": "~58.0.16",
     "expo-constants": "~58.0.12",
     "expo-font": "~58.0.9",
