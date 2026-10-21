@@ -535,6 +535,34 @@ describe('SyncClient', () => {
     ).toMatchObject({ needs_bootstrap: 0, snapshot_seq: null })
   })
 
+  it('refaz o bootstrap do zero quando duplicate chega com snapshot parcial', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '2'))
+    transport.seedVisit(createVisit(placeA, userA, '3', '2026-10-20T09:30:00.000Z'))
+    transport.seedPlace(createPlace(placeB, 'Museu', userA, '4'))
+    const client = await createClient(database, transport, userA, undefined, { pageSize: 1 })
+    transport.failBeforePullCall = 4
+
+    await expect(client.syncNow()).rejects.toThrow('falha de rede durante o pull')
+    expect(
+      await database.get<{ snapshot_seq: string | null } & Record<string, unknown>>(
+        'SELECT snapshot_seq FROM sync_state WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ snapshot_seq: '4' })
+
+    transport.failBeforePullCall = null
+    await client.markVisit(tripId, placeA)
+    await client.syncNow()
+
+    expect(client.getStatus().pending).toBe(0)
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+  })
+
   it('retoma reconciliação persistida após not_sent e falha do pull', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
     temporaryDirectories.push(directory)

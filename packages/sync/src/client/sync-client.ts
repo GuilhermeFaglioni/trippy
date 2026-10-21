@@ -376,9 +376,11 @@ class LocalSyncClient implements SyncClient {
           }
         }
         if (needsBootstrap) {
-          await transaction.run('UPDATE sync_state SET needs_bootstrap = 1 WHERE trip_id = ?', [
-            tripId,
-          ])
+          // Um snapshot parcial já pode ter passado pela linha otimista; recomeça do zero.
+          await transaction.run(
+            'UPDATE sync_state SET needs_bootstrap = 1, snapshot_seq = NULL WHERE trip_id = ?',
+            [tripId],
+          )
         }
       })
     }
