@@ -34,6 +34,7 @@ export function PhotoUploadQueueProvider({ children, userId }: PhotoUploadQueueP
   )
   const client = useMemo(() => createPhotosClient(stableRequest), [stableRequest])
   const coordinatorPromise = useRef<Promise<PhotoSyncCoordinator> | null>(null)
+  const sessionActive = useRef(true)
 
   const getCoordinator = useCallback(() => {
     if (coordinatorPromise.current === null) {
@@ -48,7 +49,12 @@ export function PhotoUploadQueueProvider({ children, userId }: PhotoUploadQueueP
 
   const drainTrip = useCallback(
     async (tripId: string) => {
+      if (!sessionActive.current) return
       const coordinator = await getCoordinator()
+      if (!sessionActive.current) {
+        coordinator.deactivate()
+        return
+      }
       await coordinator.drainTrip(tripId)
     },
     [getCoordinator],
@@ -56,9 +62,20 @@ export function PhotoUploadQueueProvider({ children, userId }: PhotoUploadQueueP
 
   const drainPendingTrips = useCallback(async () => {
     try {
+      if (!sessionActive.current) return
       const network = await Network.getNetworkStateAsync()
-      if (network.isConnected === false || network.isInternetReachable === false) return
+      if (
+        !sessionActive.current ||
+        network.isConnected === false ||
+        network.isInternetReachable === false
+      ) {
+        return
+      }
       const coordinator = await getCoordinator()
+      if (!sessionActive.current) {
+        coordinator.deactivate()
+        return
+      }
       await coordinator.drainPendingTrips()
     } catch {
       // The durable queue remains available; app resume or the next network event retries it.
@@ -66,21 +83,32 @@ export function PhotoUploadQueueProvider({ children, userId }: PhotoUploadQueueP
   }, [getCoordinator])
 
   useEffect(() => {
-    let active = true
+    sessionActive.current = true
     const appStateSubscription = AppState.addEventListener('change', (state) => {
-      if (active && state === 'active') void drainPendingTrips()
+      if (sessionActive.current && state === 'active') void drainPendingTrips()
     })
     const networkSubscription = Network.addNetworkStateListener((state) => {
-      if (active && state.isConnected !== false && state.isInternetReachable !== false) {
+      if (
+        sessionActive.current &&
+        state.isConnected !== false &&
+        state.isInternetReachable !== false
+      ) {
         void drainPendingTrips()
       }
     })
 
     void drainPendingTrips()
     return () => {
-      active = false
+      sessionActive.current = false
       appStateSubscription.remove()
       networkSubscription.remove()
+      const pendingCoordinator = coordinatorPromise.current
+      if (pendingCoordinator !== null) {
+        void pendingCoordinator.then(
+          (coordinator) => coordinator.deactivate(),
+          () => undefined,
+        )
+      }
     }
   }, [drainPendingTrips])
 

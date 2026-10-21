@@ -13,15 +13,20 @@ type PhotoSyncCoordinatorDependencies = {
 
 export class PhotoSyncCoordinator {
   private readonly controllersByTrip = new Map<string, PhotoSyncController>()
+  private active = true
 
   constructor(private readonly dependencies: PhotoSyncCoordinatorDependencies) {}
 
   async drainPendingTrips(): Promise<void> {
+    if (!this.active) return
     const tripIds = await this.dependencies.queue.listPendingTripIds()
+    if (!this.active) return
     await Promise.all(tripIds.map((tripId) => this.drainTrip(tripId)))
   }
 
   drainTrip(tripId: string): Promise<void> {
+    if (!this.active) return Promise.resolve()
+
     let controller = this.controllersByTrip.get(tripId)
     if (!controller) {
       const { client, queue, userId } = this.dependencies
@@ -36,6 +41,15 @@ export class PhotoSyncCoordinator {
     }
 
     return controller.drain()
+  }
+
+  deactivate(): void {
+    if (!this.active) return
+    this.active = false
+    for (const controller of this.controllersByTrip.values()) {
+      controller.deactivate()
+    }
+    this.controllersByTrip.clear()
   }
 }
 

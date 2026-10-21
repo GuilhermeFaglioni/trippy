@@ -11,17 +11,49 @@ export type PhotoSyncDependencies = {
 
 export class PhotoSyncController {
   private inFlightDrain: Promise<void> | null = null
+  private drainRequested = false
+  private active = true
 
   constructor(private readonly dependencies: PhotoSyncDependencies) {}
 
   drain(): Promise<void> {
-    if (this.inFlightDrain) return this.inFlightDrain
+    if (!this.active) return this.inFlightDrain ?? Promise.resolve()
+    if (this.inFlightDrain) {
+      this.drainRequested = true
+      return this.inFlightDrain
+    }
 
-    const pendingDrain = this.runDrain().finally(() => {
-      if (this.inFlightDrain === pendingDrain) this.inFlightDrain = null
-    })
+    const pendingDrain = this.runRequestedDrains()
     this.inFlightDrain = pendingDrain
     return pendingDrain
+  }
+
+  deactivate(): void {
+    this.active = false
+    this.drainRequested = false
+  }
+
+  private async runRequestedDrains(): Promise<void> {
+    let hasError = false
+    let firstError: unknown
+
+    try {
+      do {
+        this.drainRequested = false
+        try {
+          await this.runDrain()
+        } catch (error) {
+          if (!hasError) {
+            hasError = true
+            firstError = error
+          }
+        }
+      } while (this.active && this.drainRequested)
+
+      if (hasError) throw firstError
+    } finally {
+      this.inFlightDrain = null
+    }
   }
 
   private async runDrain(): Promise<void> {
