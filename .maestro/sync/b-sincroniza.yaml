@@ -1,0 +1,15 @@
+appId: app.trippy.mobile
+---
+- stopApp
+- launchApp:
+    clearState: false
+- openLink: ${DEV_CLIENT_URL}
+- assertVisible:
+    id: my-trips-screen
+- tapOn:
+    id: trip-card-${TRIP_ID}
+- assertVisible:
+    id: trip-detail-screen
+- assertVisible:
+    id: place-${PLACE_SLUG}
+- assertVisible: 0 pendentes
