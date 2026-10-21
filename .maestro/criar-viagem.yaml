@@ -40,8 +40,12 @@ appId: app.trippy.mobile
     id: new-trip-start-date
 - inputText: ${output.startDate}
 - tapOn:
+    id: trippy-wordmark
+- tapOn:
     id: new-trip-end-date
 - inputText: ${output.endDate}
+- tapOn:
+    id: trippy-wordmark
 - tapOn:
     id: new-trip-submit
 - assertVisible:
