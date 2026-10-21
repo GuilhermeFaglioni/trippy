@@ -1,4 +1,5 @@
 export * from './roles.ts'
+export * from './trips.ts'
 export * from './auth/email-code.ts'
 export * from './auth/session.ts'
 export * from './recap-snapshot.ts'

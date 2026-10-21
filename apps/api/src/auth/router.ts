@@ -22,6 +22,7 @@ import {
 import { createSmtpEmailSender, type EmailSender } from '@trippy/adapters/email'
 import type { ApiConfig } from '../config.ts'
 import { AuthHttpError, handleApiError } from './errors.ts'
+import { authenticate, type AuthEnvironment } from './authenticate.ts'
 
 export interface AuthRouterOptions {
   now?: () => Date
@@ -100,7 +101,7 @@ export async function createAuthRouter(config: ApiConfig, options: AuthRouterOpt
   const now = options.now ?? (() => new Date())
   const codeGenerator =
     options.codeGenerator ?? (() => randomInt(0, 1_000_000).toString().padStart(6, '0'))
-  const router = new Hono()
+  const router = new Hono<AuthEnvironment>()
 
   if (config.authMode === 'dev') {
     const codeSecret = config.authCodeSecret
@@ -193,17 +194,8 @@ export async function createAuthRouter(config: ApiConfig, options: AuthRouterOpt
     router.post('/auth/logout', (context) => context.body(null, 204))
   }
 
-  router.get('/me', async (context) => {
-    const authorization = context.req.header('authorization')
-    const match = /^Bearer\s+(.+)$/iu.exec(authorization ?? '')
-    if (!match) throw new AuthHttpError(401, 'unauthorized', 'Autenticação necessária.')
-
-    let userId: string
-    try {
-      userId = (await verifyAccessToken(match[1]!)).userId
-    } catch {
-      throw new AuthHttpError(401, 'unauthorized', 'Autenticação necessária.')
-    }
+  router.get('/me', authenticate(verifyAccessToken), async (context) => {
+    const userId = context.get('userId')
     const user = await store.getUser(userId)
     if (!user) throw new AuthHttpError(401, 'unauthorized', 'Autenticação necessária.')
     return context.json({ user })
@@ -237,6 +229,7 @@ export async function createAuthRouter(config: ApiConfig, options: AuthRouterOpt
 
   return {
     router,
+    verifyAccessToken,
     close: async () => {
       if (ownsPool) await pool!.end()
     },
