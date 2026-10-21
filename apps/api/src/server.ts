@@ -5,15 +5,17 @@ import { createApp } from './app.ts'
 import { createAuthRouter } from './auth/router.ts'
 import { loadConfig } from './config.ts'
 import { createHealthChecks, type HealthChecks } from './health.ts'
+import { createTripsRouter } from './trips/router.ts'
 
 export async function startApiServer(
   config: ReturnType<typeof loadConfig>,
   healthChecks: HealthChecks = createHealthChecks(config),
 ) {
   const auth = await createAuthRouter(config)
+  const trips = createTripsRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const server = serve(
     {
-      fetch: createApp(healthChecks, 1_000, auth.router).fetch,
+      fetch: createApp(healthChecks, 1_000, auth.router, trips.router).fetch,
       port: config.port,
       hostname: config.host,
     },
@@ -23,7 +25,7 @@ export async function startApiServer(
       console.log(`API em http://${config.host}:${port}`)
     },
   )
-  server.once('close', () => void auth.close())
+  server.once('close', () => void Promise.all([auth.close(), trips.close()]))
   return server
 }
 
