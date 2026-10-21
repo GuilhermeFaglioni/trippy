@@ -2,6 +2,10 @@ import { randomUUID } from 'node:crypto'
 import pg, { type Pool } from 'pg'
 import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import { PostgresTripStore } from '@trippy/adapters/trips'
+import {
+  PostgresPlacesUsageStore,
+  type PlacesUsageStore,
+} from '@trippy/adapters/places/usage-store'
 import type {
   GooglePlacesProvider,
   PlacesProvider,
@@ -166,6 +170,7 @@ function createTestApp(options: {
   detailsUserLimit?: number
   detailsTripLimit?: number
   now?: Date
+  usageStore?: PlacesUsageStore
 } = {}) {
   const router = createPlacesRouter(
     {
@@ -189,6 +194,7 @@ function createTestApp(options: {
       },
       ...(options.placesProvider ? { placesProvider: options.placesProvider } : {}),
       ...(options.googleProvider ? { googleProvider: options.googleProvider } : {}),
+      ...(options.usageStore ? { usageStore: options.usageStore } : {}),
       now: () => options.now ?? new Date(),
     },
   )
@@ -372,6 +378,20 @@ it('carrega coordenadas e nome do banco, responde no-store e deduplica toque con
     release = resolve
   })
   const received: Array<{ name: string; lat: number; lng: number }> = []
+  let detailsUsageCount = 0
+  let resolveSecondUsage!: () => void
+  const secondUsage = new Promise<void>((resolve) => {
+    resolveSecondUsage = resolve
+  })
+  const postgresUsageStore = new PostgresPlacesUsageStore(pool)
+  const usageStore: PlacesUsageStore = {
+    async consume(input) {
+      const result = await postgresUsageStore.consume(input)
+      if (input.usageType === 'google_details' && ++detailsUsageCount === 2) resolveSecondUsage()
+      return result
+    },
+    recordCall: (input) => postgresUsageStore.recordCall(input),
+  }
   const google: GooglePlacesProvider = {
     async getDetails(input, onProviderCall) {
       received.push({ name: input.name, lat: input.lat, lng: input.lng })
@@ -381,11 +401,17 @@ it('carrega coordenadas e nome do banco, responde no-store e deduplica toque con
       return googleDetails
     },
   }
-  const app = createTestApp({ googlePlacesApiKey: 'google-key', googleProvider: google })
+  const app = createTestApp({
+    googlePlacesApiKey: 'google-key',
+    googleProvider: google,
+    usageStore,
+  })
   const path = `/trips/${tripId}/places/${placeId}/google-details`
   const first = post(app, path)
   await providerStarted
   const second = post(app, path)
+  await secondUsage
+  await new Promise<void>((resolve) => setImmediate(resolve))
   release()
   const [firstResponse, secondResponse] = await Promise.all([first, second])
 

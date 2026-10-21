@@ -152,7 +152,15 @@ beforeAll(async () => {
       googleProvider: fakeGoogleProvider(),
     },
   )
-  app = createApp(healthyChecks, 1_000, undefined, trips.router, sync.router, undefined, places.router)
+  app = createApp(
+    healthyChecks,
+    1_000,
+    undefined,
+    trips.router,
+    sync.router,
+    undefined,
+    places.router,
+  )
 }, 60_000)
 
 afterAll(async () => {
@@ -253,7 +261,7 @@ async function apiRequest(path: string, token: string, init?: RequestInit): Prom
   return app.fetch(new Request(new URL(path, 'http://trippy.test'), { ...init, headers }))
 }
 
-async function scanPostgresTextColumns(): Promise<string[]> {
+async function scanPostgresTextColumns(placeId: UUID, expectedTripId: UUID): Promise<string[]> {
   const columns = await pool.query<{
     table_schema: string
     table_name: string
@@ -267,17 +275,131 @@ async function scanPostgresTextColumns(): Promise<string[]> {
   )
   const findings: string[] = []
   for (const column of columns.rows) {
-    const result = await pool.query<{ value: string | null }>(
-      `SELECT ${quoteIdentifier(column.column_name)}::text AS value
-       FROM ${quoteIdentifier(column.table_schema)}.${quoteIdentifier(column.table_name)}`,
+    const result = await pool.query<{
+      value: string | null
+      record: Record<string, unknown>
+    }>(
+      `SELECT ${quoteIdentifier(column.column_name)}::text AS value, to_jsonb(scan_row) AS record
+       FROM ${quoteIdentifier(column.table_schema)}.${quoteIdentifier(column.table_name)} AS scan_row`,
     )
     for (const row of result.rows) {
       if (row.value && sentinels.some((sentinel) => row.value!.includes(sentinel))) {
         findings.push(`${column.table_name}.${column.column_name}`)
       }
+      const allowedGooglePlaceId =
+        row.value !== null &&
+        isAllowedGooglePlaceIdColumn(
+          column.table_name,
+          column.column_name,
+          row.value,
+          row.record,
+          placeId,
+          expectedTripId,
+        )
+      if (row.value?.includes(googlePlaceId) && !allowedGooglePlaceId) {
+        findings.push(
+          `${column.table_name}.${column.column_name} contém googlePlaceId fora do vínculo permitido`,
+        )
+      }
     }
   }
   return findings
+}
+
+async function scanSqliteGooglePlaceId(placeId: UUID, expectedTripId: UUID): Promise<string[]> {
+  const database = clients[0]?.database
+  if (!database) throw new Error('Banco SQLite de conformidade não inicializado')
+
+  const tables = await database.all<{ name: string }>(
+    `SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
+  )
+  const findings: string[] = []
+  for (const table of tables) {
+    const columns = await database.all<{ name: string }>(
+      `PRAGMA table_info(${quoteIdentifier(table.name)})`,
+    )
+    for (const row of await database.all<Record<string, unknown>>(
+      `SELECT ${columns
+        .map(
+          (column) =>
+            `CAST(${quoteIdentifier(column.name)} AS TEXT) AS ${quoteIdentifier(column.name)}`,
+        )
+        .join(', ')} FROM ${quoteIdentifier(table.name)}`,
+    )) {
+      for (const [columnName, value] of Object.entries(row)) {
+        if (typeof value !== 'string' || !value.includes(googlePlaceId)) continue
+        const allowedPlaceLink = isAllowedGooglePlaceIdColumn(
+          table.name,
+          columnName,
+          value,
+          row,
+          placeId,
+          expectedTripId,
+        )
+        const allowedOutboxOperation =
+          table.name === 'outbox' &&
+          columnName === 'payload' &&
+          row.type === 'place.google_link' &&
+          isGoogleLinkOperation(value, placeId, expectedTripId, row)
+        if (!allowedPlaceLink && !allowedOutboxOperation) {
+          findings.push(
+            `${table.name}.${columnName} contém googlePlaceId fora da operação permitida`,
+          )
+        }
+      }
+    }
+  }
+  return findings
+}
+
+function isAllowedGooglePlaceIdColumn(
+  tableName: string,
+  columnName: string,
+  value: string,
+  record: Record<string, unknown>,
+  placeId: UUID,
+  expectedTripId: UUID,
+): boolean {
+  return (
+    tableName === 'places' &&
+    columnName === 'google_place_id' &&
+    value === googlePlaceId &&
+    record.id === placeId &&
+    record.trip_id === expectedTripId
+  )
+}
+
+function isGoogleLinkOperation(
+  value: string,
+  placeId: UUID,
+  expectedTripId: UUID,
+  outboxRow: Record<string, unknown>,
+): boolean {
+  try {
+    const operation: unknown = JSON.parse(value)
+    if (typeof operation !== 'object' || operation === null) return false
+    const operationFields = Object.keys(operation).sort()
+    const expectedFields = ['googlePlaceId', 'opId', 'placeId', 'tripId', 'type'].sort()
+    return (
+      operationFields.length === expectedFields.length &&
+      operationFields.every((field, index) => field === expectedFields[index]) &&
+      'type' in operation &&
+      operation.type === 'place.google_link' &&
+      'googlePlaceId' in operation &&
+      operation.googlePlaceId === googlePlaceId &&
+      'placeId' in operation &&
+      operation.placeId === placeId &&
+      'tripId' in operation &&
+      operation.tripId === expectedTripId &&
+      'opId' in operation &&
+      typeof operation.opId === 'string' &&
+      operation.opId === outboxRow.op_id &&
+      outboxRow.trip_id === expectedTripId &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(operation.opId)
+    )
+  } catch {
+    return false
+  }
 }
 
 async function scanSqliteFiles(): Promise<string[]> {
@@ -319,8 +441,13 @@ async function scanMinioObjects(): Promise<string[]> {
           const response = await client.send(
             new GetObjectCommand({ Bucket: bucket.Name, Key: object.Key }),
           )
-          const bytes = response.Body ? await response.Body.transformToByteArray() : new Uint8Array()
-          if (sentinels.some((sentinel) => Buffer.from(bytes).includes(Buffer.from(sentinel)))) {
+          const bytes = response.Body
+            ? await response.Body.transformToByteArray()
+            : new Uint8Array()
+          if (
+            sentinels.some((sentinel) => Buffer.from(bytes).includes(Buffer.from(sentinel))) ||
+            Buffer.from(bytes).includes(Buffer.from(googlePlaceId))
+          ) {
             findings.push(`${bucket.Name}/${object.Key}`)
           }
         }
@@ -388,6 +515,7 @@ function json(value: unknown): Response {
 it('não persiste nem registra campos de Detalhes do Google após buscar, salvar, confirmar e recusar', async () => {
   const sqlitePath = join(sqliteDirectory!, 'cliente-google.sqlite')
   const sqlite = new NodeSqlDatabase(sqlitePath)
+  let savedPlaceId: UUID | undefined
   const syncClient = await createSyncClient({
     database: sqlite,
     transport: syncTransport('organizer-token'),
@@ -406,6 +534,7 @@ it('não persiste nem registra campos de Detalhes do Google após buscar, salvar
     const { candidates } = await jsonResponse<PlaceSearchResponse>(search)
     expect(candidates).toHaveLength(1)
     const placeId = await syncClient.addPlaceFromCandidate(tripId, candidates[0]!)
+    savedPlaceId = placeId
     await syncClient.syncNow()
 
     const detailsResponse = await apiRequest(
@@ -416,7 +545,13 @@ it('não persiste nem registra campos de Detalhes do Google após buscar, salvar
     expect(detailsResponse.headers.get('cache-control')).toBe('no-store')
     const details = await jsonResponse<{
       candidateIds: string[]
-      current: { googlePlaceId: string; name: string; address: string; type: string; photo: unknown }
+      current: {
+        googlePlaceId: string
+        name: string
+        address: string
+        type: string
+        photo: unknown
+      }
     }>(detailsResponse)
     expect(details.current).toMatchObject({
       googlePlaceId,
@@ -427,12 +562,48 @@ it('não persiste nem registra campos de Detalhes do Google após buscar, salvar
     expect(details.current.photo).toBeTruthy()
 
     await syncClient.linkGooglePlace(tripId, placeId, googlePlaceId)
+    expect(await scanPostgresTextColumns(placeId, tripId)).toEqual([])
+    expect(await scanSqliteGooglePlaceId(placeId, tripId)).toEqual([])
+    const pendingOperation = await sqlite.all<{ op_id: string; payload: string }>(
+      "SELECT op_id, payload FROM outbox WHERE type = 'place.google_link'",
+    )
+    expect(pendingOperation).toHaveLength(1)
+    const originalPayload = pendingOperation[0]!.payload
+    const payloadWithDuplicate = JSON.stringify({
+      ...JSON.parse(originalPayload),
+      duplicateGooglePlaceId: googlePlaceId,
+    })
+    await sqlite.run('UPDATE outbox SET payload = ? WHERE op_id = ?', [
+      payloadWithDuplicate,
+      pendingOperation[0]!.op_id,
+    ])
+    expect(await scanSqliteGooglePlaceId(placeId, tripId)).toEqual([
+      'outbox.payload contém googlePlaceId fora da operação permitida',
+    ])
+    await sqlite.run('UPDATE outbox SET payload = ? WHERE op_id = ?', [
+      originalPayload,
+      pendingOperation[0]!.op_id,
+    ])
+    const mismatchedOperationId = randomUUID()
+    await sqlite.run('UPDATE outbox SET op_id = ? WHERE op_id = ?', [
+      mismatchedOperationId,
+      pendingOperation[0]!.op_id,
+    ])
+    expect(await scanSqliteGooglePlaceId(placeId, tripId)).toEqual([
+      'outbox.payload contém googlePlaceId fora da operação permitida',
+    ])
+    await sqlite.run('UPDATE outbox SET op_id = ? WHERE op_id = ?', [
+      pendingOperation[0]!.op_id,
+      mismatchedOperationId,
+    ])
     await syncClient.syncNow()
     const confirmed = await pool.query<{ google_place_id: string; google_match: string }>(
       'SELECT google_place_id, google_match FROM places WHERE id = $1',
       [placeId],
     )
     expect(confirmed.rows).toEqual([{ google_place_id: googlePlaceId, google_match: 'matched' }])
+    expect(await scanPostgresTextColumns(placeId, tripId)).toEqual([])
+    expect(await scanSqliteGooglePlaceId(placeId, tripId)).toEqual([])
 
     await syncClient.linkGooglePlace(tripId, placeId, null)
     await syncClient.syncNow()
@@ -445,15 +616,22 @@ it('não persiste nem registra campos de Detalhes do Google após buscar, salvar
     captured.restore()
   }
 
+  if (!savedPlaceId) throw new Error('Lugar de conformidade não foi criado')
   const [databaseFindings, sqliteFindings, minioFindings] = await Promise.all([
-    scanPostgresTextColumns(),
+    scanPostgresTextColumns(savedPlaceId, tripId),
     scanSqliteFiles(),
     scanMinioObjects(),
   ])
-  const logFindings = sentinels.filter((sentinel) => captured.output.some((line) => line.includes(sentinel)))
+  const [sqliteGoogleIdFindings] = await Promise.all([
+    scanSqliteGooglePlaceId(savedPlaceId, tripId),
+  ])
+  const logFindings = [...sentinels, googlePlaceId].filter((marker) =>
+    captured.output.some((line) => line.includes(marker)),
+  )
 
   expect(databaseFindings).toEqual([])
   expect(sqliteFindings).toEqual([])
+  expect(sqliteGoogleIdFindings).toEqual([])
   expect(minioFindings).toEqual([])
   expect(logFindings).toEqual([])
 }, 60_000)
