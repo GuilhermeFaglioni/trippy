@@ -16,11 +16,7 @@ export function canRemoveMember(actor: Member, target: Member): boolean {
 
 /** Só organizador muda papel, sem alterar a si mesmo nem outro organizador. */
 export function canSetMemberRole(actor: Member, target: Member): boolean {
-  return (
-    actor.role === 'organizer' &&
-    actor.userId !== target.userId &&
-    target.role !== 'organizer'
-  )
+  return actor.role === 'organizer' && actor.userId !== target.userId && target.role !== 'organizer'
 }
 
 /**

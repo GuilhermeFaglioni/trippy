@@ -127,10 +127,7 @@ export function validateSyncOperation(
     let placeCount = 0
     for (const [index, rawDay] of value.days.entries()) {
       if (!isRecord(rawDay)) return failure(`days[${index}]`, 'O dia precisa ser um objeto.')
-      if (
-        !isNonNegativeSafeInteger(rawDay.dayIndex) ||
-        rawDay.dayIndex > maxItineraryDayIndex
-      ) {
+      if (!isNonNegativeSafeInteger(rawDay.dayIndex) || rawDay.dayIndex > maxItineraryDayIndex) {
         return failure(`days[${index}].dayIndex`, 'Informe um índice de dia entre 0 e 365.')
       }
       if (dayIndexes.has(rawDay.dayIndex)) {
@@ -177,7 +174,12 @@ export function validateSyncOperation(
     if (!isUuid(value.userId)) return failure('userId', 'Informe um UUID válido.')
     return {
       success: true,
-      value: { type: 'member.remove', opId: value.opId, tripId: value.tripId, userId: value.userId },
+      value: {
+        type: 'member.remove',
+        opId: value.opId,
+        tripId: value.tripId,
+        userId: value.userId,
+      },
     }
   }
 
@@ -327,11 +329,7 @@ function validateMember(value: unknown): value is SyncMember {
 }
 
 function validateItinerary(value: unknown): value is { version: number; atSeq: SyncSequence } {
-  return (
-    isRecord(value) &&
-    isNonNegativeSafeInteger(value.version) &&
-    isSyncSequence(value.atSeq)
-  )
+  return isRecord(value) && isNonNegativeSafeInteger(value.version) && isSyncSequence(value.atSeq)
 }
 
 function isStringArrayOf<T>(value: unknown, validate: (item: unknown) => item is T): value is T[] {

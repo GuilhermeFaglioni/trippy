@@ -96,12 +96,12 @@ describe('validação das operações e do push', () => {
       ],
     }
     expect(validateSyncOperation(operation)).toEqual({ success: true, value: operation })
-    expect(
-      validateSyncOperation({ ...operation, baseVersion: -1 }),
-    ).toMatchObject({ success: false })
-    expect(
-      validateSyncOperation({ ...operation, baseVersion: 1.5 }),
-    ).toMatchObject({ success: false })
+    expect(validateSyncOperation({ ...operation, baseVersion: -1 })).toMatchObject({
+      success: false,
+    })
+    expect(validateSyncOperation({ ...operation, baseVersion: 1.5 })).toMatchObject({
+      success: false,
+    })
     expect(
       validateSyncOperation({
         ...operation,
@@ -146,15 +146,14 @@ describe('validação das operações e do push', () => {
         ],
       }),
     ).toMatchObject({ success: false })
-    expect(
-      validateSyncOperation({ ...operation, days: [] }),
-    ).toMatchObject({ success: false })
+    expect(validateSyncOperation({ ...operation, days: [] })).toMatchObject({ success: false })
   })
 
   it('valida operações de remoção e alteração de papel de membro', () => {
-    expect(
-      validateSyncOperation({ type: 'member.remove', opId, tripId, userId }),
-    ).toEqual({ success: true, value: { type: 'member.remove', opId, tripId, userId } })
+    expect(validateSyncOperation({ type: 'member.remove', opId, tripId, userId })).toEqual({
+      success: true,
+      value: { type: 'member.remove', opId, tripId, userId },
+    })
     expect(
       validateSyncOperation({
         type: 'member.set_role',
