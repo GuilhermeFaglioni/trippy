@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./client/types": "./src/client/types.ts"
+    "./client/types": "./src/client/types.ts",
+    "./node-sqlite": "./src/client/node-sqlite.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -1,4 +1,11 @@
-import type { PullQuery, PullResponse, PushRequest, PushResponse, SyncPlace, UUID } from '../types.ts'
+import type {
+  PullQuery,
+  PullResponse,
+  PushRequest,
+  PushResponse,
+  SyncPlace,
+  UUID,
+} from '../types.ts'
 
 export type LivePlace = Omit<SyncPlace, 'deletedAt'> & { deletedAt: null; visitedByMe: boolean }
 
@@ -6,6 +13,8 @@ export interface SyncClientStatus {
   lastSyncedAt: string | null
   pending: number
   notSent: number
+  syncing?: boolean
+  lastError?: string | null
 }
 
 export interface SyncClient {
