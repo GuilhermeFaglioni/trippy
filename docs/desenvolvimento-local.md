@@ -69,7 +69,7 @@ O `.env.example` fornece os valores exclusivos do adaptador local: `AUTH_MODE=de
 | `AUTH_JWKS_URL` | Vazio | Usada com a verificação JWKS do Cognito, não no modo local. |
 | `SMTP_HOST` / `SMTP_PORT` | `localhost` / `51025` | Envio local via Mailpit; a caixa e API ficam em `http://localhost:58025`. |
 
-Para rodar o primeiro fluxo no iOS Simulator, deixe os serviços locais já iniciados e abra três terminais na raiz do repositório:
+Para validar criação de viagem e sessão persistente no iOS Simulator, deixe os serviços locais já iniciados e abra três terminais na raiz do repositório:
 
 ```sh
 # Terminal 1: API local
@@ -79,10 +79,11 @@ pnpm --filter @trippy/api dev
 EXPO_PUBLIC_API_URL=http://localhost:3000 pnpm --filter @trippy/mobile ios
 
 # Terminal 3: fluxo ponta a ponta, depois que o app estiver instalado no Simulator
+maestro test .maestro/criar-viagem.yaml
 maestro test .maestro/login-ate-home.yaml
 ```
 
-O fluxo limpa os dados do app e o keychain na primeira abertura, gera um e-mail de teste único por execução, busca o código mais recente desse endereço pela API do Mailpit, conclui o login e confirma “Minhas viagens”. Em seguida, encerra e reabre o app sem limpar o estado para verificar que a sessão persiste no SecureStore. Como cada execução usa um endereço novo, não é necessário resetar o banco nem a caixa do Mailpit entre execuções.
+`criar-viagem.yaml` limpa os dados do app e o keychain, gera um e-mail único, busca o código mais recente pela API do Mailpit, conclui o login e cria uma viagem com datas futuras. O fluxo confirma o nome da viagem e o selo “Planejando” na home. `login-ate-home.yaml` repete o login com outro e-mail e confirma “Minhas viagens”; em seguida, encerra e reabre o app sem limpar o estado para verificar que a sessão persiste no SecureStore. Como os fluxos usam endereços novos, não é necessário resetar o banco nem a caixa do Mailpit entre execuções.
 
 Instale o Maestro pelo instalador oficial antes da primeira execução: `curl -fsSL https://get.maestro.mobile.dev | bash`. O `.maestro/login-ate-home.yaml` usa o bundle ID `app.trippy.mobile`; mantenha um iOS Simulator iniciado e use o mesmo app instalado pelo comando `pnpm --filter @trippy/mobile ios`. Não derrube nem recrie os contêineres para rodar esse fluxo.
 
