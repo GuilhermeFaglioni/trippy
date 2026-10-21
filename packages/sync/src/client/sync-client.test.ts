@@ -14,6 +14,7 @@ import type {
   SyncVisit,
   UUID,
 } from '../types.ts'
+import type { PlaceSearchCandidate } from '@trippy/domain'
 import type { SqlDatabase } from '../database.ts'
 import { createSyncClient } from './sync-client.ts'
 import { NodeSqlDatabase } from './node-sqlite.ts'
@@ -116,18 +117,48 @@ async function expectDuplicateReconciliation(
   )
 }
 
-function createPlace(id: UUID, name: string, suggestedBy: UUID, seq: string): SyncPlace {
+const signedCandidate: PlaceSearchCandidate = {
+  provider: 'geoapify',
+  providerRef: 'geo-123',
+  name: 'Museu do Amanhã',
+  localName: '故宮博物院',
+  address: 'Praça Mauá, 1',
+  localAddress: '北京市东城区景山前街4号',
+  lat: -22.894,
+  lng: -43.179,
+  countryCode: 'cn',
+  datasource: 'openstreetmap',
+  attribution: '© OpenStreetMap contributors',
+  license: 'ODbL',
+  method: 'geocoding',
+  token: 'assinatura-de-teste',
+}
+
+function createPlace(
+  id: UUID,
+  name: string,
+  suggestedBy: UUID,
+  seq: string,
+  candidate?: PlaceSearchCandidate,
+): SyncPlace {
   return {
     id,
     tripId,
-    provider: null,
-    providerRef: null,
+    provider: candidate?.provider ?? null,
+    providerRef: candidate?.providerRef ?? null,
+    providerDatasource: candidate?.datasource ?? null,
+    attribution: candidate?.attribution ?? null,
+    license: candidate?.license ?? null,
     name,
-    localName: null,
-    address: null,
-    localAddress: null,
-    lat: null,
-    lng: null,
+    localName: candidate?.localName ?? null,
+    address: candidate?.address ?? null,
+    localAddress: candidate?.localAddress ?? null,
+    googlePlaceId: null,
+    googleMatch: 'none',
+    userLocalName: null,
+    userLocalAddress: null,
+    lat: candidate?.lat ?? null,
+    lng: candidate?.lng ?? null,
     suggestedBy,
     comment: null,
     dayIndex: null,
@@ -398,16 +429,43 @@ class FakeSyncTransport {
       }
     }
 
+    if (operation.type === 'place.google_link' || operation.type === 'place.set_local') {
+      const place = this.places.get(operation.placeId)
+      if (!place || place.tripId !== operation.tripId || place.deletedAt !== null) {
+        return { opId: operation.opId, status: 'rejected', reason: 'invalid' }
+      }
+    }
+
     this.sequence += 1n
     const seq = String(this.sequence)
     if (operation.type === 'place.add') {
       this.places.set(
         operation.placeId,
-        createPlace(operation.placeId, operation.name, this.userId, seq),
+        createPlace(operation.placeId, operation.name, this.userId, seq, operation.candidate),
       )
     } else if (operation.type === 'place.remove') {
       const place = this.places.get(operation.placeId)
       if (place) this.places.set(place.id, { ...place, seq, deletedAt: fixedTime })
+    } else if (operation.type === 'place.google_link') {
+      const place = this.places.get(operation.placeId)!
+      this.places.set(operation.placeId, {
+        ...place,
+        googlePlaceId: operation.googlePlaceId,
+        googleMatch: operation.googlePlaceId === null ? 'no_match' : 'matched',
+        seq,
+      })
+    } else if (operation.type === 'place.set_local') {
+      const place = this.places.get(operation.placeId)!
+      this.places.set(operation.placeId, {
+        ...place,
+        ...(Object.hasOwn(operation, 'localName')
+          ? { userLocalName: operation.localName ?? null }
+          : {}),
+        ...(Object.hasOwn(operation, 'localAddress')
+          ? { userLocalAddress: operation.localAddress ?? null }
+          : {}),
+        seq,
+      })
     } else {
       const key = `${operation.placeId}:${this.userId}`
       const previous = this.visits.get(key)
@@ -427,6 +485,63 @@ class FakeSyncTransport {
 }
 
 describe('SyncClient', () => {
+  it('sincroniza candidato, confirmação do Google e detalhes locais sem token no registro', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    const client = await createClient(database, transport)
+
+    const placeId = await client.addPlaceFromCandidate(tripId, signedCandidate)
+    expect(await client.listPlaces(tripId, 'CN')).toEqual([
+      expect.objectContaining({
+        id: placeId,
+        provider: 'geoapify',
+        providerRef: 'geo-123',
+        providerDatasource: 'openstreetmap',
+        attribution: '© OpenStreetMap contributors',
+        license: 'ODbL',
+        googleMatch: 'none',
+        localNameStatus: 'ok',
+        localAddressStatus: 'ok',
+      }),
+    ])
+    const storedColumns = await database.all<{ name: string } & Record<string, unknown>>(
+      'PRAGMA table_info(places)',
+    )
+    expect(storedColumns.map(({ name }) => name)).not.toContain('token')
+
+    await client.syncNow()
+    await client.linkGooglePlace(tripId, placeId, 'ChIJgUbEo8cfqokR5lP9_Wh_DaM')
+    await client.setLocalDetails(tripId, placeId, {
+      localName: 'Forbidden City',
+      localAddress: '4 Jingshan Front St',
+    })
+    expect(await client.listPlaces(tripId, 'CN')).toEqual([
+      expect.objectContaining({
+        googlePlaceId: 'ChIJgUbEo8cfqokR5lP9_Wh_DaM',
+        googleMatch: 'matched',
+        userLocalName: 'Forbidden City',
+        userLocalAddress: '4 Jingshan Front St',
+        localNameStatus: 'not_local_language',
+        localAddressStatus: 'not_local_language',
+      }),
+    ])
+    await client.syncNow()
+    expect(transport.state().places[0]).toMatchObject({
+      provider: 'geoapify',
+      providerRef: 'geo-123',
+      userLocalName: 'Forbidden City',
+      userLocalAddress: '4 Jingshan Front St',
+      googlePlaceId: 'ChIJgUbEo8cfqokR5lP9_Wh_DaM',
+      googleMatch: 'matched',
+    })
+
+    await client.linkGooglePlace(tripId, placeId, null)
+    await client.syncNow()
+    expect(await client.listPlaces(tripId)).toEqual([
+      expect.objectContaining({ googlePlaceId: null, googleMatch: 'no_match' }),
+    ])
+  })
+
   it('persiste reconciliação após duplicate no primeiro lote e falha no segundo, mesmo após reabrir', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
     temporaryDirectories.push(directory)
@@ -865,10 +980,17 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
         trip_id: UUID
         provider: string | null
         provider_ref: string | null
+        provider_datasource: string | null
+        attribution: string | null
+        license: string | null
         name: string
         local_name: string | null
         address: string | null
         local_address: string | null
+        google_place_id: string | null
+        google_match: SyncPlace['googleMatch']
+        user_local_name: string | null
+        user_local_address: string | null
         lat: number | null
         lng: number | null
         suggested_by: UUID
@@ -909,10 +1031,17 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
       tripId: row.trip_id,
       provider: row.provider,
       providerRef: row.provider_ref,
+      providerDatasource: row.provider_datasource,
+      attribution: row.attribution,
+      license: row.license,
       name: row.name,
       localName: row.local_name,
       address: row.address,
       localAddress: row.local_address,
+      googlePlaceId: row.google_place_id,
+      googleMatch: row.google_match,
+      userLocalName: row.user_local_name,
+      userLocalAddress: row.user_local_address,
       lat: row.lat,
       lng: row.lng,
       suggestedBy: row.suggested_by,

@@ -1,4 +1,5 @@
 import { validatePlaceName } from '@trippy/domain/places'
+import type { PlaceSearchCandidate } from '@trippy/domain'
 import type {
   AcceptInviteRequest,
   CreateInviteParams,
@@ -60,6 +61,59 @@ function isNullableNumber(value: unknown): value is number | null {
   return value === null || (typeof value === 'number' && Number.isFinite(value))
 }
 
+function isGooglePlaceId(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value === value.trim() &&
+    !/^[a-z][a-z\d+.-]*:\/\//iu.test(value) &&
+    !/[\s\p{Cc}\p{Cf}]/u.test(value)
+  )
+}
+
+function validatePlaceSearchCandidate(value: unknown): PlaceSearchCandidate | null {
+  if (
+    !isRecord(value) ||
+    value.provider !== 'geoapify' ||
+    typeof value.providerRef !== 'string' ||
+    value.providerRef.length === 0 ||
+    typeof value.name !== 'string' ||
+    !validatePlaceName(value.name).success ||
+    !isNullableString(value.localName) ||
+    !isNullableString(value.address) ||
+    !isNullableString(value.localAddress) ||
+    typeof value.lat !== 'number' ||
+    !Number.isFinite(value.lat) ||
+    typeof value.lng !== 'number' ||
+    !Number.isFinite(value.lng) ||
+    !isNullableString(value.countryCode) ||
+    typeof value.datasource !== 'string' ||
+    typeof value.attribution !== 'string' ||
+    typeof value.license !== 'string' ||
+    (value.method !== 'geocoding' && value.method !== 'places') ||
+    typeof value.token !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    provider: 'geoapify',
+    providerRef: value.providerRef,
+    name: value.name,
+    localName: value.localName,
+    address: value.address,
+    localAddress: value.localAddress,
+    lat: value.lat,
+    lng: value.lng,
+    countryCode: value.countryCode,
+    datasource: value.datasource,
+    attribution: value.attribution,
+    license: value.license,
+    method: value.method,
+    token: value.token,
+  }
+}
+
 function failure<T = never>(path: string, message: string): ValidationResult<T> {
   return { success: false, issues: [{ path, message }] }
 }
@@ -75,6 +129,11 @@ export function validateSyncOperation(
     if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
     const name = validatePlaceName(value.name)
     if (!name.success) return failure('name', name.message)
+    const candidate =
+      value.candidate === undefined ? undefined : validatePlaceSearchCandidate(value.candidate)
+    if (value.candidate !== undefined && (!candidate || candidate.name !== name.value)) {
+      return failure('candidate', 'Candidato de lugar inválido.')
+    }
     return {
       success: true,
       value: {
@@ -83,6 +142,54 @@ export function validateSyncOperation(
         tripId: value.tripId,
         placeId: value.placeId,
         name: name.value,
+        ...(candidate ? { candidate } : {}),
+      },
+    }
+  }
+
+  if (value.type === 'place.google_link') {
+    if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
+    if (value.googlePlaceId !== null && !isGooglePlaceId(value.googlePlaceId)) {
+      return failure('googlePlaceId', 'Informe um Place ID do Google válido ou null.')
+    }
+    return {
+      success: true,
+      value: {
+        type: 'place.google_link',
+        opId: value.opId,
+        tripId: value.tripId,
+        placeId: value.placeId,
+        googlePlaceId: value.googlePlaceId as string | null,
+      },
+    }
+  }
+
+  if (value.type === 'place.set_local') {
+    if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
+    const hasLocalName = Object.hasOwn(value, 'localName')
+    const hasLocalAddress = Object.hasOwn(value, 'localAddress')
+    if (!hasLocalName && !hasLocalAddress) {
+      return failure('localName', 'Informe o nome ou o endereço local a atualizar.')
+    }
+    if (hasLocalName && !isNullableString(value.localName)) {
+      return failure('localName', 'Informe um texto local ou null.')
+    }
+    if (hasLocalAddress && !isNullableString(value.localAddress)) {
+      return failure('localAddress', 'Informe um texto local ou null.')
+    }
+    return {
+      success: true,
+      value: {
+        type: 'place.set_local',
+        opId: value.opId,
+        tripId: value.tripId,
+        placeId: value.placeId,
+        ...(hasLocalName
+          ? { localName: normalizeNullableText(value.localName as string | null) }
+          : {}),
+        ...(hasLocalAddress
+          ? { localAddress: normalizeNullableText(value.localAddress as string | null) }
+          : {}),
       },
     }
   }
@@ -105,6 +212,12 @@ export function validateSyncOperation(
   }
 
   return failure('type', 'Tipo de operação desconhecido.')
+}
+
+function normalizeNullableText(value: string | null): string | null {
+  if (value === null) return null
+  const trimmed = value.trim()
+  return trimmed || null
 }
 
 export function validatePushRequest(value: unknown): ValidationResult<PushRequest> {
@@ -187,10 +300,19 @@ function validatePlace(value: unknown): value is SyncPlace {
     isUuid(value.tripId) &&
     isNullableString(value.provider) &&
     isNullableString(value.providerRef) &&
+    isNullableString(value.providerDatasource) &&
+    isNullableString(value.attribution) &&
+    isNullableString(value.license) &&
     typeof value.name === 'string' &&
     isNullableString(value.localName) &&
     isNullableString(value.address) &&
     isNullableString(value.localAddress) &&
+    isNullableString(value.googlePlaceId) &&
+    (value.googleMatch === 'none' ||
+      value.googleMatch === 'matched' ||
+      value.googleMatch === 'no_match') &&
+    isNullableString(value.userLocalName) &&
+    isNullableString(value.userLocalAddress) &&
     isNullableNumber(value.lat) &&
     isNullableNumber(value.lng) &&
     isUuid(value.suggestedBy) &&

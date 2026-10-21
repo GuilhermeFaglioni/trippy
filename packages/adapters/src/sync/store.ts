@@ -1,4 +1,5 @@
-import { canRemovePlace } from '@trippy/domain/places'
+import { canConfirmGooglePlace, canRemovePlace } from '@trippy/domain/places'
+import { verifyPlaceSearchCandidate } from '../places/candidate-token.ts'
 import type {
   PullQuery,
   PullResponse,
@@ -31,6 +32,10 @@ interface PlaceLookupRow {
   trip_id: string
   suggested_by: string
   deleted_at: Date | null
+  google_place_id?: string | null
+  google_match?: SyncPlace['googleMatch']
+  user_local_name?: string | null
+  user_local_address?: string | null
 }
 
 interface VisitLookupRow {
@@ -139,7 +144,12 @@ async function applyPlaceAdd(
   userId: string,
   operation: Extract<SyncOperation, { type: 'place.add' }>,
   trip: TripRow,
+  candidateSecret: string,
 ): Promise<PushOperationResult> {
+  if (operation.candidate && !verifyPlaceSearchCandidate(operation.candidate, candidateSecret)) {
+    return rejectedResult(operation, 'invalid')
+  }
+
   const existing = await client.query<PlaceLookupRow>(
     'SELECT trip_id, suggested_by, deleted_at FROM places WHERE id = $1',
     [operation.placeId],
@@ -153,11 +163,29 @@ async function applyPlaceAdd(
 
   const sequence = (BigInt(trip.seq_counter) + 1n).toString()
   const inserted = await client.query(
-    `INSERT INTO places (id, trip_id, name, suggested_by, seq)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO places (
+       id, trip_id, provider, provider_ref, provider_datasource, attribution, license,
+       name, local_name, address, local_address, lat, lng, suggested_by, seq
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
      ON CONFLICT (id) DO NOTHING
      RETURNING id`,
-    [operation.placeId, operation.tripId, operation.name, userId, sequence],
+    [
+      operation.placeId,
+      operation.tripId,
+      operation.candidate?.provider ?? null,
+      operation.candidate?.providerRef ?? null,
+      operation.candidate?.datasource ?? null,
+      operation.candidate?.attribution ?? null,
+      operation.candidate?.license ?? null,
+      operation.candidate?.name ?? operation.name,
+      operation.candidate?.localName ?? null,
+      operation.candidate?.address ?? null,
+      operation.candidate?.localAddress ?? null,
+      operation.candidate?.lat ?? null,
+      operation.candidate?.lng ?? null,
+      userId,
+      sequence,
+    ],
   )
   if ((inserted.rowCount ?? 0) === 0) {
     const conflict = await client.query<{ trip_id: string }>(
@@ -266,18 +294,92 @@ async function applyVisit(
   return { opId: operation.opId, status: 'applied' }
 }
 
+async function applyGoogleLink(
+  client: PoolClient,
+  userId: string,
+  role: SyncMember['role'],
+  operation: Extract<SyncOperation, { type: 'place.google_link' }>,
+): Promise<PushOperationResult> {
+  const selected = await client.query<PlaceLookupRow>(
+    `SELECT trip_id, suggested_by, deleted_at, google_place_id, google_match
+     FROM places WHERE id = $1 FOR UPDATE`,
+    [operation.placeId],
+  )
+  const place = selected.rows[0]
+  if (!place || place.trip_id !== operation.tripId || place.deleted_at) {
+    return rejectedResult(operation, 'invalid')
+  }
+  if (!canConfirmGooglePlace({ role, userId, suggestedBy: place.suggested_by })) {
+    return rejectedResult(operation, 'forbidden')
+  }
+
+  const googleMatch = operation.googlePlaceId === null ? 'no_match' : 'matched'
+  if (place.google_place_id === operation.googlePlaceId && place.google_match === googleMatch) {
+    return duplicateResult(operation)
+  }
+
+  const sequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    `UPDATE places SET google_place_id = $2, google_match = $3, seq = $4
+     WHERE id = $1`,
+    [operation.placeId, operation.googlePlaceId, googleMatch, sequence],
+  )
+  return { opId: operation.opId, status: 'applied' }
+}
+
+async function applyLocalDetails(
+  client: PoolClient,
+  operation: Extract<SyncOperation, { type: 'place.set_local' }>,
+): Promise<PushOperationResult> {
+  const selected = await client.query<PlaceLookupRow>(
+    `SELECT trip_id, suggested_by, deleted_at, user_local_name, user_local_address
+     FROM places WHERE id = $1 FOR UPDATE`,
+    [operation.placeId],
+  )
+  const place = selected.rows[0]
+  if (!place || place.trip_id !== operation.tripId || place.deleted_at) {
+    return rejectedResult(operation, 'invalid')
+  }
+
+  const hasLocalName = Object.hasOwn(operation, 'localName')
+  const hasLocalAddress = Object.hasOwn(operation, 'localAddress')
+  const localName = hasLocalName ? (operation.localName ?? null) : (place.user_local_name ?? null)
+  const localAddress = hasLocalAddress
+    ? (operation.localAddress ?? null)
+    : (place.user_local_address ?? null)
+  if (localName === place.user_local_name && localAddress === place.user_local_address) {
+    return duplicateResult(operation)
+  }
+
+  const sequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    `UPDATE places SET
+       user_local_name = CASE WHEN $2::boolean THEN $3::text ELSE user_local_name END,
+       user_local_address = CASE WHEN $4::boolean THEN $5::text ELSE user_local_address END,
+       seq = $6
+     WHERE id = $1`,
+    [operation.placeId, hasLocalName, localName, hasLocalAddress, localAddress, sequence],
+  )
+  return { opId: operation.opId, status: 'applied' }
+}
+
 async function applyNewOperation(
   client: PoolClient,
   userId: string,
   operation: SyncOperation,
   trip: TripRow,
   role: SyncMember['role'],
+  candidateSecret: string,
 ): Promise<PushOperationResult> {
   switch (operation.type) {
     case 'place.add':
-      return applyPlaceAdd(client, userId, operation, trip)
+      return applyPlaceAdd(client, userId, operation, trip, candidateSecret)
     case 'place.remove':
       return applyPlaceRemove(client, userId, role, operation)
+    case 'place.google_link':
+      return applyGoogleLink(client, userId, role, operation)
+    case 'place.set_local':
+      return applyLocalDetails(client, operation)
     case 'visit.mark':
     case 'visit.unmark':
       return applyVisit(client, userId, operation, trip.timezone)
@@ -316,7 +418,12 @@ function comparePullRecords(left: PullRecord, right: PullRecord): number {
 }
 
 export class PostgresSyncStore implements SyncStore {
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly pool: Pool,
+    private readonly candidateSecret: string,
+  ) {
+    if (!candidateSecret) throw new Error('PLACES_CANDIDATE_SECRET é obrigatório.')
+  }
 
   async applyOperation(userId: string, operation: SyncOperation): Promise<PushOperationResult> {
     const client = await this.pool.connect()
@@ -351,7 +458,14 @@ export class PostgresSyncStore implements SyncStore {
           )
           const member = memberResult.rows[0]
           const result = member
-            ? await applyNewOperation(client, userId, operation, trip, member.role)
+            ? await applyNewOperation(
+                client,
+                userId,
+                operation,
+                trip,
+                member.role,
+                this.candidateSecret,
+              )
             : rejectedResult(operation, 'not_member')
 
           await storeResult(client, userId, operation, result)
@@ -412,8 +526,11 @@ export class PostgresSyncStore implements SyncStore {
       listPageRows<PullPlaceRow>(
         this.pool,
         'places',
-        `id, trip_id AS "tripId", provider, provider_ref AS "providerRef", name,
+        `id, trip_id AS "tripId", provider, provider_ref AS "providerRef",
+         provider_datasource AS "providerDatasource", attribution, license, name,
          local_name AS "localName", address, local_address AS "localAddress", lat, lng,
+         google_place_id AS "googlePlaceId", google_match AS "googleMatch",
+         user_local_name AS "userLocalName", user_local_address AS "userLocalAddress",
          suggested_by AS "suggestedBy", comment, day_index AS "dayIndex", position,
          seq::text AS seq, deleted_at AS "deletedAt", created_at AS "createdAt"`,
         'deleted_at',

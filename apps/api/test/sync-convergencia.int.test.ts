@@ -5,8 +5,10 @@ import { join } from 'node:path'
 import pg, { type Pool } from 'pg'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresInviteStore } from '@trippy/adapters/invites'
+import { signPlaceSearchCandidate } from '@trippy/adapters/places'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
 import { PostgresTripStore } from '@trippy/adapters/trips'
+import type { PlaceSearchCandidateFields } from '@trippy/domain'
 import {
   canonicalTripState,
   createSyncClient,
@@ -32,6 +34,7 @@ import type { HealthChecks } from '../src/health.ts'
 
 const databaseUrl = process.env.DATABASE_URL
 if (!databaseUrl) throw new Error('DATABASE_URL não definido: configure o Postgres local')
+const candidateSecret = 'segredo-de-candidato-integração-com-entropia-suficiente'
 
 const testDatabaseName = `trippy_sync_convergencia_${process.pid}_${randomUUID().replaceAll('-', '').slice(0, 12)}`
 const adminUrl = new URL(databaseUrl)
@@ -155,8 +158,11 @@ async function post(path: string, body: unknown, token: string): Promise<Respons
 
 async function readLocalState(database: SqlDatabase, currentTripId: UUID) {
   const places = await database.all<SyncPlace & Record<string, unknown>>(
-    `SELECT id, trip_id AS tripId, provider, provider_ref AS providerRef, name,
+    `SELECT id, trip_id AS tripId, provider, provider_ref AS providerRef,
+            provider_datasource AS providerDatasource, attribution, license, name,
             local_name AS localName, address, local_address AS localAddress, lat, lng,
+            google_place_id AS googlePlaceId, google_match AS googleMatch,
+            user_local_name AS userLocalName, user_local_address AS userLocalAddress,
             suggested_by AS suggestedBy, comment, day_index AS dayIndex, position, seq,
             deleted_at AS deletedAt, created_at AS createdAt
      FROM places WHERE trip_id = ?`,
@@ -179,8 +185,11 @@ async function readLocalState(database: SqlDatabase, currentTripId: UUID) {
 
 async function readServerState(currentTripId: UUID) {
   const placeRows = await pool.query<SyncPlace>(
-    `SELECT id, trip_id AS "tripId", provider, provider_ref AS "providerRef", name,
+    `SELECT id, trip_id AS "tripId", provider, provider_ref AS "providerRef",
+            provider_datasource AS "providerDatasource", attribution, license, name,
             local_name AS "localName", address, local_address AS "localAddress", lat, lng,
+            google_place_id AS "googlePlaceId", google_match AS "googleMatch",
+            user_local_name AS "userLocalName", user_local_address AS "userLocalAddress",
             suggested_by AS "suggestedBy", comment, day_index AS "dayIndex", position,
             seq::text AS seq, deleted_at AS "deletedAt", created_at AS "createdAt"
      FROM places WHERE trip_id = $1`,
@@ -250,8 +259,8 @@ beforeAll(async () => {
     { tripStore: new PostgresTripStore(pool), accessTokenVerifier },
   )
   const sync = createSyncRouter(
-    { databaseUrl: testDatabaseUrl.toString() },
-    { syncStore: new PostgresSyncStore(pool), accessTokenVerifier },
+    { databaseUrl: testDatabaseUrl.toString(), placesCandidateSecret: candidateSecret },
+    { syncStore: new PostgresSyncStore(pool, candidateSecret), accessTokenVerifier },
   )
   const invites = createInvitesRouter(
     { databaseUrl: testDatabaseUrl.toString() },
@@ -422,6 +431,159 @@ it('converge após resposta perdida, fechamento offline, remoção e escritas si
   expect(controlsA.pullQueries.length + controlsB.pullQueries.length).toBeGreaterThan(8)
   expect(clientA.getStatus().pending).toBe(0)
   expect(clientB.getStatus().pending).toBe(0)
+})
+
+it('sincroniza candidato assinado, vínculo Google e detalhes locais entre clientes', async () => {
+  const tripResponse = await post(
+    '/trips',
+    {
+      name: `Lugar assinado ${randomUUID()}`,
+      destination: 'Lisboa',
+      startDate: '2026-12-01',
+      endDate: '2026-12-05',
+      timezone: 'Europe/Lisbon',
+    },
+    'convergencia-organizador',
+  )
+  expect(tripResponse.status).toBe(201)
+  tripId = ((await tripResponse.json()) as { trip: { id: UUID } }).trip.id
+
+  const inviteResponse = await post(`/trips/${tripId}/invites`, {}, 'convergencia-organizador')
+  const { token } = (await inviteResponse.json()) as { token: string }
+  expect((await post('/invites/accept', { token }, 'convergencia-membro')).status).toBe(200)
+
+  const controlsA: ClientControls = {
+    online: true,
+    failPushCall: null,
+    loseNextPushResponse: false,
+    pullQueries: [],
+    pushRequests: [],
+  }
+  const controlsB: ClientControls = {
+    online: true,
+    failPushCall: null,
+    loseNextPushResponse: false,
+    pullQueries: [],
+    pushRequests: [],
+  }
+  const { client: clientA } = await openClient(
+    organizerId,
+    'convergencia-organizador',
+    'cliente-candidato-a.sqlite',
+    controlsA,
+  )
+  const { database: databaseB, client: clientB } = await openClient(
+    memberId,
+    'convergencia-membro',
+    'cliente-candidato-b.sqlite',
+    controlsB,
+  )
+  await clientA.syncNow()
+  await clientB.syncNow()
+
+  const fields: PlaceSearchCandidateFields = {
+    provider: 'geoapify',
+    providerRef: 'geoapify:lisboa:25',
+    name: 'Museu Nacional do Azulejo',
+    localName: 'Museu Nacional do Azulejo',
+    address: 'Rua da Madre de Deus, 4',
+    localAddress: 'Rua da Madre de Deus, 4',
+    lat: 38.725,
+    lng: -9.116,
+    countryCode: 'pt',
+    datasource: 'openstreetmap',
+    attribution: '© OpenStreetMap contributors',
+    license: 'ODbL',
+    method: 'geocoding',
+  }
+  const candidate = signPlaceSearchCandidate(fields, candidateSecret)
+  const placeId = await clientA.addPlaceFromCandidate(tripId, candidate)
+  await clientA.syncNow()
+  await clientB.syncNow()
+  expect(await clientB.listPlaces(tripId)).toEqual([
+    expect.objectContaining({
+      id: placeId,
+      provider: 'geoapify',
+      providerRef: fields.providerRef,
+      providerDatasource: fields.datasource,
+      attribution: fields.attribution,
+      license: fields.license,
+      name: fields.name,
+      localAddress: fields.localAddress,
+      googleMatch: 'none',
+    }),
+  ])
+
+  const tamperedCandidate = { ...candidate, token: `x${candidate.token.slice(1)}` }
+  const tamperedPlaceId = randomUUID()
+  const invalidResponse = await post(
+    '/sync/push',
+    {
+      operations: [
+        {
+          type: 'place.add',
+          opId: randomUUID(),
+          tripId,
+          placeId: tamperedPlaceId,
+          name: fields.name,
+          candidate: tamperedCandidate,
+        },
+      ],
+    },
+    'convergencia-organizador',
+  )
+  expect(invalidResponse.status).toBe(200)
+  expect(await invalidResponse.json()).toMatchObject({
+    results: [{ status: 'rejected', reason: 'invalid' }],
+  })
+  expect(await pool.query('SELECT id FROM places WHERE id = $1', [tamperedPlaceId])).toMatchObject({
+    rowCount: 0,
+  })
+
+  const forbiddenResponse = await post(
+    '/sync/push',
+    {
+      operations: [
+        {
+          type: 'place.google_link',
+          opId: randomUUID(),
+          tripId,
+          placeId,
+          googlePlaceId: 'ChIJgUbEo8cfqokR5lP9_Wh_DaM',
+        },
+      ],
+    },
+    'convergencia-membro',
+  )
+  expect(await forbiddenResponse.json()).toMatchObject({
+    results: [{ status: 'rejected', reason: 'forbidden' }],
+  })
+
+  await clientA.linkGooglePlace(tripId, placeId, 'ChIJgUbEo8cfqokR5lP9_Wh_DaM')
+  await clientA.setLocalDetails(tripId, placeId, {
+    localName: 'Museu do Azulejo',
+    localAddress: 'Rua da Madre de Deus, 4',
+  })
+  await clientA.syncNow()
+  await clientB.syncNow()
+  expect(await clientB.listPlaces(tripId)).toEqual([
+    expect.objectContaining({
+      googlePlaceId: 'ChIJgUbEo8cfqokR5lP9_Wh_DaM',
+      googleMatch: 'matched',
+      userLocalName: 'Museu do Azulejo',
+      userLocalAddress: 'Rua da Madre de Deus, 4',
+    }),
+  ])
+
+  await clientA.linkGooglePlace(tripId, placeId, null)
+  await clientA.syncNow()
+  await clientB.syncNow()
+  expect(await clientB.listPlaces(tripId)).toEqual([
+    expect.objectContaining({ googlePlaceId: null, googleMatch: 'no_match' }),
+  ])
+  expect(canonicalTripState(await readLocalState(databaseB, tripId))).toEqual(
+    canonicalTripState(await readServerState(tripId)),
+  )
 })
 
 it('reconcilia uma marcação repetida com o estado confirmado pela API', async () => {

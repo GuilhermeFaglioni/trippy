@@ -35,13 +35,13 @@ async function readBody(request: Request): Promise<unknown> {
 }
 
 export function createSyncRouter(
-  config: Pick<ApiConfig, 'databaseUrl'>,
+  config: Pick<ApiConfig, 'databaseUrl' | 'placesCandidateSecret'>,
   options: SyncRouterOptions,
 ) {
   const pool: Pool | undefined = options.syncStore
     ? undefined
     : new pg.Pool({ connectionString: config.databaseUrl, max: 5 })
-  const store = options.syncStore ?? new PostgresSyncStore(pool!)
+  const store = options.syncStore ?? new PostgresSyncStore(pool!, config.placesCandidateSecret)
   const authenticateRequest = authenticate(options.accessTokenVerifier)
   const router = new Hono<AuthEnvironment>()
 

@@ -47,7 +47,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     migrate({ databaseUrl: testUrl.toString() }),
     migrate({ databaseUrl: testUrl.toString() }),
   ])
-  expect(concurrentRuns.flat()).toEqual(['0001', '0002', '0003', '0004', '0005'])
+  expect(concurrentRuns.flat()).toEqual(['0001', '0002', '0003', '0004', '0005', '0006'])
 
   const client = new pg.Client({ connectionString: testUrl.toString() })
   await client.connect()
@@ -59,7 +59,8 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
          AND table_name IN (
            'users', 'identities', 'trips', 'trip_members', 'schema_migrations',
            'recaps', 'render_jobs', 'render_outbox', 'email_login_codes', 'refresh_tokens',
-           'invites', 'places', 'visits', 'applied_ops'
+           'invites', 'places', 'places_provider_usage', 'places_provider_calls',
+           'visits', 'applied_ops'
          )`,
     )
     expect(tables.rows.map(({ table_name }) => table_name).sort()).toEqual([
@@ -68,6 +69,8 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       'identities',
       'invites',
       'places',
+      'places_provider_calls',
+      'places_provider_usage',
       'recaps',
       'refresh_tokens',
       'render_jobs',
@@ -90,6 +93,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       '0003',
       '0004',
       '0005',
+      '0006',
     ])
 
     await migrate({ databaseUrl: testUrl.toString() })
@@ -222,6 +226,11 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
   const tripMembersIndexMigration = await readFile(tripMembersIndexMigrationPath, 'utf8')
   const syncMigrationPath = new URL('../migrations/0005_sync_lugares_convites.sql', import.meta.url)
   const syncMigration = await readFile(syncMigrationPath, 'utf8')
+  const placesProviderMigrationPath = new URL(
+    '../migrations/0006_lugares_fornecedor_google.sql',
+    import.meta.url,
+  )
+  const placesProviderMigration = await readFile(placesProviderMigrationPath, 'utf8')
   const modifiedMigrations = await mkdtemp(join(tmpdir(), 'trippy-db-migrations-'))
   try {
     await writeFile(
@@ -235,6 +244,10 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       tripMembersIndexMigration,
     )
     await writeFile(join(modifiedMigrations, '0005_sync_lugares_convites.sql'), syncMigration)
+    await writeFile(
+      join(modifiedMigrations, '0006_lugares_fornecedor_google.sql'),
+      placesProviderMigration,
+    )
     await expect(
       migrate({
         databaseUrl: testUrl.toString(),
@@ -256,7 +269,11 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     )
     await writeFile(join(failedMigrations, '0005_sync_lugares_convites.sql'), syncMigration)
     await writeFile(
-      join(failedMigrations, '0006_teste_transacao.sql'),
+      join(failedMigrations, '0006_lugares_fornecedor_google.sql'),
+      placesProviderMigration,
+    )
+    await writeFile(
+      join(failedMigrations, '0007_teste_transacao.sql'),
       'CREATE TABLE migration_rollback_probe (id integer);\nINVALID SQL;\n',
     )
     await expect(
@@ -282,6 +299,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
         '0003',
         '0004',
         '0005',
+        '0006',
       ])
     } finally {
       await client.end()

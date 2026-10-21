@@ -31,10 +31,17 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     tripId: 'trip-1',
     provider: null,
     providerRef: null,
+    providerDatasource: null,
+    attribution: null,
+    license: null,
     name: 'Café do Porto',
     localName: null,
     address: null,
     localAddress: null,
+    googlePlaceId: null,
+    googleMatch: 'none',
+    userLocalName: null,
+    userLocalAddress: null,
     lat: null,
     lng: null,
     suggestedBy: currentUserId,
@@ -45,6 +52,8 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     deletedAt: null,
     createdAt: '2026-10-20T12:00:00.000Z',
     visitedByMe: false,
+    localNameStatus: 'missing',
+    localAddressStatus: 'missing',
     ...overrides,
   }
 }
@@ -60,10 +69,13 @@ function createClient(initialPlaces: LivePlace[] = [createPlace()]) {
       notify()
       return added.id
     }),
+    addPlaceFromCandidate: jest.fn(async () => 'place-2'),
     removePlace: jest.fn(async (_tripId, placeId) => {
       places = places.filter((place) => place.id !== placeId)
       notify()
     }),
+    linkGooglePlace: jest.fn().mockResolvedValue(undefined),
+    setLocalDetails: jest.fn().mockResolvedValue(undefined),
     markVisit: jest.fn(async (_tripId, placeId) => {
       places = places.map((place) =>
         place.id === placeId ? { ...place, visitedByMe: true } : place,

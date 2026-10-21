@@ -9,6 +9,7 @@ export interface ApiConfig {
   authDevJwtPrivateKey?: string
   authJwksUrl?: string
   databaseUrl: string
+  placesCandidateSecret: string
   awsRegion: string
   awsAccessKeyId?: string
   awsSecretAccessKey?: string
@@ -106,6 +107,7 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): ApiCon
     ...(authDevJwtPrivateKey ? { authDevJwtPrivateKey } : {}),
     ...(authJwksUrl ? { authJwksUrl } : {}),
     databaseUrl: required(environment, 'DATABASE_URL'),
+    placesCandidateSecret: required(environment, 'PLACES_CANDIDATE_SECRET'),
     awsRegion: optional(environment, 'AWS_REGION') ?? 'us-east-1',
     ...(accessKeyId ? { awsAccessKeyId: accessKeyId } : {}),
     ...(secretAccessKey ? { awsSecretAccessKey: secretAccessKey } : {}),

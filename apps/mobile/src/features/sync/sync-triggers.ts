@@ -72,11 +72,17 @@ export function withWriteSyncTriggers(
 
   return {
     addPlace: (tripId, name) => afterWrite(() => client.addPlace(tripId, name)),
+    addPlaceFromCandidate: (tripId, candidate) =>
+      afterWrite(() => client.addPlaceFromCandidate(tripId, candidate)),
     removePlace: (tripId, placeId) => afterWrite(() => client.removePlace(tripId, placeId)),
+    linkGooglePlace: (tripId, placeId, googlePlaceId) =>
+      afterWrite(() => client.linkGooglePlace(tripId, placeId, googlePlaceId)),
+    setLocalDetails: (tripId, placeId, details) =>
+      afterWrite(() => client.setLocalDetails(tripId, placeId, details)),
     markVisit: (tripId, placeId) => afterWrite(() => client.markVisit(tripId, placeId)),
     unmarkVisit: (tripId, placeId) => afterWrite(() => client.unmarkVisit(tripId, placeId)),
     syncNow: () => client.syncNow(),
-    listPlaces: (tripId) => client.listPlaces(tripId),
+    listPlaces: (tripId, countryCode) => client.listPlaces(tripId, countryCode),
     subscribe: (listener) => client.subscribe(listener),
     getStatus: () => client.getStatus(),
   }
