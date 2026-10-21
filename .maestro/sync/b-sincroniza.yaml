@@ -3,7 +3,6 @@ appId: app.trippy.mobile
 - stopApp
 - launchApp:
     clearState: false
-- openLink: ${DEV_CLIENT_URL}
 - assertVisible:
     id: my-trips-screen
 - tapOn:

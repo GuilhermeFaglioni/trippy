@@ -1,9 +1,7 @@
 appId: app.trippy.mobile
 ---
 - launchApp:
-    clearState: true
     clearKeychain: true
-- openLink: ${DEV_CLIENT_URL}
 - tapOn:
     id: login-email-input
 - inputText: ${B_EMAIL}

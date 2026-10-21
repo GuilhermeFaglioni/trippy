@@ -86,9 +86,10 @@ run_maestro() {
   local udid="$1"
   local flow="$2"
   local log_file="$TMP_DIR/$(basename "$flow" .yaml).log"
+  local artifacts_dir="$TMP_DIR/maestro-$(basename "$flow" .yaml)"
   shift 2
-  if maestro test --udid "$udid" "$ROOT_DIR/.maestro/sync/$flow" \
-    -e "DEV_CLIENT_URL=$DEV_CLIENT_URL" "$@" >"$log_file" 2>&1; then
+  if maestro test --test-output-dir "$artifacts_dir" --udid "$udid" "$ROOT_DIR/.maestro/sync/$flow" \
+    "$@" >"$log_file" 2>&1; then
     sed -E 's/INVITE_TOKEN=.*/INVITE_TOKEN=[omitido]/' "$log_file"
   else
     sed -E 's/INVITE_TOKEN=.*/INVITE_TOKEN=[omitido]/' "$log_file" >&2
@@ -114,7 +115,6 @@ B_EMAIL="sync-b-$RUN_ID@example.test"
 TRIP_NAME="Sync Offline $RUN_ID"
 PLACE_NAME="Lugar Offline $RUN_ID"
 PLACE_SLUG="$(printf '%s' "$PLACE_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
-DEV_CLIENT_URL="$(node -e 'console.log(`exp+trippy://expo-development-client/?url=${encodeURIComponent(process.argv[1])}`)' "http://localhost:$METRO_PORT")"
 
 log "API local: $API_URL"
 log "Metro: porta $METRO_PORT"
@@ -150,14 +150,19 @@ if [[ -z "$APP_PATH" ]]; then
   exit 1
 fi
 log "Build: $APP_PATH"
+xcrun simctl uninstall "$UDID_A" app.trippy.mobile >/dev/null 2>&1 || true
+xcrun simctl uninstall "$UDID_B" app.trippy.mobile >/dev/null 2>&1 || true
 xcrun simctl install "$UDID_A" "$APP_PATH"
 xcrun simctl install "$UDID_B" "$APP_PATH"
+xcrun simctl spawn "$UDID_A" defaults write app.trippy.mobile RCT_jsLocation "localhost:$METRO_PORT"
+xcrun simctl spawn "$UDID_B" defaults write app.trippy.mobile RCT_jsLocation "localhost:$METRO_PORT"
 
 TRIP_NAME_SQL="${TRIP_NAME//\'/\'\'}"
 log 'Executando login, criação da viagem e geração do convite pelo app A.'
 run_maestro "$UDID_A" a-cria-viagem-convite.yaml \
   -e "A_EMAIL=$A_EMAIL" -e "TRIP_NAME=$TRIP_NAME"
-INVITE_CODE="$(sed -nE 's/.*INVITE_TOKEN=([A-Za-z0-9_-]+).*/\1/p' "$TMP_DIR/a-cria-viagem-convite.log" | tail -n 1)"
+INVITE_CODE="$(rg --no-filename -o 'JsConsole: INVITE_TOKEN=[A-Za-z0-9_-]+' \
+  "$TMP_DIR/maestro-a-cria-viagem-convite" --glob 'maestro.log' | sed -E 's/.*=//' | tail -n 1)"
 if [[ ! "$INVITE_CODE" =~ ^[A-Za-z0-9_-]{40,}$ ]]; then
   printf 'Fluxo A não retornou código de convite válido.\n' >&2
   exit 1
@@ -187,8 +192,7 @@ run_maestro "$UDID_A" a-reconecta.yaml \
   -e "PLACE_NAME=$PLACE_NAME"
 log 'Fechando e reabrindo B para sincronizar a atualização de A.'
 run_maestro "$UDID_B" b-sincroniza.yaml \
-  -e "DEV_CLIENT_URL=$DEV_CLIENT_URL" -e "TRIP_ID=$TRIP_ID" \
-  -e "PLACE_NAME=$PLACE_NAME" -e "PLACE_SLUG=$PLACE_SLUG"
+  -e "TRIP_ID=$TRIP_ID" -e "PLACE_NAME=$PLACE_NAME" -e "PLACE_SLUG=$PLACE_SLUG"
 
 A_USER_ID="$(psql_value "SELECT id FROM users WHERE email = '$A_EMAIL'")"
 B_USER_ID="$(psql_value "SELECT id FROM users WHERE email = '$B_EMAIL'")"

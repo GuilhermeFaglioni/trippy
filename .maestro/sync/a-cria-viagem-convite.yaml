@@ -1,9 +1,7 @@
 appId: app.trippy.mobile
 ---
 - launchApp:
-    clearState: true
     clearKeychain: true
-- openLink: ${DEV_CLIENT_URL}
 - tapOn:
     id: login-email-input
 - inputText: ${A_EMAIL}
@@ -44,8 +42,8 @@ appId: app.trippy.mobile
     id: trippy-wordmark
 - tapOn:
     id: new-trip-submit
-- assertVisible: ${TRIP_NAME}
-- tapOn: ${TRIP_NAME}
+- assertVisible: ${TRIP_NAME}, Recife
+- tapOn: ${TRIP_NAME}, Recife
 - assertVisible:
     id: trip-detail-screen
 - tapOn:
