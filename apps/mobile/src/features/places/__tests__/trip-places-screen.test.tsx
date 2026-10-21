@@ -84,6 +84,7 @@ function createClient(initialPlaces: LivePlace[] = [createPlace()]) {
     removeMember: jest.fn().mockResolvedValue(undefined),
     setMemberRole: jest.fn().mockResolvedValue(undefined),
     listRemovedTrips: jest.fn().mockResolvedValue([]),
+    countNotSent: jest.fn().mockResolvedValue(0),
     syncNow: jest.fn().mockResolvedValue(undefined),
     listPlaces: jest.fn(async () => places),
     subscribe: jest.fn((listener) => {

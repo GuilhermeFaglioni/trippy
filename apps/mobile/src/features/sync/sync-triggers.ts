@@ -84,6 +84,7 @@ export function withWriteSyncTriggers(
     setMemberRole: (tripId, userId, role) =>
       afterWrite(() => client.setMemberRole(tripId, userId, role)),
     listRemovedTrips: () => client.listRemovedTrips(),
+    countNotSent: (tripId) => client.countNotSent(tripId),
     syncNow: () => client.syncNow(),
     listPlaces: (tripId) => client.listPlaces(tripId),
     subscribe: (listener) => client.subscribe(listener),

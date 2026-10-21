@@ -55,6 +55,8 @@ export interface SyncClient {
   setMemberRole(tripId: UUID, userId: UUID, role: 'coorganizer' | 'member'): Promise<void>
   /** Lista viagens removidas que deixaram de sincronizar no aparelho. */
   listRemovedTrips(): Promise<UUID[]>
+  /** Conta as operações da viagem marcadas como não enviadas. */
+  countNotSent(tripId: UUID): Promise<number>
   syncNow(): Promise<void>
   listPlaces(tripId: UUID): Promise<LivePlace[]>
   subscribe(listener: () => void): () => void

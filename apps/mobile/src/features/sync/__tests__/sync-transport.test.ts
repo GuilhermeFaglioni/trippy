@@ -59,4 +59,15 @@ describe('transporte HTTP de sync', () => {
       method: 'GET',
     })
   })
+
+  it('preserva 403 not_member como resposta tipada de pull', async () => {
+    const request = jest
+      .fn<Promise<Response>, [string, RequestInit?]>()
+      .mockResolvedValue(new Response(JSON.stringify({ error: 'not_member' }), { status: 403 }))
+    const transport = createSyncTransport(request)
+
+    await expect(
+      transport.pull({ tripId: 'trip-1', mode: 'incremental', limit: 10, cursor: '4' }),
+    ).resolves.toEqual({ error: 'not_member' })
+  })
 })
