@@ -24,7 +24,12 @@ export default function TripRoute() {
       tripId={firstParam(params.id)}
       tripName={firstParam(params.tripName)}
       role={tripRole(firstParam(params.role))}
-      onOpenPhotos={() => router.push({ pathname: '/trips/[id]/photos', params: { id: firstParam(params.id), tripName: firstParam(params.tripName) } })}
+      onOpenPhotos={() =>
+        router.push({
+          pathname: '/trips/[id]/photos',
+          params: { id: firstParam(params.id), tripName: firstParam(params.tripName) },
+        })
+      }
     />
   )
 }

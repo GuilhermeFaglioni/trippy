@@ -290,7 +290,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
         '0003',
         '0004',
         '0005',
-      '0006',
+        '0006',
       ])
     } finally {
       await client.end()

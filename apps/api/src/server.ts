@@ -21,8 +21,15 @@ export async function startApiServer(
   const photos = createPhotosRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const server = serve(
     {
-      fetch: createApp(healthChecks, 1_000, auth.router, trips.router, sync.router, invites.router, photos.router)
-        .fetch,
+      fetch: createApp(
+        healthChecks,
+        1_000,
+        auth.router,
+        trips.router,
+        sync.router,
+        invites.router,
+        photos.router,
+      ).fetch,
       port: config.port,
       hostname: config.host,
     },
@@ -34,7 +41,14 @@ export async function startApiServer(
   )
   server.once(
     'close',
-    () => void Promise.all([auth.close(), trips.close(), sync.close(), invites.close(), photos.close()]),
+    () =>
+      void Promise.all([
+        auth.close(),
+        trips.close(),
+        sync.close(),
+        invites.close(),
+        photos.close(),
+      ]),
   )
   return server
 }

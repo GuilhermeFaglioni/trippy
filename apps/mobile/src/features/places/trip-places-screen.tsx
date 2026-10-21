@@ -286,7 +286,12 @@ export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripP
         </View>
 
         {onOpenPhotos ? (
-          <Button label="Fotos da viagem" onPress={onOpenPhotos} testID="trip-open-photos" variant="secondary" />
+          <Button
+            label="Fotos da viagem"
+            onPress={onOpenPhotos}
+            testID="trip-open-photos"
+            variant="secondary"
+          />
         ) : null}
 
         {!ready ? (

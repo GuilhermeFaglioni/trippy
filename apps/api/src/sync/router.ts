@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import {
   validatePullQuery,
   validatePullResponse,
@@ -11,6 +11,8 @@ import type { AccessTokenVerifier } from '@trippy/adapters/auth'
 import type { ApiConfig } from '../config.ts'
 import { authenticate, type AuthEnvironment } from '../auth/authenticate.ts'
 import { handleApiError } from '../auth/errors.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface SyncRouterOptions {
   syncStore?: SyncStore
