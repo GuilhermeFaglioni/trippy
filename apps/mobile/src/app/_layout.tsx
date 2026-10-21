@@ -12,6 +12,7 @@ function SessionNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={status === 'authenticated'} redirectTo="/login">
         <Stack.Screen name="index" />
+        <Stack.Screen name="trips/new" />
       </Stack.Protected>
       <Stack.Protected guard={status !== 'authenticated'} redirectTo="/">
         <Stack.Screen name="login" />
