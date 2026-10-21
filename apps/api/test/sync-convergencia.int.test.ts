@@ -336,24 +336,28 @@ it('converge após resposta perdida, fechamento offline, remoção e escritas si
   controlsA.loseNextPushResponse = true
   await expect(clientA.syncNow()).rejects.toThrow('Resposta de push perdida')
   expect(clientA.getStatus().pending).toBe(2)
-  const afterLostResponse = await pool.query<{
-    places: string
-    visits: string
-    operations: string
-  }>(
-    `SELECT
-       (SELECT count(*) FROM places WHERE id = $1)::text AS places,
-       (SELECT count(*) FROM visits WHERE place_id = $1 AND user_id = $2)::text AS visits,
-       (SELECT count(*) FROM applied_ops WHERE trip_id = $3 AND user_id = $2)::text AS operations`,
-    [offlinePlaceId, organizerId, tripId],
-  )
-  expect(afterLostResponse.rows[0]).toEqual({ places: '1', visits: '1', operations: '2' })
+  const persistedCounts = async () => {
+    const response = await pool.query<{
+      places: string
+      visits: string
+      operations: string
+    }>(
+      `SELECT
+         (SELECT count(*) FROM places WHERE id = $1)::text AS places,
+         (SELECT count(*) FROM visits WHERE place_id = $1 AND user_id = $2)::text AS visits,
+         (SELECT count(*) FROM applied_ops WHERE trip_id = $3 AND user_id = $2)::text AS operations`,
+      [offlinePlaceId, organizerId, tripId],
+    )
+    return response.rows[0]
+  }
+  expect(await persistedCounts()).toEqual({ places: '1', visits: '1', operations: '2' })
 
   const pushesBeforeRetry = controlsA.pushRequests.length
   await clientA.syncNow()
   const sentAfterLostResponse = controlsA.pushRequests.slice(pushesBeforeRetry - 1)
   expect(sentAfterLostResponse).toHaveLength(2)
   expect(sentAfterLostResponse[0]).toEqual(sentAfterLostResponse[1])
+  expect(await persistedCounts()).toEqual({ places: '1', visits: '1', operations: '2' })
   expect(clientA.getStatus().pending).toBe(0)
 
   await clientB.syncNow()

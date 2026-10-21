@@ -1,6 +1,7 @@
 # Spike 23 — sincronização offline de lugares
 
-**Execução:** 21/out/2026  
+**Execução:** 21/out/2026
+
 **Escopo:** convergência de lugares, visitas e membros entre dois clientes SQLite e Postgres, incluindo reenvio idempotente, remoção e retomada após encerramento do app.
 
 ## Hipótese
