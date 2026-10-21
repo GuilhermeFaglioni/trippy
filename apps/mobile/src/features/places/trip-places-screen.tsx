@@ -22,6 +22,7 @@ type TripPlacesScreenProps = {
   tripId: string
   tripName: string
   role: TripRole
+  onOpenPhotos?: () => void
 }
 
 function toTestSlug(value: string): string {
@@ -133,7 +134,7 @@ function SyncFooter({ status }: { status: SyncClientStatus }) {
   )
 }
 
-export function TripPlacesScreen({ tripId, tripName, role }: TripPlacesScreenProps) {
+export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripPlacesScreenProps) {
   const theme = useTheme()
   const { session, request } = useSession()
   const { client, status, ready, error: syncError } = useSync()
@@ -283,6 +284,10 @@ export function TripPlacesScreen({ tripId, tripName, role }: TripPlacesScreenPro
             Lugares
           </TypographyText>
         </View>
+
+        {onOpenPhotos ? (
+          <Button label="Fotos da viagem" onPress={onOpenPhotos} testID="trip-open-photos" variant="secondary" />
+        ) : null}
 
         {!ready ? (
           <View accessibilityRole="progressbar" testID="trip-sync-loading">

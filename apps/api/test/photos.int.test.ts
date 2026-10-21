@@ -135,7 +135,7 @@ beforeAll(async () => {
       photoStorage: storage,
     },
   )
-  app = createApp(healthyChecks, 1_000, undefined, undefined, photos.router)
+  app = createApp(healthyChecks, 1_000, undefined, undefined, undefined, undefined, photos.router)
 })
 
 afterAll(async () => {
