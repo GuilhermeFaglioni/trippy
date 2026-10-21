@@ -5,7 +5,7 @@ Data: 21/10/2026 · Escopo: subtarefa 2, implementação mobile. · Branch: `Gui
 ## Implementação
 
 - Tela acessível de fotos da viagem, aberta pelo cartão da viagem. Mostra fila local, estado de envio, ação de retry e aviso quando a API não responde. Fotos iniciam como `Sem lugar`; associação de lugar e álbum completo ficam fora do spike.
-- Fila durável em SQLite, particionada por `user_id`, com UUID estável por foto. A fila retoma ao abrir a tela, voltar ao app e recuperar conexão. Drenagens concorrentes da mesma viagem são serializadas.
+- Fila durável em SQLite, particionada por `user_id`, com UUID estável por foto. A implementação retoma o envio ao abrir a tela, voltar ao app e recuperar conexão. Drenagens concorrentes da mesma viagem são serializadas.
 - Original copiado para armazenamento privado antes de qualquer transformação. EXIF do original é normalizado antes da conversão; JPEG de envio limita a maior dimensão a 2048 px, sem ampliar imagens menores.
 - `takenTz` só vem de offset explícito no EXIF. Data sem offset não ganha fuso inferido; GPS ausente ou inválido vira `null`.
 - Cliente usa os endpoints publicados: reserva com UUID local, PUT direto na URL assinada, confirmação idempotente e listagem. Falha entre PUT e confirmação retoma pela confirmação com o mesmo UUID; URL expirada é renovada sem trocar o UUID.
@@ -30,13 +30,14 @@ Os cinco arquivos foram adicionados com `xcrun simctl addmedia` ao Simulator `Ma
 - Build, instalação e abertura passaram com `cd apps/mobile && PATH="/Users/guilhermefaglioni/.nvm/versions/node/v22.22.3/bin:$PATH" pnpm exec expo run:ios --device 098C1E12-701D-4A2E-A487-2E18F11FB0D7`. Bundle: `app.trippy.mobile`; Metro: porta `8081`; API configurada no Metro: `http://localhost:3022`. Build teve 0 erros e 1 warning do autolinking Expo sobre `CoreModule` interno.
 - No seletor real do iOS, foram selecionadas cinco fixtures importadas: HEIC e JPEG com offsets EXIF distintos, JPEG com GPS sem offset e HEIC/JPEG sem EXIF. A tela exibiu `5 fotos`; após envio, linhas exibiam `Enviada`.
 - O fluxo Maestro parou e reabriu o app com `clearState: false`, abriu a mesma viagem (`093a2a83-842a-49f6-adf7-6bf4b10e13e6`) e confirmou a tela e `5 fotos`. A hierarquia capturada contém cinco rótulos `Foto da viagem. Sem lugar. Enviada.`. O fluxo Maestro terminou com falha na asserção de texto isolado `Enviada`; esse texto compõe o rótulo acessível completo de cada foto e não aparece como elemento textual separado.
-- A viagem de ensaio foi criada na API em `localhost:3022`. Não foi feita leitura direta dos registros do banco ou objetos MinIO para confirmar bytes e metadados persistidos; esses pontos seguem sem verificação ponta a ponta.
+- A viagem de ensaio foi criada na API em `localhost:3022`.
+- Depois do ensaio, o coordenador confirmou por consulta somente leitura em `trippy_w22_rebase` cinco fotos `uploaded` para essa viagem: Pequim `2026-10-20T08:12:03` / `+08:00` / `39.9042, 116.4074`; Paraty `2026-10-19T20:45:10` / `-03:00` / `-23.2237, -44.7192`; Tóquio `2026-10-18T14:20:00` / sem fuso / `35.6762, 139.6503`; duas sem EXIF com todos os campos nulos. O coordenador também confirmou leitura dos cinco objetos MinIO e conversão via sharp para JPEG 2048 × 1360 (~84 KB), além de cinco mensagens publicadas na outbox e processamento nas filas exclusivas `trippy-w22-*`.
 
 ## Pendente
 
-- Não foi inspecionado o resultado de `ImagePicker` nem o payload EXIF normalizado por fixture no backend. A seleção real comprova compatibilidade do seletor com os formatos, não a preservação dos campos EXIF ao longo do envio.
+- A verificação dos metadados persistidos foi feita pelo coordenador no banco/MinIO, não por consulta direta deste worker.
 - O estado `Enviada` após reabertura está presente nos cinco rótulos acessíveis capturados; a asserção Maestro por texto exato `Enviada` falhou porque buscava elemento separado. Não foi repetido o ensaio.
-- Falta leitura direta da API/banco/MinIO para confirmar correspondência entre cada fixture, metadados, UUID estável e objeto armazenado. A validação combinada pós-rebase do pai foi reportada pelo coordenador como verde; a integração de ponta a ponta será confirmada pelo revisor após cherry-pick.
+- Não foi confirmado se uma tentativa interrompida e repetida mantém o mesmo UUID sem criar duplicatas. A validação combinada pós-rebase do pai foi reportada pelo coordenador como verde.
 - Não foi simulado encerramento do app com itens ainda pendentes nem queda de rede durante envio; reabrir com cinco fotos enviadas não comprova retomada de fila pendente nem ausência de duplicatas após retry.
 - Upload enquanto o app está em segundo plano não foi testado no Simulator.
 - O ensaio criou viagem ID `093a2a83-842a-49f6-adf7-6bf4b10e13e6`; dados de teste não foram apagados.
