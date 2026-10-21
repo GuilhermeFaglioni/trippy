@@ -14,6 +14,7 @@ export type RemoteTripPhoto = {
   id: string
   status: string
   placeId: string | null
+  thumbnailUrl?: string | null
   takenAtOriginal: string | null
   takenTz: string | null
   lat: number | null
@@ -65,6 +66,7 @@ function isRemoteTripPhoto(value: unknown): value is RemoteTripPhoto {
     typeof value.id === 'string' &&
     typeof value.status === 'string' &&
     isNullableString(value.placeId) &&
+    (!('thumbnailUrl' in value) || isNullableString(value.thumbnailUrl)) &&
     isNullableString(value.takenAtOriginal) &&
     isNullableString(value.takenTz) &&
     isNullableNumber(value.lat) &&

@@ -19,8 +19,8 @@ let fixtures = [
     type: .heic,
     dateTimeOriginal: "2026:10:20 08:12:03",
     offsetTimeOriginal: "+08:00",
-    latitude: 31.2304,
-    longitude: 121.4737
+    latitude: 39.9042,
+    longitude: 116.4074
   ),
   PhotoFixture(
     filename: "jpeg-paraty-offset-gps.jpg",

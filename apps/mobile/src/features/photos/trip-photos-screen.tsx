@@ -59,7 +59,7 @@ export function toTripPhotoRows(
     .filter((photo) => !localIds.has(photo.id))
     .map((photo) => ({
       id: photo.id,
-      uri: null,
+      uri: photo.thumbnailUrl ?? null,
       locationLabel: photo.placeId === null ? 'Sem lugar' : 'Com lugar',
       statusLabel: remoteStatusLabel(photo.status),
     }))

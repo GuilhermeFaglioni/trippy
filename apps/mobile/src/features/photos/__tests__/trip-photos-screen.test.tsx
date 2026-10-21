@@ -1,7 +1,11 @@
 import { fireEvent, render } from '@testing-library/react-native'
 
 import { DesignSystemProvider } from '../../../design-system'
-import { TripPhotosScreenView, type TripPhotosScreenViewProps } from '../trip-photos-screen'
+import {
+  toTripPhotoRows,
+  TripPhotosScreenView,
+  type TripPhotosScreenViewProps,
+} from '../trip-photos-screen'
 
 const mockBack = jest.fn()
 
@@ -72,5 +76,32 @@ describe('TripPhotosScreenView', () => {
 
     expect(screen.getByText('As fotos da viagem aparecem aqui.')).toBeOnTheScreen()
     expect(screen.getByTestId('trip-photos-remote-error')).toBeOnTheScreen()
+  })
+
+  it('shows remote thumbnails for photos shared by the trip', () => {
+    expect(
+      toTripPhotoRows(
+        [],
+        [
+          {
+            id: 'remote-photo',
+            status: 'ready',
+            placeId: null,
+            thumbnailUrl: 'https://photos.example.test/thumb.jpg',
+            takenAtOriginal: null,
+            takenTz: null,
+            lat: null,
+            lng: null,
+          },
+        ],
+      ),
+    ).toEqual([
+      {
+        id: 'remote-photo',
+        uri: 'https://photos.example.test/thumb.jpg',
+        locationLabel: 'Sem lugar',
+        statusLabel: 'Pronta',
+      },
+    ])
   })
 })
