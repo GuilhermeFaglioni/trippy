@@ -1,5 +1,7 @@
-import type { Pool, PoolClient } from 'pg'
+import pg, { type PoolClient } from 'pg'
 import type { CreateTripInput, Role } from '@trippy/domain'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface CreateTripRecord extends CreateTripInput {
   organizerId: string

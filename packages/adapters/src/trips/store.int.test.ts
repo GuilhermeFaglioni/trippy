@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto'
-import pg, { type Pool, type PoolClient } from 'pg'
+import pg, { type PoolClient } from 'pg'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { migrate } from '../../../db/src/migrate.ts'
 import { PostgresTripStore } from './store.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 const databaseUrl = process.env.DATABASE_URL
 if (!databaseUrl) throw new Error('DATABASE_URL não definido: configure o Postgres local')

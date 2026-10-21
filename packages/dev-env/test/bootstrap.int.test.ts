@@ -1,6 +1,11 @@
-import { GetQueueAttributesCommand, GetQueueUrlCommand } from '@aws-sdk/client-sqs'
-import { HeadBucketCommand } from '@aws-sdk/client-s3'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { randomUUID } from 'node:crypto'
+import { DeleteBucketCommand, HeadBucketCommand } from '@aws-sdk/client-s3'
+import {
+  DeleteQueueCommand,
+  GetQueueAttributesCommand,
+  GetQueueUrlCommand,
+} from '@aws-sdk/client-sqs'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { bootstrapResources, createS3Client, createSqsClient } from '../src/bootstrap.ts'
 import { resourcesFor } from '../src/resources.ts'
 
@@ -11,6 +16,45 @@ const requiredEnvironment = [
   'SQS_ENDPOINT',
 ]
 
+const suffix = `${process.pid}-${randomUUID().replaceAll('-', '').slice(0, 8)}`
+const isolatedEnvironment: NodeJS.ProcessEnv = {
+  ...process.env,
+  S3_BUCKET_PHOTOS: `trippy-photos-test-${suffix}`,
+  S3_BUCKET_VIDEOS: `trippy-videos-test-${suffix}`,
+  SQS_QUEUE_THUMBS: `trippy-thumbs-test-${suffix}`,
+  SQS_QUEUE_RECAP: `trippy-recap-test-${suffix}`,
+}
+let shouldCleanup = false
+
+afterAll(async () => {
+  if (!shouldCleanup) return
+  const s3 = createS3Client(isolatedEnvironment)
+  const sqs = createSqsClient(isolatedEnvironment)
+  const { buckets, queues } = resourcesFor(isolatedEnvironment)
+  try {
+    for (const queue of queues) {
+      const queueUrl = (
+        await sqs.send(new GetQueueUrlCommand({ QueueName: queue.name })).catch(() => undefined)
+      )?.QueueUrl
+      const deadLetterQueueUrl = (
+        await sqs
+          .send(new GetQueueUrlCommand({ QueueName: queue.deadLetterQueueName }))
+          .catch(() => undefined)
+      )?.QueueUrl
+      if (queueUrl) await sqs.send(new DeleteQueueCommand({ QueueUrl: queueUrl }))
+      if (deadLetterQueueUrl) {
+        await sqs.send(new DeleteQueueCommand({ QueueUrl: deadLetterQueueUrl }))
+      }
+    }
+    for (const bucket of buckets) {
+      await s3.send(new DeleteBucketCommand({ Bucket: bucket })).catch(() => undefined)
+    }
+  } finally {
+    s3.destroy()
+    sqs.destroy()
+  }
+})
+
 describe('bootstrap do ambiente local', () => {
   beforeAll(() => {
     const missing = requiredEnvironment.filter((name) => !process.env[name]?.trim())
@@ -19,15 +63,16 @@ describe('bootstrap do ambiente local', () => {
         `Teste de integração do bootstrap exige ${missing.join(', ')}. Configure essas variáveis no .env da raiz.`,
       )
     }
+    shouldCleanup = true
   })
 
   it('cria buckets e filas idempotentemente com DLQs', async () => {
-    await bootstrapResources()
-    await bootstrapResources()
+    await bootstrapResources(isolatedEnvironment)
+    await bootstrapResources(isolatedEnvironment)
 
-    const s3 = createS3Client()
-    const sqs = createSqsClient()
-    const { buckets, queues } = resourcesFor()
+    const s3 = createS3Client(isolatedEnvironment)
+    const sqs = createSqsClient(isolatedEnvironment)
+    const { buckets, queues } = resourcesFor(isolatedEnvironment)
 
     for (const bucket of buckets) {
       await s3.send(new HeadBucketCommand({ Bucket: bucket }))
