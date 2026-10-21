@@ -65,6 +65,9 @@ export function createSyncTransport(request: SyncRequest): SyncTransport {
       if (isRecord(payload) && payload.error === 'bootstrap_required') {
         return { error: 'bootstrap_required' }
       }
+      if (response.status === 403 && isRecord(payload) && payload.error === 'not_member') {
+        return { error: 'not_member' }
+      }
       if (!response.ok) {
         const message =
           isRecord(payload) && typeof payload.message === 'string'

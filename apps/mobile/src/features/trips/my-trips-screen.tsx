@@ -34,6 +34,14 @@ function formatDate(isoDate: string): string {
   return `${match[3]}/${match[2]}/${match[1]}`
 }
 
+function withoutRemovedTrips(
+  trips: readonly TripSummary[],
+  removedTripIds: readonly string[],
+): TripSummary[] {
+  const removed = new Set(removedTripIds)
+  return trips.filter((trip) => !removed.has(trip.id))
+}
+
 function TripCard({ trip, onPress }: { trip: TripSummary; onPress: () => void }) {
   const theme = useTheme()
 
@@ -77,7 +85,7 @@ export function MyTripsScreen() {
   const theme = useTheme()
   const router = useRouter()
   const client = useTripsClient()
-  const { client: syncClient, rememberTripIds } = useSync()
+  const { client: syncClient, rememberTripIds, removedTrips } = useSync()
   const [trips, setTrips] = useState<TripSummary[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -88,8 +96,11 @@ export function MyTripsScreen() {
 
     try {
       const loadedTrips = await client.listTrips()
-      rememberTripIds(loadedTrips.map((trip) => trip.id))
-      setTrips(loadedTrips)
+      const removedTripIds =
+        syncClient === null ? [] : await syncClient.listRemovedTrips().catch(() => [])
+      const availableTrips = withoutRemovedTrips(loadedTrips, removedTripIds)
+      rememberTripIds(availableTrips.map((trip) => trip.id))
+      setTrips(availableTrips)
       if (syncClient !== null) void syncClient.syncNow().catch(() => undefined)
     } catch (loadError) {
       setError(getTripsErrorMessage(loadError))
@@ -103,6 +114,8 @@ export function MyTripsScreen() {
       void loadTrips()
     }, [loadTrips]),
   )
+
+  const visibleTrips = trips === null ? null : withoutRemovedTrips(trips, removedTrips)
 
   const openNewTrip = useCallback(() => router.push('/trips/new'), [router])
 
@@ -146,7 +159,7 @@ export function MyTripsScreen() {
               testID="my-trips-retry"
             />
           </View>
-        ) : trips?.length === 0 ? (
+        ) : visibleTrips?.length === 0 ? (
           <Card testID="my-trips-empty-card">
             <View style={{ gap: theme.spacing.space4 }}>
               <Notice
@@ -162,14 +175,20 @@ export function MyTripsScreen() {
           </Card>
         ) : (
           <View style={{ gap: theme.spacing.space4 }}>
-            {trips?.map((trip) => (
+            {visibleTrips?.map((trip) => (
               <TripCard
                 key={trip.id}
                 trip={trip}
                 onPress={() =>
                   router.push({
                     pathname: '/trips/[id]',
-                    params: { id: trip.id, tripName: trip.name, role: trip.role },
+                    params: {
+                      id: trip.id,
+                      tripName: trip.name,
+                      role: trip.role,
+                      startDate: trip.startDate,
+                      endDate: trip.endDate,
+                    },
                   })
                 }
               />

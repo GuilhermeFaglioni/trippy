@@ -15,6 +15,7 @@ function createClient(): jest.Mocked<SyncClient> {
     removeMember: jest.fn().mockResolvedValue(undefined),
     setMemberRole: jest.fn().mockResolvedValue(undefined),
     listRemovedTrips: jest.fn().mockResolvedValue([]),
+    countNotSent: jest.fn().mockResolvedValue(0),
     syncNow: jest.fn().mockResolvedValue(undefined),
     listPlaces: jest.fn().mockResolvedValue([]),
     subscribe: jest.fn().mockReturnValue(() => undefined),
@@ -72,5 +73,14 @@ describe('gatilhos de sincronização', () => {
     await expect(wrapped.addPlace('trip-1', 'Parque')).resolves.toBe('place-1')
     expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque')
     expect(client.syncNow).toHaveBeenCalledTimes(1)
+  })
+
+  it('encaminha a contagem de pendências não enviadas por viagem', async () => {
+    const client = createClient()
+    client.countNotSent.mockResolvedValue(3)
+    const wrapped = withWriteSyncTriggers(client, () => client.syncNow())
+
+    await expect(wrapped.countNotSent('trip-1')).resolves.toBe(3)
+    expect(client.countNotSent).toHaveBeenCalledWith('trip-1')
   })
 })

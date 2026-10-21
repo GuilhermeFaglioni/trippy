@@ -23,6 +23,7 @@ export type SyncContextValue = {
   status: SyncClientStatus
   ready: boolean
   error: string | null
+  removedTrips: readonly string[]
   rememberTripId(tripId: string): void
   rememberTripIds(tripIds: readonly string[]): void
 }
@@ -44,16 +45,18 @@ export function SyncProvider({
   const requestRef = useRef(request)
   requestRef.current = request
   const tripIdsRef = useRef(new Set<string>())
+  const removedTripIdsRef = useRef(new Set<string>())
   const [createdClient, setCreatedClient] = useState<SyncClient | null>(injectedClient ?? null)
   const [ready, setReady] = useState(injectedClient !== undefined)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<SyncClientStatus>(EMPTY_STATUS)
+  const [removedTrips, setRemovedTrips] = useState<readonly string[]>([])
 
   const rememberTripId = useCallback((tripId: string) => {
-    tripIdsRef.current.add(tripId)
+    if (!removedTripIdsRef.current.has(tripId)) tripIdsRef.current.add(tripId)
   }, [])
   const rememberTripIds = useCallback((tripIds: readonly string[]) => {
-    tripIdsRef.current = new Set(tripIds)
+    tripIdsRef.current = new Set(tripIds.filter((tripId) => !removedTripIdsRef.current.has(tripId)))
   }, [])
 
   useEffect(() => {
@@ -122,12 +125,36 @@ export function SyncProvider({
   useEffect(() => {
     if (exposedClient === null) {
       setStatus(EMPTY_STATUS)
+      removedTripIdsRef.current = new Set()
+      setRemovedTrips([])
       return
     }
 
-    const refreshStatus = () => setStatus(exposedClient.getStatus())
-    refreshStatus()
-    return exposedClient.subscribe(refreshStatus)
+    let active = true
+    const refresh = () => {
+      setStatus(exposedClient.getStatus())
+      void exposedClient
+        .listRemovedTrips()
+        .then((tripIds) => {
+          if (!active) return
+          const normalizedIds = [...tripIds].sort()
+          removedTripIdsRef.current = new Set(normalizedIds)
+          for (const tripId of normalizedIds) tripIdsRef.current.delete(tripId)
+          setRemovedTrips((current) =>
+            current.length === normalizedIds.length &&
+            current.every((tripId, index) => tripId === normalizedIds[index])
+              ? current
+              : normalizedIds,
+          )
+        })
+        .catch(() => undefined)
+    }
+    refresh()
+    const unsubscribe = exposedClient.subscribe(refresh)
+    return () => {
+      active = false
+      unsubscribe()
+    }
   }, [exposedClient])
 
   useEffect(() => {
@@ -136,8 +163,16 @@ export function SyncProvider({
   }, [exposedClient])
 
   const value = useMemo<SyncContextValue>(
-    () => ({ client: exposedClient, status, ready, error, rememberTripId, rememberTripIds }),
-    [error, exposedClient, ready, rememberTripId, rememberTripIds, status],
+    () => ({
+      client: exposedClient,
+      status,
+      ready,
+      error,
+      removedTrips,
+      rememberTripId,
+      rememberTripIds,
+    }),
+    [error, exposedClient, ready, rememberTripId, rememberTripIds, removedTrips, status],
   )
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>
