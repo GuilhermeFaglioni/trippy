@@ -27,9 +27,11 @@ appId: app.trippy.mobile
 - tapOn:
     id: new-trip-name
 - inputText: ${TRIP_NAME}
+- tapOn: Destino
 - tapOn:
     id: new-trip-destination
 - inputText: Recife
+- tapOn: Data de ida
 - tapOn:
     id: new-trip-start-date
 - inputText: ${output.startDate}

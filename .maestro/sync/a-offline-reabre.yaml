@@ -3,11 +3,17 @@ appId: app.trippy.mobile
 - launchApp:
     stopApp: false
 - openLink: trippy:///diagnostics
+- tapOn:
+    text: Abrir
+    optional: true
 - assertVisible:
     id: simulate-offline-toggle
 - tapOn:
     id: simulate-offline-toggle
-- back
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
 - assertVisible:
     id: trip-detail-screen
 - tapOn:
@@ -26,8 +32,10 @@ appId: app.trippy.mobile
     clearState: false
 - assertVisible:
     id: my-trips-screen
+- openLink: trippy:///trips/${TRIP_ID}
 - tapOn:
-    id: trip-card-${TRIP_ID}
+    text: Abrir
+    optional: true
 - assertVisible:
     id: trip-detail-screen
 - assertVisible:

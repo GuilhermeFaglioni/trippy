@@ -37,7 +37,11 @@ cleanup() {
     kill "$API_PID" >/dev/null 2>&1 || true
     wait "$API_PID" >/dev/null 2>&1 || true
   fi
-  rm -rf "$TMP_DIR"
+  if [[ "${SYNC_KEEP_TEMP:-0}" == 1 ]]; then
+    log "Artefatos preservados em $TMP_DIR"
+  else
+    rm -rf "$TMP_DIR"
+  fi
 }
 trap cleanup EXIT
 
@@ -189,7 +193,7 @@ log 'Com A ainda offline, Postgres confirma que lugar não foi enviado.'
 
 log 'Reconectando A e aguardando o outbox esvaziar.'
 run_maestro "$UDID_A" a-reconecta.yaml \
-  -e "PLACE_NAME=$PLACE_NAME"
+  -e "TRIP_ID=$TRIP_ID" -e "PLACE_NAME=$PLACE_NAME"
 log 'Fechando e reabrindo B para sincronizar a atualização de A.'
 run_maestro "$UDID_B" b-sincroniza.yaml \
   -e "TRIP_ID=$TRIP_ID" -e "PLACE_NAME=$PLACE_NAME" -e "PLACE_SLUG=$PLACE_SLUG"
