@@ -55,7 +55,10 @@ export class NetworkGate {
     return offline
   }
 
-  async fetch(input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]): Promise<Response> {
+  async fetch(
+    input: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1],
+  ): Promise<Response> {
     await this.load()
     if (this.options.enabled && this.offline) throw new TypeError('Network request failed')
 

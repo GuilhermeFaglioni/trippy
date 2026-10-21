@@ -111,7 +111,9 @@ function renderScreen(client: SyncClient, role: 'organizer' | 'coorganizer' | 'm
 describe('tela da viagem e lugares locais', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockRequest.mockResolvedValue(new Response(JSON.stringify({ token: 'convite-abc' }), { status: 201 }))
+    mockRequest.mockResolvedValue(
+      new Response(JSON.stringify({ token: 'convite-abc' }), { status: 201 }),
+    )
   })
 
   it('lista SQLite, adiciona só nome, alterna Eu fui e mostra status honesto', async () => {
@@ -125,7 +127,9 @@ describe('tela da viagem e lugares locais', () => {
 
     await fireEvent.changeText(screen.getByTestId('add-place-name'), 'Museu Nacional')
     await fireEvent.press(screen.getByTestId('add-place-button'))
-    await waitFor(() => expect(fake.client.addPlace).toHaveBeenCalledWith('trip-1', 'Museu Nacional'))
+    await waitFor(() =>
+      expect(fake.client.addPlace).toHaveBeenCalledWith('trip-1', 'Museu Nacional'),
+    )
     expect(fake.getPlaces().map((place) => place.name)).toContain('Museu Nacional')
 
     await fireEvent.press(screen.getByTestId('place-visit-cafe-do-porto'))
@@ -141,9 +145,7 @@ describe('tela da viagem e lugares locais', () => {
   })
 
   it('permite remover para quem sugeriu e convidar organizadores, mostrando código', async () => {
-    const fake = createClient([
-      createPlace({ suggestedBy: 'member-2', name: 'Praça da Sé' }),
-    ])
+    const fake = createClient([createPlace({ suggestedBy: 'member-2', name: 'Praça da Sé' })])
     const screen = await renderScreen(fake.client, 'organizer')
 
     expect(await screen.findByTestId('place-praca-da-se')).toBeOnTheScreen()

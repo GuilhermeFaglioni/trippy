@@ -12,8 +12,7 @@ export function canRemovePlace({ role, userId, suggestedBy }: CanRemovePlaceInpu
 }
 
 export type PlaceNameValidation =
-  | { success: true; value: string }
-  | { success: false; message: string }
+  { success: true; value: string } | { success: false; message: string }
 
 /** Valida e normaliza o nome manual do lugar para persistência e sincronização. */
 export function validatePlaceName(value: unknown): PlaceNameValidation {

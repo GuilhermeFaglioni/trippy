@@ -1,4 +1,11 @@
-import type { SqlDatabase, SyncClient, SyncTransport, UUID } from '@trippy/sync'
+import { randomUUID } from 'expo-crypto'
+import {
+  createSyncClient,
+  type SqlDatabase,
+  type SyncClient,
+  type SyncTransport,
+  type UUID,
+} from '@trippy/sync'
 
 export type SyncClientFactoryInput = {
   database: SqlDatabase
@@ -7,23 +14,12 @@ export type SyncClientFactoryInput = {
   getTripIds: () => readonly UUID[] | Promise<readonly UUID[]>
 }
 
-export type SyncClientFactory = (input: SyncClientFactoryInput) => SyncClient
-
-let connectedFactory: SyncClientFactory | null = null
+export type SyncClientFactory = (input: SyncClientFactoryInput) => SyncClient | Promise<SyncClient>
 
 /**
- * Ponte isolada para `packages/sync`: S1 fixou os contratos, mas o commit-base
- * ainda não exporta a fábrica de cliente que S3 está implementando. Ao integrar
- * S3, conecte o `createSyncClient` exportado aqui; as telas já dependem só de
- * `SyncClient`.
+ * Liga o app ao motor de `@trippy/sync`; as telas dependem só de `SyncClient`.
+ * O React Native não garante `crypto.randomUUID`, então os IDs vêm do expo-crypto.
  */
-export function connectSyncClientFactory(factory: SyncClientFactory): void {
-  connectedFactory = factory
-}
-
-export function createAppSyncClient(input: SyncClientFactoryInput): SyncClient {
-  if (connectedFactory === null) {
-    throw new Error('O motor de sincronização ainda não foi conectado ao app.')
-  }
-  return connectedFactory(input)
+export function createAppSyncClient(input: SyncClientFactoryInput): Promise<SyncClient> {
+  return createSyncClient({ ...input, idGenerator: randomUUID })
 }

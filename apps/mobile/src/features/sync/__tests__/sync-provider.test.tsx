@@ -29,7 +29,10 @@ function Probe() {
       <Text testID="sync-provider-state">
         {`${ready ? 'ready' : 'loading'}:${status.pending}:${status.notSent}`}
       </Text>
-      <Pressable testID="provider-add-place" onPress={() => void client?.addPlace('trip-1', 'Parque')}>
+      <Pressable
+        testID="provider-add-place"
+        onPress={() => void client?.addPlace('trip-1', 'Parque')}
+      >
         <Text>Adicionar</Text>
       </Pressable>
     </>

@@ -330,10 +330,7 @@ export function TripPlacesScreen({ tripId, tripName, role }: TripPlacesScreenPro
             <ActivityIndicator color={theme.colors.forest} />
           </View>
         ) : places.length === 0 ? (
-          <Notice
-            testID="places-empty"
-            message="Adicione o primeiro lugar ou convide o grupo."
-          />
+          <Notice testID="places-empty" message="Adicione o primeiro lugar ou convide o grupo." />
         ) : (
           <View style={{ gap: theme.spacing.space3 }}>
             {places.map((place) => {

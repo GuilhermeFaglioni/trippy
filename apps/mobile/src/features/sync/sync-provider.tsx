@@ -84,7 +84,7 @@ export function SyncProvider({
     void (async () => {
       const database = await openUserSqlDatabase(session.user.id)
       const transport = createSyncTransport((path, init) => requestRef.current(path, init))
-      const nextClient = factory({
+      const nextClient = await factory({
         database,
         transport,
         userId: session.user.id,
@@ -115,8 +115,7 @@ export function SyncProvider({
   }, [createdClient])
 
   const exposedClient = useMemo(
-    () =>
-      createdClient === null ? null : withWriteSyncTriggers(createdClient, requestSync),
+    () => (createdClient === null ? null : withWriteSyncTriggers(createdClient, requestSync)),
     [createdClient, requestSync],
   )
 

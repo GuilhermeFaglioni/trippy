@@ -32,10 +32,7 @@ export interface UnmarkVisitOperation extends OperationMetadata {
 }
 
 export type SyncOperation =
-  | AddPlaceOperation
-  | RemovePlaceOperation
-  | MarkVisitOperation
-  | UnmarkVisitOperation
+  AddPlaceOperation | RemovePlaceOperation | MarkVisitOperation | UnmarkVisitOperation
 
 export interface PushRequest {
   operations: SyncOperation[]

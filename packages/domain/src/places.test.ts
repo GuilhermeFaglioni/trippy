@@ -3,9 +3,7 @@ import { canRemovePlace, validatePlaceName } from './places.ts'
 
 describe('canRemovePlace', () => {
   it('permite que quem sugeriu remova o lugar', () => {
-    expect(
-      canRemovePlace({ role: 'member', userId: 'user-a', suggestedBy: 'user-a' }),
-    ).toBe(true)
+    expect(canRemovePlace({ role: 'member', userId: 'user-a', suggestedBy: 'user-a' })).toBe(true)
   })
 
   it.each(['organizer', 'coorganizer'] as const)('permite %s remover qualquer lugar', (role) => {
@@ -13,9 +11,7 @@ describe('canRemovePlace', () => {
   })
 
   it('não permite que outro membro remova o lugar', () => {
-    expect(
-      canRemovePlace({ role: 'member', userId: 'user-b', suggestedBy: 'user-a' }),
-    ).toBe(false)
+    expect(canRemovePlace({ role: 'member', userId: 'user-b', suggestedBy: 'user-a' })).toBe(false)
   })
 })
 

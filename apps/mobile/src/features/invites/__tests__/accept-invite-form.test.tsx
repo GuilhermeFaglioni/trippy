@@ -13,9 +13,11 @@ const mockSyncNow = jest.fn<Promise<void>, []>()
 
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }))
 
-jest.spyOn(sessionProvider, 'useSession').mockImplementation(
-  () => ({ request: mockRequest }) as unknown as ReturnType<typeof sessionProvider.useSession>,
-)
+jest
+  .spyOn(sessionProvider, 'useSession')
+  .mockImplementation(
+    () => ({ request: mockRequest }) as unknown as ReturnType<typeof sessionProvider.useSession>,
+  )
 jest.spyOn(syncProvider, 'useSync').mockImplementation(
   () =>
     ({
@@ -58,10 +60,13 @@ describe('formulário de entrada por convite', () => {
     await fireEvent.press(screen.getByTestId('accept-invite-button'))
 
     await waitFor(() => {
-      expect(mockRequest).toHaveBeenCalledWith('/invites/accept', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ token: 'código-123' }),
-      }))
+      expect(mockRequest).toHaveBeenCalledWith(
+        '/invites/accept',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ token: 'código-123' }),
+        }),
+      )
       expect(mockSyncNow).toHaveBeenCalledTimes(1)
       expect(mockPush).toHaveBeenCalledWith({
         pathname: '/trips/[id]',

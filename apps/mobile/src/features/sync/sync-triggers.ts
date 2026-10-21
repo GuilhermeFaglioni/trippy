@@ -56,7 +56,10 @@ export function startSyncTriggers(
 }
 
 /** A escrita local sempre vence; falha de rede deixa a operação pendente no outbox. */
-export function withWriteSyncTriggers(client: SyncClient, requestSync: () => Promise<void>): SyncClient {
+export function withWriteSyncTriggers(
+  client: SyncClient,
+  requestSync: () => Promise<void>,
+): SyncClient {
   async function afterWrite<T>(write: () => Promise<T>): Promise<T> {
     const result = await write()
     try {

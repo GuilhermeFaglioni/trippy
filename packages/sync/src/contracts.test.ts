@@ -48,10 +48,12 @@ describe('validação das operações e do push', () => {
   })
 
   it('recusa identificadores inválidos e nome vazio', () => {
-    expect(validateSyncOperation({ type: 'visit.mark', opId: 'x', tripId, placeId })).toMatchObject({
-      success: false,
-      issues: [{ path: 'opId' }],
-    })
+    expect(validateSyncOperation({ type: 'visit.mark', opId: 'x', tripId, placeId })).toMatchObject(
+      {
+        success: false,
+        issues: [{ path: 'opId' }],
+      },
+    )
     expect(
       validatePushRequest({
         operations: [{ type: 'place.add', opId, tripId, placeId, name: '  ' }],
@@ -60,8 +62,9 @@ describe('validação das operações e do push', () => {
   })
 
   it('valida envelope e resultados do push, incluindo motivos conhecidos', () => {
-    expect(validatePushRequest({ operations: [{ type: 'visit.mark', opId, tripId, placeId }] }))
-      .toMatchObject({ success: true })
+    expect(
+      validatePushRequest({ operations: [{ type: 'visit.mark', opId, tripId, placeId }] }),
+    ).toMatchObject({ success: true })
     expect(
       validatePushResponse({
         results: [
@@ -163,7 +166,11 @@ describe('canonicalTripState', () => {
     deletedAt,
     createdAt: '2026-10-20T12:00:00.000Z',
   })
-  const visit = (placeKey: string, userKey: string, deletedAt: string | null = null): SyncVisit => ({
+  const visit = (
+    placeKey: string,
+    userKey: string,
+    deletedAt: string | null = null,
+  ): SyncVisit => ({
     placeId: placeKey,
     tripId,
     userId: userKey,

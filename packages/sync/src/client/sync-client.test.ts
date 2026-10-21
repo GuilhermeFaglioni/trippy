@@ -473,21 +473,23 @@ describe('SyncClient', () => {
   it.each(['not_member', 'forbidden'] as const)(
     'mantém rejeição %s em not_sent e não reenvia automaticamente',
     async (reason) => {
-    const database = createDatabase()
-    const transport = new FakeSyncTransport()
-    transport.rejectReason = reason
-    const client = await createClient(database, transport)
-    await client.addPlace(tripId, 'Roteiro')
+      const database = createDatabase()
+      const transport = new FakeSyncTransport()
+      transport.rejectReason = reason
+      const client = await createClient(database, transport)
+      await client.addPlace(tripId, 'Roteiro')
 
-    await client.syncNow()
-    expect(client.getStatus().notSent).toBe(1)
-    expect(client.getStatus().pending).toBe(0)
-    expect(await client.listPlaces(tripId)).toHaveLength(0)
-    await client.syncNow()
-    expect(transport.pushes).toHaveLength(1)
-    expect(
-      await database.get<{ status: string } & Record<string, unknown>>('SELECT status FROM outbox'),
-    ).toMatchObject({ status: 'not_sent' })
+      await client.syncNow()
+      expect(client.getStatus().notSent).toBe(1)
+      expect(client.getStatus().pending).toBe(0)
+      expect(await client.listPlaces(tripId)).toHaveLength(0)
+      await client.syncNow()
+      expect(transport.pushes).toHaveLength(1)
+      expect(
+        await database.get<{ status: string } & Record<string, unknown>>(
+          'SELECT status FROM outbox',
+        ),
+      ).toMatchObject({ status: 'not_sent' })
     },
   )
 

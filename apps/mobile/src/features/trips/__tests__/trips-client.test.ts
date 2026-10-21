@@ -24,12 +24,17 @@ describe('cliente de viagens', () => {
   })
 
   it('rejeita resposta com ID de viagem que não seja UUID', async () => {
-    const request = jest.fn().mockResolvedValue(
-      new Response(JSON.stringify({ trips: [{ ...trip, id: 'trip-1' }] }), { status: 200 }),
-    )
+    const request = jest
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ trips: [{ ...trip, id: 'trip-1' }] }), { status: 200 }),
+      )
     const client = createTripsClient(request)
 
-    await expect(client.listTrips()).rejects.toMatchObject({ status: 502, code: 'unexpected_error' })
+    await expect(client.listTrips()).rejects.toMatchObject({
+      status: 502,
+      code: 'unexpected_error',
+    })
   })
 
   it('cria uma viagem enviando o contrato da API em JSON', async () => {

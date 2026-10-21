@@ -21,8 +21,7 @@ export interface ValidationIssue {
 }
 
 export type ValidationResult<T> =
-  | { success: true; value: T }
-  | { success: false; issues: ValidationIssue[] }
+  { success: true; value: T } | { success: false; issues: ValidationIssue[] }
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu
 const sequencePattern = /^(0|[1-9]\d*)$/u
@@ -65,7 +64,9 @@ function failure<T = never>(path: string, message: string): ValidationResult<T> 
   return { success: false, issues: [{ path, message }] }
 }
 
-export function validateSyncOperation(value: unknown): ValidationResult<PushRequest['operations'][number]> {
+export function validateSyncOperation(
+  value: unknown,
+): ValidationResult<PushRequest['operations'][number]> {
   if (!isRecord(value)) return failure('$', 'A operação precisa ser um objeto.')
   if (!isUuid(value.opId)) return failure('opId', 'Informe um UUID válido.')
   if (!isUuid(value.tripId)) return failure('tripId', 'Informe um UUID válido.')
@@ -86,7 +87,11 @@ export function validateSyncOperation(value: unknown): ValidationResult<PushRequ
     }
   }
 
-  if (value.type === 'place.remove' || value.type === 'visit.mark' || value.type === 'visit.unmark') {
+  if (
+    value.type === 'place.remove' ||
+    value.type === 'visit.mark' ||
+    value.type === 'visit.unmark'
+  ) {
     if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
     return {
       success: true,
@@ -113,10 +118,12 @@ export function validatePushRequest(value: unknown): ValidationResult<PushReques
     const result = validateSyncOperation(operation)
     if (result.success) operations.push(result.value)
     else {
-      issues.push(...result.issues.map((issue) => ({
-        path: `operations[${index}]${issue.path === '$' ? '' : `.${issue.path}`}`,
-        message: issue.message,
-      })))
+      issues.push(
+        ...result.issues.map((issue) => ({
+          path: `operations[${index}]${issue.path === '$' ? '' : `.${issue.path}`}`,
+          message: issue.message,
+        })),
+      )
     }
   })
 
@@ -188,8 +195,10 @@ function validatePlace(value: unknown): value is SyncPlace {
     isNullableNumber(value.lng) &&
     isUuid(value.suggestedBy) &&
     isNullableString(value.comment) &&
-    (value.dayIndex === null || (typeof value.dayIndex === 'number' && Number.isInteger(value.dayIndex))) &&
-    (value.position === null || (typeof value.position === 'number' && Number.isInteger(value.position))) &&
+    (value.dayIndex === null ||
+      (typeof value.dayIndex === 'number' && Number.isInteger(value.dayIndex))) &&
+    (value.position === null ||
+      (typeof value.position === 'number' && Number.isInteger(value.position))) &&
     isSyncSequence(value.seq) &&
     (value.deletedAt === null || isDateTime(value.deletedAt)) &&
     isDateTime(value.createdAt)

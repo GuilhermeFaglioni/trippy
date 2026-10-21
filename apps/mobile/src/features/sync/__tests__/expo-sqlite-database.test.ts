@@ -30,9 +30,11 @@ describe('adaptador expo-sqlite', () => {
   it('adapta binds, resultados e transações exclusivas para SqlDatabase', async () => {
     const transactionDatabase = createDatabase()
     const database = createDatabase({
-      withExclusiveTransactionAsync: jest.fn(async (operation: (database: unknown) => Promise<void>) => {
-        await operation(transactionDatabase)
-      }),
+      withExclusiveTransactionAsync: jest.fn(
+        async (operation: (database: unknown) => Promise<void>) => {
+          await operation(transactionDatabase)
+        },
+      ),
     })
     const sql = new ExpoSqlDatabase(database as never)
 

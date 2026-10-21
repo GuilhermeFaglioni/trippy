@@ -13,10 +13,7 @@ export interface SqlRunResult {
 export interface SqlDatabase {
   exec(sql: string): Promise<void>
   run(sql: string, parameters?: SqlParameters): Promise<SqlRunResult>
-  all<Row extends Record<string, unknown>>(
-    sql: string,
-    parameters?: SqlParameters,
-  ): Promise<Row[]>
+  all<Row extends Record<string, unknown>>(sql: string, parameters?: SqlParameters): Promise<Row[]>
   get<Row extends Record<string, unknown>>(
     sql: string,
     parameters?: SqlParameters,

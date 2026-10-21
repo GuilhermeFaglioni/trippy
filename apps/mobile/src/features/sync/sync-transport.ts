@@ -1,4 +1,10 @@
-import type { PullQuery, PullResponse, PushRequest, PushResponse, SyncTransport } from '@trippy/sync'
+import type {
+  PullQuery,
+  PullResponse,
+  PushRequest,
+  PushResponse,
+  SyncTransport,
+} from '@trippy/sync'
 
 export type SyncRequest = (path: string, init?: RequestInit) => Promise<Response>
 

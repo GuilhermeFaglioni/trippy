@@ -54,9 +54,8 @@ describe('transporte HTTP de sync', () => {
       }),
     ).resolves.toEqual(payload)
 
-    expect(request).toHaveBeenCalledWith(
-      '/sync/pull?trip=trip-1&limit=5&cursor=5&snapshotSeq=15',
-      { method: 'GET' },
-    )
+    expect(request).toHaveBeenCalledWith('/sync/pull?trip=trip-1&limit=5&cursor=5&snapshotSeq=15', {
+      method: 'GET',
+    })
   })
 })

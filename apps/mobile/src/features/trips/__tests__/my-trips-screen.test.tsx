@@ -120,7 +120,9 @@ describe('tela Minhas viagens', () => {
     )
     const screen = await renderScreen()
 
-    expect(await screen.findByTestId('trip-card-58f75ed5-b524-46f8-b387-650d9b43ee36')).toBeOnTheScreen()
+    expect(
+      await screen.findByTestId('trip-card-58f75ed5-b524-46f8-b387-650d9b43ee36'),
+    ).toBeOnTheScreen()
     expect(screen.getByTestId('trip-card-7ca841f4-1ceb-4597-b021-fbb3f80c5f9f')).toBeOnTheScreen()
     expect(screen.getByTestId('trip-card-88362a44-f59f-437e-a682-79966a68650a')).toBeOnTheScreen()
     expect(screen.getByText('Fim de semana')).toBeOnTheScreen()
