@@ -121,7 +121,12 @@ function sameReservation(
 export interface PhotoStore {
   reserveForMember(userId: string, tripId: string, input: PhotoUploadMetadata): Promise<PhotoRecord>
   getForMember(userId: string, tripId: string, photoId: string): Promise<PhotoRecord | null>
-  completeForMember(userId: string, tripId: string, photoId: string): Promise<PhotoRecord>
+  completeForMember(
+    userId: string,
+    tripId: string,
+    photoId: string,
+    promoteUpload: (photo: PhotoRecord) => Promise<void>,
+  ): Promise<PhotoRecord>
   listForMember(userId: string, tripId: string): Promise<TripPhoto[] | null>
   getForWorker(photoId: string): Promise<PhotoRecord | null>
   markReady(photoId: string): Promise<void>
@@ -183,7 +188,12 @@ export class PostgresPhotoStore implements PhotoStore {
     }
   }
 
-  async completeForMember(userId: string, tripId: string, photoId: string): Promise<PhotoRecord> {
+  async completeForMember(
+    userId: string,
+    tripId: string,
+    photoId: string,
+    promoteUpload: (photo: PhotoRecord) => Promise<void>,
+  ): Promise<PhotoRecord> {
     const client = await this.pool.connect()
     try {
       return await inTransaction(client, async () => {
@@ -201,6 +211,8 @@ export class PostgresPhotoStore implements PhotoStore {
         const row = selected.rows[0]
         if (!row) throw new TripPhotoNotFoundError()
         if (row.status !== 'pending') return mapPhoto(row)
+
+        await promoteUpload(mapPhoto(row))
 
         const updated = await client.query<PhotoRow>(
           `UPDATE photos SET status = 'uploaded', uploaded_at = clock_timestamp()

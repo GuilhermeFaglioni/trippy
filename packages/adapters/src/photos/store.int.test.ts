@@ -114,8 +114,8 @@ it('reserva UUID idempotente, preserva metadados e exige vínculo ativo', async 
 })
 
 it('confirma idempotentemente e grava outbox na mesma transação', async () => {
-  const first = await store.completeForMember(userId, tripId, photoId)
-  const retry = await store.completeForMember(userId, tripId, photoId)
+  const first = await store.completeForMember(userId, tripId, photoId, async () => {})
+  const retry = await store.completeForMember(userId, tripId, photoId, async () => {})
   expect(first.status).toBe('uploaded')
   expect(retry.status).toBe('uploaded')
 

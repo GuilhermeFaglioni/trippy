@@ -202,6 +202,7 @@ it('reserva, faz PUT no host assinado, confirma sem duplicar e entrega miniatura
     body: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]),
   })
   expect(put.status).toBe(200)
+  const original = new Uint8Array([0xff, 0xd8, 0xff, 0xd9])
 
   const completed = await post(`/trips/${tripId}/photos/${photoId}/complete`, {}, 'member-token')
   const completedAgain = await post(
@@ -212,6 +213,27 @@ it('reserva, faz PUT no host assinado, confirma sem duplicar e entrega miniatura
   expect(completed.status).toBe(200)
   expect(completedAgain.status).toBe(200)
   expect(await completed.json()).toEqual({ id: photoId })
+
+  const reservedAfterCompletion = await post(path, metadata, 'member-token')
+  expect(reservedAfterCompletion.status).toBe(201)
+  const repeatedReservation = (await reservedAfterCompletion.json()) as {
+    id: string
+    uploadUrl: string
+  }
+  const repeatedPut = await fetch(repeatedReservation.uploadUrl, {
+    method: 'PUT',
+    headers: { 'content-type': 'image/jpeg' },
+    body: new Uint8Array([0xff, 0xd8, 0x00, 0x01, 0xff, 0xd9]),
+  })
+  expect(repeatedPut.status).toBe(200)
+  expect(await storage.readObject(`photos/${tripId}/${photoId}/original.jpg`)).toEqual(original)
+  const completedAfterRepeatedPut = await post(
+    `/trips/${tripId}/photos/${photoId}/complete`,
+    {},
+    'member-token',
+  )
+  expect(completedAfterRepeatedPut.status).toBe(200)
+  expect(await storage.hasJpeg(`photos/${tripId}/${photoId}/upload.jpg`)).toBe(false)
   const outboxCount = await pool.query<{ count: string }>(
     'SELECT count(*) FROM photo_outbox WHERE photo_id = $1',
     [photoId],

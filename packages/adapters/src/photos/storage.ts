@@ -1,4 +1,6 @@
 import {
+  CopyObjectCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -19,9 +21,15 @@ export type S3PhotoStorageConfig = Readonly<{
 export interface PhotoStorage {
   createUploadUrl(key: string): Promise<string>
   hasJpeg(key: string): Promise<boolean>
+  promoteUpload(sourceKey: string, targetKey: string): Promise<void>
+  deleteUpload(key: string): Promise<void>
   createThumbnailUrl(key: string): Promise<string>
   readObject(key: string): Promise<Uint8Array>
   writeThumbnail(key: string, body: Uint8Array): Promise<void>
+}
+
+export function photoUploadKey(tripId: string, photoId: string): string {
+  return `photos/${tripId}/${photoId}/upload.jpg`
 }
 
 function clientConfig(config: S3PhotoStorageConfig): S3ClientConfig {
@@ -62,6 +70,25 @@ export class S3PhotoStorage implements PhotoStorage {
       new PutObjectCommand({ Bucket: this.config.bucket, Key: key, ContentType: 'image/jpeg' }),
       { expiresIn: 300 },
     )
+  }
+
+  async promoteUpload(sourceKey: string, targetKey: string): Promise<void> {
+    await this.s3.send(
+      new CopyObjectCommand({
+        Bucket: this.config.bucket,
+        Key: targetKey,
+        CopySource: `${this.config.bucket}/${sourceKey
+          .split('/')
+          .map(encodeURIComponent)
+          .join('/')}`,
+        ContentType: 'image/jpeg',
+        MetadataDirective: 'REPLACE',
+      }),
+    )
+  }
+
+  async deleteUpload(key: string): Promise<void> {
+    await this.s3.send(new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }))
   }
 
   async hasJpeg(key: string): Promise<boolean> {

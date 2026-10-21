@@ -3,6 +3,7 @@ import pg from 'pg'
 import { validatePhotoUploadInput } from '@trippy/domain'
 import {
   PostgresPhotoStore,
+  photoUploadKey,
   S3PhotoStorage,
   TripPhotoConflictError,
   TripPhotoNotFoundError,
@@ -60,6 +61,13 @@ function conflict(context: Context<AuthEnvironment>) {
   )
 }
 
+function photoNotUploaded(context: Context<AuthEnvironment>) {
+  return context.json(
+    { error: 'photo_not_uploaded', message: 'O arquivo JPEG ainda não está disponível.' },
+    409,
+  )
+}
+
 export function createPhotosRouter(config: PhotosRouterConfig, options: PhotosRouterOptions) {
   const pool: Pool | undefined = options.photoStore
     ? undefined
@@ -96,7 +104,7 @@ export function createPhotosRouter(config: PhotosRouterConfig, options: PhotosRo
 
     try {
       const photo = await store.reserveForMember(context.get('userId'), tripId, validation.value)
-      const uploadUrl = await storage.createUploadUrl(photo.s3Key)
+      const uploadUrl = await storage.createUploadUrl(photoUploadKey(tripId, photo.id))
       return context.json({ id: photo.id, uploadUrl }, 201)
     } catch (error) {
       if (error instanceof TripPhotoNotFoundError) return notFound(context)
@@ -112,19 +120,16 @@ export function createPhotosRouter(config: PhotosRouterConfig, options: PhotosRo
 
     try {
       const userId = context.get('userId')
-      const photo = await store.getForMember(userId, tripId, photoId)
-      if (!photo) return notFound(context)
-      if (photo.status === 'pending' && !(await storage.hasJpeg(photo.s3Key))) {
-        return context.json(
-          { error: 'photo_not_uploaded', message: 'O arquivo JPEG ainda não está disponível.' },
-          409,
-        )
-      }
-
-      const completed = await store.completeForMember(userId, tripId, photoId)
+      const uploadKey = photoUploadKey(tripId, photoId)
+      const completed = await store.completeForMember(userId, tripId, photoId, async (photo) => {
+        if (!(await storage.hasJpeg(uploadKey))) throw new PhotoUploadMissingError()
+        await storage.promoteUpload(uploadKey, photo.s3Key)
+      })
+      await storage.deleteUpload(uploadKey)
       return context.json({ id: completed.id })
     } catch (error) {
       if (error instanceof TripPhotoNotFoundError) return notFound(context)
+      if (error instanceof PhotoUploadMissingError) return photoNotUploaded(context)
       if (error instanceof TripPhotoConflictError || error instanceof TripPhotoStateError) {
         return conflict(context)
       }
@@ -165,3 +170,5 @@ export function createPhotosRouter(config: PhotosRouterConfig, options: PhotosRo
     },
   }
 }
+
+class PhotoUploadMissingError extends Error {}

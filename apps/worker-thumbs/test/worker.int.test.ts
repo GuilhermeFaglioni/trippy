@@ -20,7 +20,7 @@ import {
 import pg from 'pg'
 import sharp from 'sharp'
 import { afterAll, beforeAll, expect, it } from 'vitest'
-import { PostgresPhotoStore, S3PhotoStorage } from '@trippy/adapters/photos'
+import { photoUploadKey, PostgresPhotoStore, S3PhotoStorage } from '@trippy/adapters/photos'
 import { PostgresTripStore } from '@trippy/adapters/trips'
 import { migrate } from '../../../packages/db/src/migrate.ts'
 import type { ThumbWorkerConfig } from '../src/config.ts'
@@ -76,6 +76,8 @@ let worker: ThumbWorker
 let tripId: string
 let photoId: string
 let queueUrl: string
+let originalImage: Uint8Array<ArrayBuffer>
+let uploadUrl: string
 
 const workerConfig: ThumbWorkerConfig = {
   databaseUrl: testDatabaseUrl.toString(),
@@ -161,18 +163,47 @@ beforeAll(async () => {
     lat: null,
     lng: null,
   })
-  const image = await sharp({
-    create: { width: 1200, height: 900, channels: 3, background: '#ba8060' },
-  })
-    .jpeg()
-    .toBuffer()
-  const upload = await fetch(await storage.createUploadUrl(reservation.s3Key), {
+  originalImage = new Uint8Array(
+    await sharp({
+      create: { width: 1200, height: 900, channels: 3, background: '#ba8060' },
+    })
+      .jpeg()
+      .toBuffer(),
+  )
+  uploadUrl = await storage.createUploadUrl(photoUploadKey(tripId, photoId))
+  const upload = await fetch(uploadUrl, {
     method: 'PUT',
     headers: { 'content-type': 'image/jpeg' },
-    body: image,
+    body: originalImage,
   })
   if (!upload.ok) throw new Error(`PUT MinIO falhou com HTTP ${upload.status}`)
-  await photoStore.completeForMember(user.rows[0]!.id, tripId, photoId)
+  await expect(
+    photoStore.completeForMember(user.rows[0]!.id, tripId, photoId, async (photo) => {
+      await storage.promoteUpload(photoUploadKey(tripId, photoId), photo.s3Key)
+      throw new Error('falha simulada após cópia, antes do commit')
+    }),
+  ).rejects.toThrow('falha simulada após cópia, antes do commit')
+  expect(await photoStore.getForWorker(photoId)).toMatchObject({ status: 'pending' })
+  expect(Buffer.from(await storage.readObject(reservation.s3Key))).toEqual(Buffer.from(originalImage))
+  await photoStore.completeForMember(user.rows[0]!.id, tripId, photoId, async (photo) => {
+    await storage.promoteUpload(photoUploadKey(tripId, photoId), photo.s3Key)
+  })
+
+  const replacementImage = new Uint8Array(
+    await sharp({
+      create: { width: 1200, height: 900, channels: 3, background: '#3274b9' },
+    })
+      .jpeg()
+      .toBuffer(),
+  )
+  const repeatedUpload = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'content-type': 'image/jpeg' },
+    body: replacementImage,
+  })
+  if (!repeatedUpload.ok)
+    throw new Error(`PUT repetido no MinIO falhou com HTTP ${repeatedUpload.status}`)
+  expect(Buffer.from(await storage.readObject(reservation.s3Key))).toEqual(Buffer.from(originalImage))
   worker = new ThumbWorker(pool, photoStore, storage, workerConfig, queueUrl)
 })
 
@@ -224,6 +255,12 @@ it('reconcilia outbox na fila isolada, gera JPEG e aceita mensagem repetida', as
   const thumbnailResponse = await fetch(thumbnailUrl)
   expect(thumbnailResponse.status).toBe(200)
   const thumbnail = Buffer.from(await thumbnailResponse.arrayBuffer())
+  const expectedThumbnail = await sharp(originalImage)
+    .rotate()
+    .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 82, mozjpeg: true })
+    .toBuffer()
+  expect(thumbnail).toEqual(expectedThumbnail)
   const thumbnailMetadata = await sharp(thumbnail).metadata()
   expect(thumbnailMetadata.format).toBe('jpeg')
   expect(thumbnailMetadata.width).toBeLessThanOrEqual(512)
