@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@trippy/domain": "workspace:*",
+    "@trippy/sync": "workspace:*",
     "jose": "^6.1.0",
     "nodemailer": "^10.1.7",
     "pg": "^8.16.0"

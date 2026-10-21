@@ -28,7 +28,7 @@ jest
   )
 
 const trip: TripSummary = {
-  id: 'trip-1',
+  id: '58f75ed5-b524-46f8-b387-650d9b43ee36',
   name: 'Fim de semana',
   destination: 'Paraty',
   startDate: '2027-03-14',
@@ -86,14 +86,14 @@ describe('tela Minhas viagens', () => {
         trip,
         {
           ...trip,
-          id: 'trip-2',
+          id: '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f',
           name: 'Viagem em curso',
           destination: 'Brasília',
           phase: 'traveling',
         },
         {
           ...trip,
-          id: 'trip-3',
+          id: '88362a44-f59f-437e-a682-79966a68650a',
           name: 'Viagem encerrada',
           destination: 'Ouro Preto',
           phase: 'ended',
@@ -102,9 +102,9 @@ describe('tela Minhas viagens', () => {
     )
     const screen = await renderScreen()
 
-    expect(await screen.findByTestId('trip-card-trip-1')).toBeOnTheScreen()
-    expect(screen.getByTestId('trip-card-trip-2')).toBeOnTheScreen()
-    expect(screen.getByTestId('trip-card-trip-3')).toBeOnTheScreen()
+    expect(await screen.findByTestId('trip-card-58f75ed5-b524-46f8-b387-650d9b43ee36')).toBeOnTheScreen()
+    expect(screen.getByTestId('trip-card-7ca841f4-1ceb-4597-b021-fbb3f80c5f9f')).toBeOnTheScreen()
+    expect(screen.getByTestId('trip-card-88362a44-f59f-437e-a682-79966a68650a')).toBeOnTheScreen()
     expect(screen.getByText('Fim de semana')).toBeOnTheScreen()
     expect(screen.getByText('Paraty')).toBeOnTheScreen()
     expect(screen.getAllByText('14/03/2027 – 16/03/2027')).toHaveLength(3)

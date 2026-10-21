@@ -47,7 +47,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     migrate({ databaseUrl: testUrl.toString() }),
     migrate({ databaseUrl: testUrl.toString() }),
   ])
-  expect(concurrentRuns.flat()).toEqual(['0001', '0002', '0003', '0004'])
+  expect(concurrentRuns.flat()).toEqual(['0001', '0002', '0003', '0004', '0005'])
 
   const client = new pg.Client({ connectionString: testUrl.toString() })
   await client.connect()
@@ -58,12 +58,16 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
        WHERE table_schema = 'public'
          AND table_name IN (
            'users', 'identities', 'trips', 'trip_members', 'schema_migrations',
-           'recaps', 'render_jobs', 'render_outbox', 'email_login_codes', 'refresh_tokens'
+           'recaps', 'render_jobs', 'render_outbox', 'email_login_codes', 'refresh_tokens',
+           'invites', 'places', 'visits', 'applied_ops'
          )`,
     )
     expect(tables.rows.map(({ table_name }) => table_name).sort()).toEqual([
+      'applied_ops',
       'email_login_codes',
       'identities',
+      'invites',
+      'places',
       'recaps',
       'refresh_tokens',
       'render_jobs',
@@ -72,6 +76,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       'trip_members',
       'trips',
       'users',
+      'visits',
     ])
 
     const migrationBefore = await client.query<{
@@ -84,6 +89,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       '0002',
       '0003',
       '0004',
+      '0005',
     ])
 
     await migrate({ databaseUrl: testUrl.toString() })
@@ -133,6 +139,12 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     )
     const tripId = tripResult.rows[0]!.id
 
+    const syncFloor = await client.query<{ sync_floor_seq: string }>(
+      'SELECT sync_floor_seq FROM trips WHERE id = $1',
+      [tripId],
+    )
+    expect(syncFloor.rows[0]?.sync_floor_seq).toBe('0')
+
     await client.query('INSERT INTO trip_members (trip_id, user_id, role) VALUES ($1, $2, $3)', [
       tripId,
       organizerId,
@@ -143,6 +155,32 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
        VALUES ($1, $2, 'organizer', now())`,
       [tripId, secondOrganizerId],
     )
+
+    const placeId = randomUUID()
+    await client.query(
+      `INSERT INTO places (id, trip_id, name, suggested_by, seq)
+       VALUES ($1, $2, 'Museu', $3, 4)`,
+      [placeId, tripId, organizerId],
+    )
+    await expect(
+      client.query(
+        `INSERT INTO visits (place_id, trip_id, user_id, marked_by, visited_at, visited_tz, seq)
+         VALUES ($1, $2, $3, $3, now(), 'America/Sao_Paulo', 5)`,
+        [placeId, '00000000-0000-4000-8000-000000000001', organizerId],
+      ),
+    ).rejects.toMatchObject({ code: '23503' })
+    await client.query(
+      `INSERT INTO invites (trip_id, token_hash, created_by)
+       VALUES ($1, 'hash-1', $2)`,
+      [tripId, organizerId],
+    )
+    await expect(
+      client.query(
+        `INSERT INTO invites (trip_id, token_hash, created_by)
+         VALUES ($1, 'hash-1', $2)`,
+        [tripId, organizerId],
+      ),
+    ).rejects.toMatchObject({ code: '23505' })
     const activeOrganizerId = await user('active-organizer@example.test')
     await expect(
       client.query('INSERT INTO trip_members (trip_id, user_id, role) VALUES ($1, $2, $3)', [
@@ -180,6 +218,8 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     import.meta.url,
   )
   const tripMembersIndexMigration = await readFile(tripMembersIndexMigrationPath, 'utf8')
+  const syncMigrationPath = new URL('../migrations/0005_sync_lugares_convites.sql', import.meta.url)
+  const syncMigration = await readFile(syncMigrationPath, 'utf8')
   const modifiedMigrations = await mkdtemp(join(tmpdir(), 'trippy-db-migrations-'))
   try {
     await writeFile(
@@ -192,6 +232,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       join(modifiedMigrations, '0004_trip_members_user_idx.sql'),
       tripMembersIndexMigration,
     )
+    await writeFile(join(modifiedMigrations, '0005_sync_lugares_convites.sql'), syncMigration)
     await expect(
       migrate({
         databaseUrl: testUrl.toString(),
@@ -211,8 +252,9 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       join(failedMigrations, '0004_trip_members_user_idx.sql'),
       tripMembersIndexMigration,
     )
+    await writeFile(join(failedMigrations, '0005_sync_lugares_convites.sql'), syncMigration)
     await writeFile(
-      join(failedMigrations, '0005_teste_transacao.sql'),
+      join(failedMigrations, '0006_teste_transacao.sql'),
       'CREATE TABLE migration_rollback_probe (id integer);\nINVALID SQL;\n',
     )
     await expect(
@@ -232,7 +274,13 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       const applied = await client.query<{ version: string }>(
         'SELECT version FROM schema_migrations ORDER BY version',
       )
-      expect(applied.rows.map(({ version }) => version)).toEqual(['0001', '0002', '0003', '0004'])
+      expect(applied.rows.map(({ version }) => version)).toEqual([
+        '0001',
+        '0002',
+        '0003',
+        '0004',
+        '0005',
+      ])
     } finally {
       await client.end()
     }

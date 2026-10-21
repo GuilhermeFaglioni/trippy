@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { isTripRole, isUuid } from '@trippy/sync'
 
 import { useSession } from '../auth/session-provider'
 
@@ -56,13 +57,13 @@ function isTripSummary(value: unknown): value is TripSummary {
   if (!isRecord(value)) return false
 
   return (
-    typeof value.id === 'string' &&
+    isUuid(value.id) &&
     typeof value.name === 'string' &&
     typeof value.destination === 'string' &&
     typeof value.startDate === 'string' &&
     typeof value.endDate === 'string' &&
     typeof value.timezone === 'string' &&
-    (value.role === 'organizer' || value.role === 'coorganizer' || value.role === 'member') &&
+    isTripRole(value.role) &&
     (value.phase === 'planning' || value.phase === 'traveling' || value.phase === 'ended') &&
     typeof value.createdAt === 'string'
   )

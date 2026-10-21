@@ -1,7 +1,7 @@
 import { createTripsClient, TripsApiError, type TripSummary } from '../trips-client'
 
 const trip: TripSummary = {
-  id: 'trip-1',
+  id: '58f75ed5-b524-46f8-b387-650d9b43ee36',
   name: 'Fim de semana',
   destination: 'Paraty',
   startDate: '2027-03-14',
@@ -21,6 +21,15 @@ describe('cliente de viagens', () => {
 
     await expect(client.listTrips()).resolves.toEqual([trip])
     expect(request).toHaveBeenCalledWith('/trips')
+  })
+
+  it('rejeita resposta com ID de viagem que não seja UUID', async () => {
+    const request = jest.fn().mockResolvedValue(
+      new Response(JSON.stringify({ trips: [{ ...trip, id: 'trip-1' }] }), { status: 200 }),
+    )
+    const client = createTripsClient(request)
+
+    await expect(client.listTrips()).rejects.toMatchObject({ status: 502, code: 'unexpected_error' })
   })
 
   it('cria uma viagem enviando o contrato da API em JSON', async () => {

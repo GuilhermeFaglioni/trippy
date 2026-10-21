@@ -19,7 +19,7 @@ jest
   )
 
 const trip: TripSummary = {
-  id: 'trip-2',
+  id: '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f',
   name: 'Férias em Recife',
   destination: 'Recife',
   startDate: '2027-02-10',

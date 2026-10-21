@@ -1,0 +1,198 @@
+import { describe, expect, it } from 'vitest'
+import { canonicalTripState } from './canonical-state.ts'
+import {
+  isSyncSequence,
+  isTripRole,
+  isUuid,
+  validateAcceptInviteRequest,
+  validateCreateInviteParams,
+  validateCreateInviteResponse,
+  validatePullQuery,
+  validatePullResponse,
+  validatePushRequest,
+  validatePushResponse,
+  validateSyncOperation,
+} from './validation.ts'
+import type { SyncMember, SyncPlace, SyncVisit } from './types.ts'
+
+const tripId = '58f75ed5-b524-46f8-b387-650d9b43ee36'
+const userId = '3c42531a-085f-4ebc-89ca-d32dd33bc527'
+const otherUserId = 'd109e726-e366-4c6a-b852-d33650af093b'
+const placeId = '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f'
+const opId = '88362a44-f59f-437e-a682-79966a68650a'
+
+describe('validação das operações e do push', () => {
+  it('valida UUID e sequência bigint em formato seguro para JSON', () => {
+    expect(isUuid(opId)).toBe(true)
+    expect(isUuid('não-é-uuid')).toBe(false)
+    expect(isSyncSequence('9223372036854775807')).toBe(true)
+    expect(isSyncSequence('9223372036854775808')).toBe(false)
+    expect(isSyncSequence('01')).toBe(false)
+    expect(isTripRole('organizer')).toBe(true)
+    expect(isTripRole('unknown')).toBe(false)
+  })
+
+  it('normaliza o nome de place.add e mantém os metadados', () => {
+    expect(
+      validateSyncOperation({
+        type: 'place.add',
+        opId,
+        tripId,
+        placeId,
+        name: '  Museu do Amanhã  ',
+      }),
+    ).toEqual({
+      success: true,
+      value: { type: 'place.add', opId, tripId, placeId, name: 'Museu do Amanhã' },
+    })
+  })
+
+  it('recusa identificadores inválidos e nome vazio', () => {
+    expect(validateSyncOperation({ type: 'visit.mark', opId: 'x', tripId, placeId })).toMatchObject({
+      success: false,
+      issues: [{ path: 'opId' }],
+    })
+    expect(
+      validatePushRequest({
+        operations: [{ type: 'place.add', opId, tripId, placeId, name: '  ' }],
+      }),
+    ).toMatchObject({ success: false, issues: [{ path: 'operations[0].name' }] })
+  })
+
+  it('valida envelope e resultados do push, incluindo motivos conhecidos', () => {
+    expect(validatePushRequest({ operations: [{ type: 'visit.mark', opId, tripId, placeId }] }))
+      .toMatchObject({ success: true })
+    expect(
+      validatePushResponse({
+        results: [
+          { opId, status: 'applied' },
+          { opId, status: 'duplicate' },
+          { opId, status: 'rejected', reason: 'not_member' },
+        ],
+      }),
+    ).toMatchObject({ success: true })
+    expect(
+      validatePushResponse({ results: [{ opId, status: 'rejected', reason: 'unknown' }] }),
+    ).toMatchObject({ success: false })
+  })
+})
+
+describe('validação do pull', () => {
+  it('distingue início de bootstrap, continuação e pull incremental', () => {
+    expect(validatePullQuery({ trip: tripId, limit: '25' })).toEqual({
+      success: true,
+      value: { tripId, mode: 'bootstrap', limit: 25 },
+    })
+    expect(
+      validatePullQuery({ trip: tripId, limit: '25', cursor: '20', snapshotSeq: '30' }),
+    ).toEqual({
+      success: true,
+      value: { tripId, mode: 'bootstrap', limit: 25, cursor: '20', snapshotSeq: '30' },
+    })
+    expect(validatePullQuery({ trip: tripId, limit: '25', cursor: '30' })).toEqual({
+      success: true,
+      value: { tripId, mode: 'incremental', limit: 25, cursor: '30' },
+    })
+  })
+
+  it('recusa cursor ou limite inválidos e exige cursor na continuação do bootstrap', () => {
+    expect(validatePullQuery({ trip: tripId, limit: '0' })).toMatchObject({ success: false })
+    expect(validatePullQuery({ trip: tripId, limit: '10', snapshotSeq: '20' })).toMatchObject({
+      success: false,
+      issues: [{ path: 'cursor' }],
+    })
+    expect(validatePullQuery({ trip: tripId, limit: '10', cursor: '-1' })).toMatchObject({
+      success: false,
+      issues: [{ path: 'cursor' }],
+    })
+  })
+
+  it('valida páginas de bootstrap e o erro bootstrap_required', () => {
+    const bootstrap = {
+      mode: 'bootstrap',
+      snapshotSeq: '42',
+      places: [],
+      visits: [],
+      members: [],
+      nextCursor: '42',
+      hasMore: false,
+    }
+    expect(validatePullResponse(bootstrap)).toEqual({ success: true, value: bootstrap })
+    expect(validatePullResponse({ error: 'bootstrap_required' })).toEqual({
+      success: true,
+      value: { error: 'bootstrap_required' },
+    })
+    expect(validatePullResponse({ ...bootstrap, nextCursor: 42 })).toMatchObject({
+      success: false,
+    })
+  })
+})
+
+describe('contratos de convite', () => {
+  it('valida o token recebido e o token enviado', () => {
+    expect(validateCreateInviteParams({ tripId })).toEqual({ success: true, value: { tripId } })
+    expect(validateCreateInviteResponse({ token: 'abc123' })).toEqual({
+      success: true,
+      value: { token: 'abc123' },
+    })
+    expect(validateAcceptInviteRequest({ token: '  abc123  ' })).toEqual({
+      success: true,
+      value: { token: 'abc123' },
+    })
+    expect(validateAcceptInviteRequest({ token: ' ' })).toMatchObject({ success: false })
+  })
+})
+
+describe('canonicalTripState', () => {
+  const place = (id: string, deletedAt: string | null = null): SyncPlace => ({
+    id,
+    tripId,
+    provider: null,
+    providerRef: null,
+    name: 'Lugar',
+    localName: null,
+    address: null,
+    localAddress: null,
+    lat: null,
+    lng: null,
+    suggestedBy: userId,
+    comment: null,
+    dayIndex: null,
+    position: null,
+    seq: '1',
+    deletedAt,
+    createdAt: '2026-10-20T12:00:00.000Z',
+  })
+  const visit = (placeKey: string, userKey: string, deletedAt: string | null = null): SyncVisit => ({
+    placeId: placeKey,
+    tripId,
+    userId: userKey,
+    markedBy: userKey,
+    visitedAt: '2026-10-20T12:00:00.000Z',
+    visitedTz: 'America/Sao_Paulo',
+    seq: '2',
+    deletedAt,
+  })
+  const member = (id: string, deletedAt: string | null = null): SyncMember => ({
+    tripId,
+    userId: id,
+    role: 'member',
+    joinedAt: '2026-10-20T12:00:00.000Z',
+    seq: '3',
+    deletedAt,
+  })
+
+  it('remove tombstones e ordena cada coleção por suas chaves estáveis', () => {
+    const state = canonicalTripState({
+      places: [place(placeId), place('1a000000-0000-4000-8000-000000000000')],
+      visits: [visit(placeId, otherUserId), visit(placeId, userId)],
+      members: [member(otherUserId), member(userId, '2026-10-20T13:00:00.000Z')],
+    })
+    expect(state.places.map(({ id }) => id)).toEqual([
+      '1a000000-0000-4000-8000-000000000000',
+      placeId,
+    ])
+    expect(state.visits.map(({ userId: id }) => id)).toEqual([userId, otherUserId])
+    expect(state.members.map(({ userId: id }) => id)).toEqual([otherUserId])
+  })
+})
