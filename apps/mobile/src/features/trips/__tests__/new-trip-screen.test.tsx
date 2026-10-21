@@ -89,6 +89,8 @@ describe('tela Nova viagem', () => {
     mockRequest.mockResolvedValue(new Response(JSON.stringify({ trip }), { status: 201 }))
     const screen = await renderScreen()
     await fillValidTrip(screen)
+    await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '27/02/2028')
+    await fireEvent.changeText(screen.getByTestId('new-trip-end-date'), '29/02/2028')
     await fireEvent.press(screen.getByTestId('new-trip-submit'))
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'))
@@ -98,8 +100,8 @@ describe('tela Nova viagem', () => {
       body: JSON.stringify({
         name: 'Férias em Recife',
         destination: 'Recife',
-        startDate: '2027-02-10',
-        endDate: '2027-02-14',
+        startDate: '2028-02-27',
+        endDate: '2028-02-29',
         timezone: 'America/Recife',
       }),
     })

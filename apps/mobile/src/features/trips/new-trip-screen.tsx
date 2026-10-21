@@ -42,8 +42,8 @@ function dateInputToIso(value: string): string | null {
   const year = Number(yearText)
   if (year < 1) return null
 
-  const date = new Date(Date.UTC(0, month - 1, day))
-  date.setUTCFullYear(year)
+  const date = new Date(0)
+  date.setUTCFullYear(year, month - 1, day)
   if (
     date.getUTCFullYear() !== year ||
     date.getUTCMonth() !== month - 1 ||
