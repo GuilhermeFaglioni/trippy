@@ -80,6 +80,21 @@ async function inTransaction<T>(client: PoolClient, operation: () => Promise<T>)
   }
 }
 
+async function lockRefreshTokenFamily(
+  client: PoolClient,
+  tokenHash: string,
+): Promise<string | null> {
+  const result = await client.query<{ family_id: string }>(
+    'SELECT family_id FROM refresh_tokens WHERE token_hash = $1',
+    [tokenHash],
+  )
+  const familyId = result.rows[0]?.family_id
+  if (!familyId) return null
+
+  await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [familyId])
+  return familyId
+}
+
 export class PostgresAuthStore implements AuthStore {
   constructor(private readonly pool: Pool) {}
 
@@ -226,13 +241,16 @@ export class PostgresAuthStore implements AuthStore {
     const client = await this.pool.connect()
     try {
       return await inTransaction(client, async () => {
+        const familyId = await lockRefreshTokenFamily(client, tokenHash)
+        if (!familyId) return { status: 'invalid' }
+
         const result = await client.query<RefreshTokenRow>(
           `SELECT id, user_id, family_id, expires_at, used_at, revoked_at
            FROM refresh_tokens WHERE token_hash = $1 FOR UPDATE`,
           [tokenHash],
         )
         const refreshToken = result.rows[0]
-        if (!refreshToken) return { status: 'invalid' }
+        if (!refreshToken || refreshToken.family_id !== familyId) return { status: 'invalid' }
         const decision = evaluateRefreshTokenRotation({
           usedAt: refreshToken.used_at ? new Date(refreshToken.used_at) : null,
           revokedAt: refreshToken.revoked_at ? new Date(refreshToken.revoked_at) : null,
@@ -275,17 +293,13 @@ export class PostgresAuthStore implements AuthStore {
     const client = await this.pool.connect()
     try {
       await inTransaction(client, async () => {
-        const result = await client.query<{ family_id: string }>(
-          'SELECT family_id FROM refresh_tokens WHERE token_hash = $1 FOR UPDATE',
-          [tokenHash],
+        const familyId = await lockRefreshTokenFamily(client, tokenHash)
+        if (!familyId) return
+
+        await client.query(
+          'UPDATE refresh_tokens SET revoked_at = COALESCE(revoked_at, $2) WHERE family_id = $1',
+          [familyId, now],
         )
-        const familyId = result.rows[0]?.family_id
-        if (familyId) {
-          await client.query(
-            'UPDATE refresh_tokens SET revoked_at = COALESCE(revoked_at, $2) WHERE family_id = $1',
-            [familyId, now],
-          )
-        }
       })
     } finally {
       client.release()
