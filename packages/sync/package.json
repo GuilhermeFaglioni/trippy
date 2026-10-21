@@ -1,0 +1,17 @@
+{
+  "name": "@trippy/sync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client/types": "./src/client/types.ts",
+    "./node-sqlite": "./src/client/node-sqlite.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trippy/domain": "workspace:*"
+  }
+}

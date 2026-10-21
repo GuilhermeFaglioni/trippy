@@ -124,6 +124,22 @@ Monorepo com **pnpm workspaces**.
 - **Fuso da viagem:** mudar o fuso do Simulator para Xangai e conferir dias, lembrete noturno e encerramento.
 - **Push:** usar `xcrun simctl push` com payloads de exemplo.
 
+### Sincronização offline com dois Simulators
+
+Pré-requisitos: ambiente Docker local ativo, migrations aplicadas, `.env` com auth local e Mailpit, Xcode com iOS Simulator, e Maestro instalado. O script sobe sua própria API e Metro em portas livres a partir de `4300` e `4400`; não precisa ocupar as portas `3000` e `8081`.
+
+Passe os UDIDs dos dois Simulators:
+
+```sh
+./scripts/sync-dois-simuladores.sh <UDID_A> <UDID_B>
+```
+
+Sem argumentos, o script cria dois iPhone 16 Pro com runtime iOS 18.4. Ele compila um development build, instala o mesmo artefato nos dois alvos, autentica usuários distintos via Mailpit, cria a viagem em A, aceita o convite em B, ativa o modo offline em A, grava lugar e visita, encerra e reabre o app, reconecta e sincroniza B. Ao final, compara o SQLite dos dois apps com o Postgres e sai com código diferente de zero se os estados divergirem.
+
+O script desinstala `app.trippy.mobile` apenas nos dois UDIDs recebidos antes de instalar o build, para começar com armazenamento local limpo. Não reseta o Postgres: cada execução usa e-mail e viagem únicos. Para preservar temporariamente logs e capturas do Maestro durante depuração, use `SYNC_KEEP_TEMP=1`; esses artefatos podem conter códigos OTP e convites gerados, então não os versione nem compartilhe.
+
+O script e os fluxos Maestro usados estão em `.maestro/sync/`; a execução e os limites do spike estão em [`23-sync-offline.md`](spikes/23-sync-offline.md).
+
 ## O que o ambiente local NÃO valida
 
 Estes itens precisam de aparelho real ou da AWS. Eles definem quando fazer o deploy:

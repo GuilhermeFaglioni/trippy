@@ -1,3 +1,5 @@
+import { fetchThroughNetworkGate } from '../sync/network-gate-runtime'
+
 export const DEFAULT_API_BASE_URL = 'http://localhost:3000'
 export const API_HEALTH_TIMEOUT_MS = 5000
 
@@ -22,7 +24,11 @@ export function getApiBaseUrl(): string {
 
 export function checkApiHealth(
   baseUrl: string,
-  { fetcher = fetch, signal, timeoutMs = API_HEALTH_TIMEOUT_MS }: CheckApiHealthOptions = {},
+  {
+    fetcher = fetchThroughNetworkGate,
+    signal,
+    timeoutMs = API_HEALTH_TIMEOUT_MS,
+  }: CheckApiHealthOptions = {},
 ): Promise<HealthCheckResult> {
   const normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, '')
 

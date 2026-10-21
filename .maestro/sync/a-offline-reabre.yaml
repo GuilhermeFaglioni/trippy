@@ -1,0 +1,44 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///diagnostics
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: simulate-offline-toggle
+- tapOn:
+    id: simulate-offline-toggle
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: trip-detail-screen
+- tapOn:
+    id: add-place-name
+- inputText: ${PLACE_NAME}
+- tapOn:
+    id: add-place-button
+- assertVisible:
+    id: place-${PLACE_SLUG}
+- tapOn:
+    id: place-visit-${PLACE_SLUG}
+- assertVisible: Eu fui ✓
+- assertVisible: 2 pendentes
+- stopApp
+- launchApp:
+    clearState: false
+- assertVisible:
+    id: my-trips-screen
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: trip-detail-screen
+- assertVisible:
+    id: place-${PLACE_SLUG}
+- assertVisible: Eu fui ✓
+- assertVisible: 2 pendentes

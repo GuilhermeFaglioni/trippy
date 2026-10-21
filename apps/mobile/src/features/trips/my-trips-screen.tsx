@@ -4,6 +4,8 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Button, Card, Notice, TrippyWordmark } from '../../components'
+import { AcceptInviteForm } from '../invites/accept-invite-form'
+import { useSync } from '../sync/sync-provider'
 import {
   createTypographyTokens,
   normalizeFontPlatform,
@@ -32,11 +34,16 @@ function formatDate(isoDate: string): string {
   return `${match[3]}/${match[2]}/${match[1]}`
 }
 
-function TripCard({ trip }: { trip: TripSummary }) {
+function TripCard({ trip, onPress }: { trip: TripSummary; onPress: () => void }) {
   const theme = useTheme()
 
   return (
-    <Card testID={`trip-card-${trip.id}`}>
+    <Card
+      testID={`trip-card-${trip.id}`}
+      onPress={onPress}
+      accessibilityLabel={`${trip.name}, ${trip.destination}`}
+      accessibilityHint="Abre esta viagem."
+    >
       <View style={{ gap: theme.spacing.space2 }}>
         <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
           {trip.name}
@@ -70,6 +77,7 @@ export function MyTripsScreen() {
   const theme = useTheme()
   const router = useRouter()
   const client = useTripsClient()
+  const { client: syncClient, rememberTripIds } = useSync()
   const [trips, setTrips] = useState<TripSummary[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -79,13 +87,16 @@ export function MyTripsScreen() {
     setError(null)
 
     try {
-      setTrips(await client.listTrips())
+      const loadedTrips = await client.listTrips()
+      rememberTripIds(loadedTrips.map((trip) => trip.id))
+      setTrips(loadedTrips)
+      if (syncClient !== null) void syncClient.syncNow().catch(() => undefined)
     } catch (loadError) {
       setError(getTripsErrorMessage(loadError))
     } finally {
       setIsLoading(false)
     }
-  }, [client])
+  }, [client, rememberTripIds, syncClient])
 
   useFocusEffect(
     useCallback(() => {
@@ -152,11 +163,22 @@ export function MyTripsScreen() {
         ) : (
           <View style={{ gap: theme.spacing.space4 }}>
             {trips?.map((trip) => (
-              <TripCard key={trip.id} trip={trip} />
+              <TripCard
+                key={trip.id}
+                trip={trip}
+                onPress={() =>
+                  router.push({
+                    pathname: '/trips/[id]',
+                    params: { id: trip.id, tripName: trip.name, role: trip.role },
+                  })
+                }
+              />
             ))}
             <Button label="Nova viagem" onPress={openNewTrip} testID="my-trips-new-trip" />
           </View>
         )}
+
+        <AcceptInviteForm />
       </ScrollView>
     </SafeAreaView>
   )
