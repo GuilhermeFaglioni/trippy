@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import { GeoapifyPlacesProvider } from './geoapify.ts'
 
@@ -25,33 +26,23 @@ const location = {
   results: [{ lat: 38.7223, lon: -9.1393, country_code: 'pt' }],
 }
 
-const feature = {
-  geometry: { type: 'Point', coordinates: [-9.1393, 38.7223] },
-  properties: {
-    place_id: 'geoapify-123',
-    name: 'Museu do Teste',
-    local_name: 'Nome local recebido',
-    formatted: 'Praça do Teste, Lisboa',
-    local_address: 'Praça local, Lisboa',
-    country_code: 'pt',
-    datasource: {
-      sourcename: 'test-dataset',
-      attribution: 'Atribuição recebida',
-      license: 'Licença recebida',
-    },
-  },
+function loadFixture(name: string): unknown {
+  return JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8')) as unknown
 }
+
+const geocodingResponse = loadFixture('geoapify-geocoding-json.json')
+const placesResponse = loadFixture('geoapify-places-geojson.json')
 
 function json(body: unknown): Response {
   return new Response(JSON.stringify(body), { status: 200 })
 }
 
 describe('adaptador Geoapify', () => {
-  it('geocodifica destino e usa localização, filtro, idioma e limite na busca principal', async () => {
+  it('interpreta resultados planos format=json e usa localização, filtro, idioma e limite', async () => {
     const requests: URL[] = []
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       requests.push(new URL(input.toString()))
-      return requests.length === 1 ? json(location) : json({ results: [feature] })
+      return requests.length === 1 ? json(location) : json(geocodingResponse)
     })
     const provider = new GeoapifyPlacesProvider('chave-teste', { fetcher: fetcher as typeof fetch })
 
@@ -76,9 +67,10 @@ describe('adaptador Geoapify', () => {
     expect(requests[1]!.searchParams.get('lang')).toBe('pt')
     expect(requests[1]!.searchParams.get('bias')).toBe('proximity:-9.1393,38.7223')
     expect(requests[1]!.searchParams.get('filter')).toBe('countrycode:pt')
+    expect(requests[1]!.searchParams.get('format')).toBe('json')
     expect(candidates[0]).toMatchObject({
       provider: 'geoapify',
-      providerRef: 'geoapify-123',
+      providerRef: 'geoapify-geocoding-contract-1',
       name: 'Museu do Teste',
       localName: 'Nome local recebido',
       address: 'Praça do Teste, Lisboa',
@@ -86,19 +78,19 @@ describe('adaptador Geoapify', () => {
       lat: 38.7223,
       lng: -9.1393,
       countryCode: 'pt',
-      datasource: 'test-dataset',
-      attribution: 'Atribuição recebida',
-      license: 'Licença recebida',
+      datasource: 'openstreetmap',
+      attribution: '© OpenStreetMap contributors',
+      license: 'Open Database License',
       method: 'geocoding',
     })
     expect(JSON.stringify(candidates)).not.toContain('chave-teste')
   })
 
-  it('usa Places somente na segunda tentativa, limita ao destino e não mescla tentativas', async () => {
+  it('preserva o GeoJSON do Places somente na segunda tentativa e não mescla tentativas', async () => {
     const requests: URL[] = []
     const fetcher = vi.fn(async (input: string | URL | Request) => {
       requests.push(new URL(input.toString()))
-      return requests.length === 1 ? json(location) : json({ features: [feature] })
+      return requests.length === 1 ? json(location) : json(placesResponse)
     })
     const provider = new GeoapifyPlacesProvider('chave-teste', { fetcher: fetcher as typeof fetch })
 
@@ -116,7 +108,50 @@ describe('adaptador Geoapify', () => {
     expect(requests[1]!.searchParams.get('filter')).toBe('circle:-9.1393,38.7223,50000')
     expect(requests[1]!.searchParams.get('categories')?.split(',')).toEqual(placesCategories)
     expect(candidates).toHaveLength(1)
+    expect(candidates[0]).toMatchObject({
+      providerRef: 'geoapify-places-contract-1',
+      name: 'Museu do Teste',
+      lat: 38.7223,
+      lng: -9.1393,
+      datasource: 'openstreetmap',
+      attribution: '© OpenStreetMap contributors',
+      license: 'Open Database License',
+    })
     expect(candidates[0]!.method).toBe('places')
+  })
+
+  it('descarta resultados incompletos sem descartar endereço opcional ausente', async () => {
+    const requests: URL[] = []
+    const result = (geocodingResponse as { results: Array<Record<string, unknown>> }).results[0]!
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      requests.push(new URL(input.toString()))
+      if (requests.length === 1) return json(location)
+      return json({
+        results: [
+          result,
+          { ...result, place_id: '' },
+          { ...result, name: ' ' },
+          { ...result, lat: 91 },
+          { ...result, datasource: { attribution: '© OpenStreetMap contributors' } },
+          { ...result, formatted: null, local_address: null, local_name: null },
+        ],
+      })
+    })
+    const provider = new GeoapifyPlacesProvider('chave-teste', { fetcher: fetcher as typeof fetch })
+
+    const candidates = await provider.search({
+      query: 'Museu do Teste',
+      destination: 'Lisboa',
+      attempt: 'primary',
+    })
+
+    expect(candidates).toHaveLength(2)
+    expect(candidates[1]).toMatchObject({
+      providerRef: 'geoapify-geocoding-contract-1',
+      address: null,
+      localAddress: null,
+      localName: null,
+    })
   })
 
   it('permite configurar o raio espacial da busca Places', async () => {

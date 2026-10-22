@@ -178,14 +178,19 @@ function mapCandidate(value: unknown, method: 'geocoding' | 'places'):
   | PlaceSearchCandidateFields
   | null {
   const feature = asRecord(value)
-  const properties = asRecord(feature?.properties)
+  // Geocoding `format=json` returns flat records in results[]. Places returns
+  // GeoJSON features whose candidate fields live under properties.
+  const properties = method === 'geocoding' ? feature : asRecord(feature?.properties)
   const datasource = asRecord(properties?.datasource)
-  if (!properties || !datasource) return null
+  const datasourceName = readString(datasource?.sourcename) ?? readString(datasource?.name)
+  if (!properties || !datasource || !datasourceName) return null
 
   const geometry = asRecord(feature?.geometry)
   const coordinates = asArray(geometry?.coordinates)
-  const lat = readNumber(properties.lat) ?? readNumber(coordinates[1])
-  const lng = readNumber(properties.lon) ?? readNumber(coordinates[0])
+  const lat =
+    readNumber(properties.lat) ?? (method === 'places' ? readNumber(coordinates[1]) : null)
+  const lng =
+    readNumber(properties.lon) ?? (method === 'places' ? readNumber(coordinates[0]) : null)
   const providerRef = readString(properties.place_id)
   const name = readString(properties.name)
   if (!providerRef || !name || lat === null || lng === null || !validCoordinates(lat, lng)) {
@@ -203,7 +208,7 @@ function mapCandidate(value: unknown, method: 'geocoding' | 'places'):
     lat,
     lng,
     countryCode,
-    datasource: readString(datasource.sourcename) ?? readString(datasource.name) ?? '',
+    datasource: datasourceName,
     attribution: readString(datasource.attribution) ?? '',
     license: readString(datasource.license) ?? readString(datasource.license_name) ?? '',
     method,
