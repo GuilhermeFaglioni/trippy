@@ -89,7 +89,8 @@ export class GeoapifyPlacesProvider implements PlacesProvider {
     }
 
     const body = await this.requestJson(url, method, onProviderCall)
-    const records = method === 'geocoding' ? asArray(asRecord(body)?.results) : asArray(asRecord(body)?.features)
+    const records =
+      method === 'geocoding' ? asArray(asRecord(body)?.results) : asArray(asRecord(body)?.features)
     return records
       .map((feature) => mapCandidate(feature, method))
       .filter((candidate): candidate is PlaceSearchCandidateFields => candidate !== null)
@@ -107,7 +108,8 @@ export class GeoapifyPlacesProvider implements PlacesProvider {
     const lookup = this.fetchDestination(destinationText, lang, onProviderCall)
     this.destinations.set(destinationText, lookup)
     void lookup.catch(() => {
-      if (this.destinations.get(destinationText) === lookup) this.destinations.delete(destinationText)
+      if (this.destinations.get(destinationText) === lookup)
+        this.destinations.delete(destinationText)
     })
     return lookup
   }
@@ -174,9 +176,10 @@ export class GeoapifyPlacesProvider implements PlacesProvider {
   }
 }
 
-function mapCandidate(value: unknown, method: 'geocoding' | 'places'):
-  | PlaceSearchCandidateFields
-  | null {
+function mapCandidate(
+  value: unknown,
+  method: 'geocoding' | 'places',
+): PlaceSearchCandidateFields | null {
   const feature = asRecord(value)
   // Geocoding `format=json` returns flat records in results[]. Places returns
   // GeoJSON features whose candidate fields live under properties.
