@@ -25,6 +25,7 @@ Data: 21/10/2026 · Escopo: subtarefa 2, implementação mobile. · Branch: `Gui
 
 - Tela acessível de fotos da viagem, aberta pelo cartão da viagem. Mostra fila local, estado de envio, ação de retry e aviso quando a API não responde. Fotos iniciam como `Sem lugar`; associação de lugar e álbum completo ficam fora do spike.
 - Fila durável em SQLite, particionada por `user_id`, com UUID estável por foto. A implementação retoma o envio ao abrir a tela, voltar ao app e recuperar conexão. Drenagens concorrentes da mesma viagem são serializadas.
+- A sessão observa eventos do Expo Network por uma assinatura nativa única durante a vida do módulo; sair da sessão remove apenas o consumidor JS. A drenagem não faz uma segunda consulta assíncrona de rede que possa vetar o evento recebido. Logs `[photo-sync]` registram eventos de conectividade e fases da drenagem sem IDs, URLs ou erros brutos.
 - Original copiado para armazenamento privado antes de qualquer transformação. EXIF do original é normalizado antes da conversão; JPEG de envio limita a maior dimensão a 2048 px, sem ampliar imagens menores.
 - `takenTz` só vem de offset explícito no EXIF. Data sem offset não ganha fuso inferido; GPS ausente ou inválido vira `null`.
 - Cliente usa os endpoints publicados: reserva com UUID local, PUT direto na URL assinada, confirmação idempotente e listagem. Falha entre PUT e confirmação retoma pela confirmação com o mesmo UUID; URL expirada é renovada sem trocar o UUID.
@@ -54,6 +55,7 @@ Os cinco arquivos foram adicionados com `xcrun simctl addmedia` ao Simulator `Ma
 
 ## Pendente
 
+- A causa da ausência de drenagem na reconexão relatada na validação anterior não foi determinada. A assinatura nativa única e a remoção da segunda leitura são correções preventivas de riscos observados no código, não prova da causa; a revalidação no Simulator macOS continua necessária.
 - O estado `Enviada` após reabertura aparece nos cinco rótulos acessíveis capturados. O fluxo Maestro falhou apenas na asserção por texto isolado `Enviada`, que buscava um elemento separado; não foi repetido.
 - O teste automatizado cobre reconexão com PUT ativo, UUID local preservado e no máximo um PUT simultâneo. Ainda não há ensaio manual de queda de rede durante o PUT nem de encerramento forçado com itens pendentes seguido de reabertura e envio.
 - Upload enquanto o app está suspenso/em segundo plano não foi testado no Simulator e não é uma garantia deste spike.
@@ -71,17 +73,35 @@ Os cinco arquivos foram adicionados com `xcrun simctl addmedia` ao Simulator `Ma
 
 O workspace estava limpo antes da atualização deste relatório, no HEAD `a2c3d4c`; o `.env` e `pnpm-lock.yaml` não foram alterados. Não há execução de Simulator neste fechamento.
 
+### Correção F1/F2 — implementação local sobre `3795690`
+
+- `corepack pnpm lint`, `corepack pnpm format:check` e `git diff --check`: passaram.
+- `corepack pnpm typecheck`: passou nos 11 workspaces. Como o script chama `pnpm` internamente e esse binário não estava no `PATH`, usei um wrapper temporário fora do repo que delegou ao Corepack 12.6.0.
+- `corepack pnpm test`: 24 arquivos e 206 testes Vitest, mais 37 suítes e 144 testes Jest, passaram com o mesmo wrapper temporário.
+- Integração não executada: o ambiente tem Docker, mas `docker compose` não está instalado (`docker: unknown command`) e `pg_isready` não está disponível; não confirmei uma instância de Postgres local. Simulator/iPhone não executado neste Linux; a revalidação real da reconexão e os cenários do roteiro seguem pendentes no macOS.
+
 ## Roteiro manual pendente — Simulator iOS
 
-Use a viagem de teste, uma única foto e o mesmo usuário. Antes de cada cenário, confirme que a foto não está na lista remota. Registre o modelo/versão do Simulator, os estados observados e se apareceu exatamente uma foto no backend.
+O ensaio tem duas ferramentas independentes: um proxy reverso controlável para segurar/derrubar o PUT para MinIO e um controle que gere eventos de conectividade observáveis pelo Simulator. Não trate Wi-Fi desligado no Mac como falha do PUT: o app acessa `localhost`, que continua alcançável. O Wi-Fi do Mac pode ser usado apenas como estímulo de conectividade se os logs do app confirmarem os eventos.
 
-### Queda de rede durante o PUT
+Antes de cada cenário, use a mesma viagem e o mesmo usuário, confirme que a foto de teste ainda não está na lista remota e registre o UUID local. Configure o endpoint assinado para atravessar o proxy (por exemplo, a API assina `http://localhost:59001` e o proxy encaminha ao MinIO em `localhost:59000`). O proxy deve preservar o `Host` e o caminho usados na assinatura; não reescreva a URL depois que a API a assinar. Habilite uma regra que segure um PUT e permita encerrá-lo com reset/erro sob comando. Os logs do proxy devem omitir query string, assinatura, headers de autorização e corpo da requisição; registre só sequência, método, estado (segurado, liberado, resetado), horário e concorrência máxima.
 
-1. Abra a viagem e a tela **Fotos da viagem** com o Simulator online.
-2. Selecione uma foto e aguarde o início do envio (estado de envio visível). Aplique perda total de rede no Simulator/Network Link Conditioner enquanto o PUT da URL assinada está em andamento.
-3. Aguarde a falha do PUT; restaure a rede sem fechar o app.
-4. Aguarde o evento de reconexão e confirme que a foto volta a `Enviada` sem tocar em retry.
-5. Atualize a lista e confirme no backend que há uma única foto para esse envio, sem duplicata.
+Abra os logs do app pelo Console do Xcode filtrando `[photo-sync]`. Eles registram somente origem e fases da drenagem e os booleanos de conectividade, sem ID de usuário, viagem, foto, URL ou erro bruto. Para cada transição, salve a sequência de linhas `network event`, `drain requested`, `drain started` e `drain completed`/`drain failed`, com horário.
+
+### PUT interrompido com reconexão antes da falha (corrida F1)
+
+1. Com a conexão ativa, abra **Fotos da viagem**, selecione uma foto e aguarde o proxy registrar e segurar o primeiro PUT.
+2. Gere no Simulator uma transição para desconectado e depois conectado sem fechar o app. Confirme nos logs `[photo-sync]` o evento `connected=false` seguido de `connected=true` e `drain requested source=network`. Se o controle escolhido não produzir os eventos no app, registre o ensaio como inconclusivo; não suponha que mudar o Wi-Fi do Mac basta.
+3. Só depois do pedido de drenagem causado pela reconexão, ordene ao proxy que resete o primeiro PUT, para que o PUT antigo rejeite depois da nova drenagem já ter sido pedida.
+4. Confirme no proxy que apareceu um segundo PUT após o reset, que os PUTs nunca se sobrepuseram e que a reserva/complete usou o mesmo UUID local. Aguarde a fila chegar a `Enviada` sem tocar em retry.
+5. Consulte o backend e MinIO: deve existir exatamente um registro e um par original/miniatura correspondente. Atualize ou reabra a tela apenas para confirmar a apresentação; isso não conta como acionamento do retry.
+
+### Falha comum de PUT e recuperação
+
+1. Repita a preparação e segure o PUT. Mantenha a conectividade do app inalterada e mande o proxy resetar a conexão.
+2. Confirme no proxy que o PUT falhou e observe o estado pendente/erro na fila local.
+3. Gere uma transição de conectividade no Simulator, confirme o evento `connected=true` e `drain requested source=network`, sem usar retry manual.
+4. Confirme um novo PUT com o mesmo UUID, uma única foto no backend e concorrência máxima de um PUT.
 
 ### Encerramento com item pendente e reabertura
 
@@ -90,4 +110,4 @@ Use a viagem de teste, uma única foto e o mesmo usuário. Antes de cada cenári
 3. Restaure a rede, reabra o app, entre na mesma viagem e abra **Fotos da viagem**.
 4. Aguarde a retomada automática e confirme `Enviada` e uma única foto correspondente no backend.
 
-Esses dois cenários seguem pendentes até execução e registro pelo usuário no Simulator. O plano da revisão 2 está publicado em [comentário da issue #22](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6329869402).
+Esses cenários seguem pendentes até execução e registro no Simulator. Grave os logs do app sanitizados e o relatório do proxy junto com a evidência do backend. O plano desta correção está publicado em [comentário da issue #22](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6341010017); o plano da revisão 2 está no [comentário anterior](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6329869402).

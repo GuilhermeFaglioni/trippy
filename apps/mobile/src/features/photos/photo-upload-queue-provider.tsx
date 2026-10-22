@@ -8,10 +8,10 @@ import {
   type PropsWithChildren,
 } from 'react'
 import { AppState } from 'react-native'
-import * as Network from 'expo-network'
 
 import { createPhotosClient } from './photo-client'
 import { createPhotoSyncCoordinator, type PhotoSyncCoordinator } from './photo-sync-coordinator'
+import { photoNetworkEventSource } from './photo-network-events'
 import { useSession } from '../auth/session-provider'
 
 type PhotoUploadQueueValue = {
@@ -60,48 +60,52 @@ export function PhotoUploadQueueProvider({ children, userId }: PhotoUploadQueueP
     [getCoordinator],
   )
 
-  const drainPendingTrips = useCallback(async () => {
-    try {
-      if (!sessionActive.current) return
-      const network = await Network.getNetworkStateAsync()
-      if (
-        !sessionActive.current ||
-        network.isConnected === false ||
-        network.isInternetReachable === false
-      ) {
-        return
+  const drainPendingTrips = useCallback(
+    async (source: 'startup' | 'foreground' | 'network') => {
+      console.info(`[photo-sync] drain requested source=${source}`)
+      try {
+        if (!sessionActive.current) {
+          console.info(`[photo-sync] drain skipped source=${source} reason=session-inactive`)
+          return
+        }
+        const coordinator = await getCoordinator()
+        if (!sessionActive.current) {
+          coordinator.deactivate()
+          console.info(`[photo-sync] drain skipped source=${source} reason=session-inactive`)
+          return
+        }
+        console.info(`[photo-sync] drain started source=${source}`)
+        await coordinator.drainPendingTrips()
+        console.info(`[photo-sync] drain completed source=${source}`)
+      } catch {
+        // Avoid logging errors that may include signed URLs; the durable queue remains available.
+        console.info(`[photo-sync] drain failed source=${source}`)
       }
-      const coordinator = await getCoordinator()
-      if (!sessionActive.current) {
-        coordinator.deactivate()
-        return
-      }
-      await coordinator.drainPendingTrips()
-    } catch {
-      // The durable queue remains available; app resume or the next network event retries it.
-    }
-  }, [getCoordinator])
+    },
+    [getCoordinator],
+  )
 
   useEffect(() => {
     sessionActive.current = true
     const appStateSubscription = AppState.addEventListener('change', (state) => {
-      if (sessionActive.current && state === 'active') void drainPendingTrips()
+      if (sessionActive.current && state === 'active') void drainPendingTrips('foreground')
     })
-    const networkSubscription = Network.addNetworkStateListener((state) => {
-      if (
-        sessionActive.current &&
-        state.isConnected !== false &&
-        state.isInternetReachable !== false
-      ) {
-        void drainPendingTrips()
-      }
-    })
+    const unsubscribeFromNetwork = photoNetworkEventSource.subscribeToReconnect(
+      () => {
+        if (sessionActive.current) void drainPendingTrips('network')
+      },
+      (state) => {
+        console.info(
+          `[photo-sync] network event connected=${state.isConnected ?? 'unknown'} internetReachable=${state.isInternetReachable ?? 'unknown'}`,
+        )
+      },
+    )
 
-    void drainPendingTrips()
+    void drainPendingTrips('startup')
     return () => {
       sessionActive.current = false
       appStateSubscription.remove()
-      networkSubscription.remove()
+      unsubscribeFromNetwork()
       const pendingCoordinator = coordinatorPromise.current
       if (pendingCoordinator !== null) {
         void pendingCoordinator.then(
