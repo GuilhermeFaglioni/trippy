@@ -533,6 +533,17 @@ class LocalSyncClient implements SyncClient {
           const result = results.get(opId)!
           if (result.status === 'applied' || result.status === 'duplicate') {
             await transaction.run('DELETE FROM outbox WHERE op_id = ?', [opId])
+            if (result.status === 'applied') {
+              const entry = batch.find(({ row }) => row.op_id === opId)
+              if (entry?.operation.type === 'itinerary.arrange') {
+                const nextVersion = entry.operation.baseVersion + 1
+                await transaction.run(
+                  `UPDATE sync_state SET itinerary_version = ?
+                   WHERE trip_id = ? AND (itinerary_version IS NULL OR itinerary_version < ?)`,
+                  [nextVersion, tripId, nextVersion],
+                )
+              }
+            }
             if (result.status === 'duplicate') needsBootstrap = true
           } else if (result.status === 'conflict') {
             const entry = batch.find(({ row }) => row.op_id === opId)

@@ -1,0 +1,45 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///diagnostics
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: simulate-offline-toggle
+- tapOn:
+    id: simulate-offline-toggle
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: trip-tab-roteiro
+- scrollUntilVisible:
+    element:
+      id: conflito-roteiro-rascunho-${PLACE_3_SLUG}
+    direction: DOWN
+- assertVisible:
+    id: conflito-roteiro
+- assertVisible:
+    id: conflito-roteiro-rascunho-${PLACE_3_SLUG}
+- scrollUntilVisible:
+    element:
+      id: conflito-roteiro-atual-${PLACE_2_SLUG}
+    direction: DOWN
+- assertVisible:
+    id: conflito-roteiro-atual-${PLACE_2_SLUG}
+- assertVisible: Seu rascunho
+- assertVisible: Roteiro atual
+- scrollUntilVisible:
+    element:
+      text: Aplicar meu rascunho de novo
+    direction: DOWN
+- tapOn: Aplicar meu rascunho de novo
+- assertNotVisible:
+    id: conflito-roteiro
+- assertVisible:
+    id: roteiro-lugar-${PLACE_3_SLUG}

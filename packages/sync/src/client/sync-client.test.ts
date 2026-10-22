@@ -518,6 +518,40 @@ class FakeSyncTransport {
   }
 }
 
+class PausedPullSyncTransport extends FakeSyncTransport {
+  private pullPause:
+    | {
+        started: () => void
+        startedPromise: Promise<void>
+        releasedPromise: Promise<void>
+        release: () => void
+      }
+    | undefined
+
+  pauseNextPull(): { started: Promise<void>; release: () => void } {
+    let started!: () => void
+    let release!: () => void
+    const startedPromise = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    const releasedPromise = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    this.pullPause = { started, startedPromise, releasedPromise, release }
+    return { started: startedPromise, release }
+  }
+
+  override async pull(query: PullQuery): Promise<PullResponse> {
+    const pause = this.pullPause
+    if (pause) {
+      this.pullPause = undefined
+      pause.started()
+      await pause.releasedPromise
+    }
+    return super.pull(query)
+  }
+}
+
 describe('SyncClient', () => {
   it('preserva rascunho de conflito após reabrir e mostra o roteiro do servidor', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
@@ -645,6 +679,45 @@ describe('SyncClient', () => {
       { id: placeB, dayIndex: null, position: null },
       { id: placeC, dayIndex: null, position: null },
     ])
+  })
+
+  it('usa versão do arrange aplicado quando outro toque chega antes do pull', async () => {
+    const database = createDatabase()
+    const transport = new PausedPullSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace({ ...createPlace(placeA, 'Praça', userA, '2'), dayIndex: 0, position: 0 })
+    transport.seedPlace({ ...createPlace(placeB, 'Museu', userA, '3'), dayIndex: 0, position: 1 })
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    await client.arrangeItinerary(tripId, [{ dayIndex: 0, placeIds: [placeB, placeA] }])
+    const pause = transport.pauseNextPull()
+    const firstSync = client.syncNow()
+    await pause.started
+
+    expect(transport.itineraryVersion).toBe(1)
+    expect(
+      await database.get<{ count: number } & Record<string, unknown>>(
+        'SELECT COUNT(*) AS count FROM outbox WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ count: 0 })
+    await client.arrangeItinerary(tripId, [{ dayIndex: 0, placeIds: [placeA, placeB] }])
+    const pending = await database.get<{ payload: string } & Record<string, unknown>>(
+      `SELECT payload FROM outbox WHERE trip_id = ? AND type = 'itinerary.arrange'`,
+      [tripId],
+    )
+    expect(JSON.parse(pending!.payload)).toMatchObject({ baseVersion: 1 })
+
+    pause.release()
+    await firstSync
+    await client.syncNow()
+
+    expect(await client.listItineraryDrafts(tripId)).toEqual([])
+    expect(transport.itineraryVersion).toBe(2)
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
   })
 
   it('projeta papel e remoção de membro e reaplica as pendências após pull', async () => {

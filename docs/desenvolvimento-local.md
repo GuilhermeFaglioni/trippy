@@ -140,6 +140,18 @@ O script desinstala `app.trippy.mobile` apenas nos dois UDIDs recebidos antes de
 
 O script e os fluxos Maestro usados estão em `.maestro/sync/`; a execução e os limites do spike estão em [`23-sync-offline.md`](spikes/23-sync-offline.md).
 
+### Conflito de roteiro com dois Simulators
+
+Use os mesmos pré-requisitos da sincronização offline: Docker já ativo, migrations aplicadas, `.env` com auth local e Mailpit, Xcode e Maestro. O script sobe API e Metro em portas livres a partir de `4300` e `4400`, e usa o banco indicado por `DATABASE_URL` no `.env`.
+
+```sh
+./scripts/roteiro-dois-simuladores.sh <UDID_A> <UDID_B>
+```
+
+Sem UDIDs, o script cria dois iPhone 16 Pro com runtime iOS 18.4. O fluxo autentica A e B pelo Mailpit, cria a viagem e lugares pelo app, promove B pelo Grupo, simula falta de internet nos dois aparelhos, provoca o conflito de ordem, exibe e reaplica o rascunho, e remove B enquanto ele tem uma escrita local pendente. No fim, compara a projeção do SQLite A com Postgres e verifica no SQLite B a viagem limpa, a remoção persistida e a operação `not_sent`; confere também versão, ordem e ausência do lugar recusado no Postgres.
+
+O script usa e-mails e nomes únicos por execução, não reseta o banco nem aplica migrations, e desinstala `app.trippy.mobile` somente nos dois UDIDs recebidos antes de instalar o development build. Para preservar temporariamente logs e capturas Maestro durante depuração, use `ROTEIRO_KEEP_TEMP=1`; os artefatos podem conter códigos de login e convites. Os fluxos ficam em `.maestro/roteiro/`; a evidência e os limites estão em [`24-conflito-roteiro.md`](spikes/24-conflito-roteiro.md).
+
 ## O que o ambiente local NÃO valida
 
 Estes itens precisam de aparelho real ou da AWS. Eles definem quando fazer o deploy:

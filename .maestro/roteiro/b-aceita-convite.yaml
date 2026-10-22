@@ -1,0 +1,32 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    clearKeychain: true
+- assertVisible:
+    id: login-email-input
+- tapOn:
+    id: login-email-input
+- inputText: ${B_EMAIL}
+- tapOn:
+    id: login-email-submit
+- assertVisible:
+    id: login-code-input
+- runScript:
+    file: ../scripts/codigo-mailpit.js
+    env:
+      EMAIL: ${B_EMAIL}
+- tapOn:
+    id: login-code-input
+- inputText: ${output.codigo}
+- pressKey: enter
+- assertVisible:
+    id: my-trips-screen
+- tapOn:
+    id: accept-invite-code
+- inputText: ${INVITE_CODE}
+- hideKeyboard
+- tapOn:
+    id: accept-invite-button
+- assertVisible:
+    id: trip-detail-screen
+- assertVisible: ${TRIP_NAME}

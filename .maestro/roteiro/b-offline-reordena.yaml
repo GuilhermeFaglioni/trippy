@@ -1,0 +1,45 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: trip-tab-grupo
+- scrollUntilVisible:
+    element:
+      id: grupo-membro-${B_USER_ID}-papel
+    direction: DOWN
+- assertVisible: Coorganizador
+- openLink: trippy:///diagnostics
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: simulate-offline-toggle
+- tapOn:
+    id: simulate-offline-toggle
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: trip-detail-screen
+- tapOn:
+    id: trip-tab-roteiro
+- scrollUntilVisible:
+    element:
+      id: roteiro-lugar-${PLACE_3_SLUG}-subir
+    direction: DOWN
+- assertVisible:
+    id: roteiro-lugar-${PLACE_3_SLUG}-subir
+- tapOn:
+    id: roteiro-lugar-${PLACE_3_SLUG}-subir
+- tapOn:
+    id: roteiro-lugar-${PLACE_3_SLUG}-subir
+- assertVisible:
+    id: roteiro-lugar-${PLACE_3_SLUG}

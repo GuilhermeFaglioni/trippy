@@ -1,0 +1,31 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///diagnostics
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: simulate-offline-toggle
+- tapOn:
+    id: simulate-offline-toggle
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: trip-tab-lugares
+- tapOn:
+    id: add-place-name
+- inputText: ${PLACE_PENDENTE}
+- hideKeyboard
+- tapOn:
+    id: add-place-button
+- scrollUntilVisible:
+    element:
+      id: trip-sync-status
+    direction: DOWN
+- assertVisible: 1 pendentes
