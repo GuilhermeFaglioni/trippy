@@ -218,7 +218,10 @@ export function AddPlaceScreen({ tripId, tripName }: AddPlaceScreenProps) {
               <Card key={`${candidate.providerRef}-${index}`} testID={`place-candidate-${index}`}>
                 <View style={{ gap: theme.spacing.space3 }}>
                   <View style={{ gap: theme.spacing.space1 }}>
-                    <TypographyText family="sans" style={[typography.titleS, { color: theme.colors.ink }]}>
+                    <TypographyText
+                      family="sans"
+                      style={[typography.titleS, { color: theme.colors.ink }]}
+                    >
                       {candidate.name}
                     </TypographyText>
                     {candidate.localName && candidate.localName !== candidate.name ? (

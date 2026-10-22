@@ -16,16 +16,8 @@
         "en": "Forbidden City",
         "local": "故宫博物院"
       },
-      "acceptedNames": [
-        "故宫博物院",
-        "Palace Museum",
-        "Forbidden City"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "景山前街"
-      ],
+      "acceptedNames": ["故宫博物院", "Palace Museum", "Forbidden City"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "景山前街"],
       "referenceCoordinate": {
         "lat": 39.91583333,
         "lon": 116.39083333,
@@ -65,15 +57,8 @@
         "en": "Mutianyu Great Wall",
         "local": "慕田峪长城"
       },
-      "acceptedNames": [
-        "慕田峪长城",
-        "Mutianyu Great Wall"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "怀柔区",
-        "慕田峪村"
-      ],
+      "acceptedNames": ["慕田峪长城", "Mutianyu Great Wall"],
+      "expectedLocalAddressTokens": ["北京市", "怀柔区", "慕田峪村"],
       "referenceCoordinate": {
         "lat": 40.43801667,
         "lon": 116.5619,
@@ -114,15 +99,8 @@
         "en": "Badaling Great Wall",
         "local": "八达岭长城"
       },
-      "acceptedNames": [
-        "八达岭长城",
-        "Badaling Great Wall"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "延庆区",
-        "八达岭"
-      ],
+      "acceptedNames": ["八达岭长城", "Badaling Great Wall"],
+      "expectedLocalAddressTokens": ["北京市", "延庆区", "八达岭"],
       "referenceCoordinate": {
         "lat": 40.35428,
         "lon": 116.00649,
@@ -163,16 +141,8 @@
         "en": "Temple of Heaven",
         "local": "天坛公园"
       },
-      "acceptedNames": [
-        "天坛公园",
-        "天坛",
-        "Temple of Heaven"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "天坛东路"
-      ],
+      "acceptedNames": ["天坛公园", "天坛", "Temple of Heaven"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "天坛东路"],
       "referenceCoordinate": {
         "lat": 39.8822,
         "lon": 116.4066,
@@ -212,15 +182,8 @@
         "en": "Summer Palace",
         "local": "颐和园"
       },
-      "acceptedNames": [
-        "颐和园",
-        "Summer Palace"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "海淀区",
-        "新建宫门路"
-      ],
+      "acceptedNames": ["颐和园", "Summer Palace"],
+      "expectedLocalAddressTokens": ["北京市", "海淀区", "新建宫门路"],
       "referenceCoordinate": {
         "lat": 39.9975,
         "lon": 116.2689,
@@ -260,15 +223,8 @@
         "en": "Tiananmen Square",
         "local": "天安门广场"
       },
-      "acceptedNames": [
-        "天安门广场",
-        "Tiananmen Square"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "长安街"
-      ],
+      "acceptedNames": ["天安门广场", "Tiananmen Square"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "长安街"],
       "referenceCoordinate": {
         "lat": 39.904567,
         "lon": 116.391392,
@@ -309,16 +265,8 @@
         "en": "Beijing Confucius Temple",
         "local": "北京孔庙"
       },
-      "acceptedNames": [
-        "北京孔庙",
-        "北京孔庙和国子监",
-        "Beijing Confucius Temple"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "国子监街"
-      ],
+      "acceptedNames": ["北京孔庙", "北京孔庙和国子监", "Beijing Confucius Temple"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "国子监街"],
       "referenceCoordinate": {
         "lat": 39.9499,
         "lon": 116.4076,
@@ -358,15 +306,8 @@
         "en": "Beijing Drum Tower",
         "local": "北京鼓楼"
       },
-      "acceptedNames": [
-        "北京鼓楼",
-        "Beijing Drum Tower"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "鼓楼东大街"
-      ],
+      "acceptedNames": ["北京鼓楼", "Beijing Drum Tower"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "鼓楼东大街"],
       "referenceCoordinate": {
         "lat": 39.93935,
         "lon": 116.38975,
@@ -407,17 +348,8 @@
         "en": "The Peninsula Beijing",
         "local": "北京王府半岛酒店"
       },
-      "acceptedNames": [
-        "北京王府半岛酒店",
-        "The Peninsula Beijing",
-        "Peninsula Palace Beijing"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "金鱼胡同",
-        "8"
-      ],
+      "acceptedNames": ["北京王府半岛酒店", "The Peninsula Beijing", "Peninsula Palace Beijing"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "金鱼胡同", "8"],
       "referenceCoordinate": {
         "lat": 39.9135567,
         "lon": 116.4101712,
@@ -456,16 +388,8 @@
         "en": "Beijing Hotel",
         "local": "北京饭店"
       },
-      "acceptedNames": [
-        "北京饭店",
-        "Beijing Hotel"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "东长安街",
-        "33"
-      ],
+      "acceptedNames": ["北京饭店", "Beijing Hotel"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "东长安街", "33"],
       "referenceCoordinate": {
         "lat": 39.907745,
         "lon": 116.403987,
@@ -504,16 +428,8 @@
         "en": "The Opposite House",
         "local": "瑜舍"
       },
-      "acceptedNames": [
-        "瑜舍",
-        "The Opposite House"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "朝阳区",
-        "三里屯路",
-        "11"
-      ],
+      "acceptedNames": ["瑜舍", "The Opposite House"],
+      "expectedLocalAddressTokens": ["北京市", "朝阳区", "三里屯路", "11"],
       "referenceCoordinate": {
         "lat": 39.9372,
         "lon": 116.447,
@@ -553,16 +469,8 @@
         "en": "China World Summit Wing",
         "local": "北京国贸大酒店"
       },
-      "acceptedNames": [
-        "北京国贸大酒店",
-        "China World Summit Wing"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "朝阳区",
-        "建国门外大街",
-        "1"
-      ],
+      "acceptedNames": ["北京国贸大酒店", "China World Summit Wing"],
+      "expectedLocalAddressTokens": ["北京市", "朝阳区", "建国门外大街", "1"],
       "referenceCoordinate": {
         "lat": 39.9083,
         "lon": 116.461,
@@ -597,17 +505,8 @@
         "en": "Li Qun Roast Duck",
         "local": "利群烤鸭店"
       },
-      "acceptedNames": [
-        "利群烤鸭店",
-        "Liqun Roast Duck",
-        "Li Qun"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "东城区",
-        "北翔凤胡同",
-        "11"
-      ],
+      "acceptedNames": ["利群烤鸭店", "Liqun Roast Duck", "Li Qun"],
+      "expectedLocalAddressTokens": ["北京市", "东城区", "北翔凤胡同", "11"],
       "referenceCoordinate": {
         "lat": 39.8969,
         "lon": 116.4031,
@@ -647,16 +546,8 @@
         "en": "Taishuxi Home-cooking, Huixin Branch",
         "local": "太熟悉家常菜惠新店"
       },
-      "acceptedNames": [
-        "太熟悉家常菜",
-        "Taishuxi Home-cooking"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "朝阳区",
-        "惠新东街",
-        "19"
-      ],
+      "acceptedNames": ["太熟悉家常菜", "Taishuxi Home-cooking"],
+      "expectedLocalAddressTokens": ["北京市", "朝阳区", "惠新东街", "19"],
       "referenceCoordinate": {
         "lat": 39.987,
         "lon": 116.423,
@@ -692,16 +583,8 @@
         "en": "Xin Rong Ji, Xinyuan Nanlu Branch",
         "local": "新荣记新源南路店"
       },
-      "acceptedNames": [
-        "新荣记",
-        "Xin Rong Ji"
-      ],
-      "expectedLocalAddressTokens": [
-        "北京市",
-        "朝阳区",
-        "新源南路",
-        "8"
-      ],
+      "acceptedNames": ["新荣记", "Xin Rong Ji"],
+      "expectedLocalAddressTokens": ["北京市", "朝阳区", "新源南路", "8"],
       "referenceCoordinate": {
         "lat": 39.955,
         "lon": 116.438,
@@ -737,16 +620,8 @@
         "en": "The Bund",
         "local": "外滩"
       },
-      "acceptedNames": [
-        "外滩",
-        "The Bund",
-        "Waitan"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "黄浦区",
-        "中山东一路"
-      ],
+      "acceptedNames": ["外滩", "The Bund", "Waitan"],
+      "expectedLocalAddressTokens": ["上海市", "黄浦区", "中山东一路"],
       "referenceCoordinate": {
         "lat": 31.2407,
         "lon": 121.4906,
@@ -787,17 +662,8 @@
         "en": "Yuyuan Garden",
         "local": "豫园"
       },
-      "acceptedNames": [
-        "豫园",
-        "Yuyuan Garden",
-        "Yu Garden"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "黄浦区",
-        "安仁街",
-        "218"
-      ],
+      "acceptedNames": ["豫园", "Yuyuan Garden", "Yu Garden"],
+      "expectedLocalAddressTokens": ["上海市", "黄浦区", "安仁街", "218"],
       "referenceCoordinate": {
         "lat": 31.227,
         "lon": 121.492,
@@ -835,17 +701,8 @@
         "en": "Oriental Pearl Tower",
         "local": "东方明珠广播电视塔"
       },
-      "acceptedNames": [
-        "东方明珠广播电视塔",
-        "东方明珠",
-        "Oriental Pearl Tower"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "浦东新区",
-        "世纪大道",
-        "1"
-      ],
+      "acceptedNames": ["东方明珠广播电视塔", "东方明珠", "Oriental Pearl Tower"],
+      "expectedLocalAddressTokens": ["上海市", "浦东新区", "世纪大道", "1"],
       "referenceCoordinate": {
         "lat": 31.24166944,
         "lon": 121.49471667,
@@ -885,16 +742,8 @@
         "en": "Shanghai Tower",
         "local": "上海中心大厦"
       },
-      "acceptedNames": [
-        "上海中心大厦",
-        "Shanghai Tower"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "浦东新区",
-        "银城中路",
-        "501"
-      ],
+      "acceptedNames": ["上海中心大厦", "Shanghai Tower"],
+      "expectedLocalAddressTokens": ["上海市", "浦东新区", "银城中路", "501"],
       "referenceCoordinate": {
         "lat": 31.2355,
         "lon": 121.501,
@@ -935,16 +784,8 @@
         "en": "Nanjing Road",
         "local": "南京路步行街"
       },
-      "acceptedNames": [
-        "南京路步行街",
-        "南京路",
-        "Nanjing Road"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "黄浦区",
-        "南京东路"
-      ],
+      "acceptedNames": ["南京路步行街", "南京路", "Nanjing Road"],
+      "expectedLocalAddressTokens": ["上海市", "黄浦区", "南京东路"],
       "referenceCoordinate": {
         "lat": 31.23472222,
         "lon": 121.47444444,
@@ -985,16 +826,8 @@
         "en": "Zhujiajiao Ancient Town",
         "local": "朱家角古镇"
       },
-      "acceptedNames": [
-        "朱家角古镇",
-        "Zhujiajiao Ancient Town"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "青浦区",
-        "新溪路",
-        "180"
-      ],
+      "acceptedNames": ["朱家角古镇", "Zhujiajiao Ancient Town"],
+      "expectedLocalAddressTokens": ["上海市", "青浦区", "新溪路", "180"],
       "referenceCoordinate": {
         "lat": 31.11164,
         "lon": 121.05176,
@@ -1034,16 +867,8 @@
         "en": "Shanghai Ocean Aquarium",
         "local": "上海海洋水族馆"
       },
-      "acceptedNames": [
-        "上海海洋水族馆",
-        "Shanghai Ocean Aquarium"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "浦东新区",
-        "陆家嘴环路",
-        "1388"
-      ],
+      "acceptedNames": ["上海海洋水族馆", "Shanghai Ocean Aquarium"],
+      "expectedLocalAddressTokens": ["上海市", "浦东新区", "陆家嘴环路", "1388"],
       "referenceCoordinate": {
         "lat": 31.24255,
         "lon": 121.49717,
@@ -1083,16 +908,8 @@
         "en": "Shanghai Museum East",
         "local": "上海博物馆东馆"
       },
-      "acceptedNames": [
-        "上海博物馆东馆",
-        "Shanghai Museum East"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "浦东新区",
-        "世纪大道",
-        "1952"
-      ],
+      "acceptedNames": ["上海博物馆东馆", "Shanghai Museum East"],
+      "expectedLocalAddressTokens": ["上海市", "浦东新区", "世纪大道", "1952"],
       "referenceCoordinate": {
         "lat": 31.222107,
         "lon": 121.534338,
@@ -1132,17 +949,8 @@
         "en": "Peace Hotel",
         "local": "和平饭店"
       },
-      "acceptedNames": [
-        "和平饭店",
-        "Peace Hotel",
-        "Fairmont Peace Hotel"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "黄浦区",
-        "南京东路",
-        "20"
-      ],
+      "acceptedNames": ["和平饭店", "Peace Hotel", "Fairmont Peace Hotel"],
+      "expectedLocalAddressTokens": ["上海市", "黄浦区", "南京东路", "20"],
       "referenceCoordinate": {
         "lat": 31.2411,
         "lon": 121.4851,
@@ -1181,16 +989,8 @@
         "en": "Grand Hyatt Shanghai",
         "local": "上海金茂君悦大酒店"
       },
-      "acceptedNames": [
-        "上海金茂君悦大酒店",
-        "Grand Hyatt Shanghai"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "浦东新区",
-        "世纪大道",
-        "88"
-      ],
+      "acceptedNames": ["上海金茂君悦大酒店", "Grand Hyatt Shanghai"],
+      "expectedLocalAddressTokens": ["上海市", "浦东新区", "世纪大道", "88"],
       "referenceCoordinate": {
         "lat": 31.23722222,
         "lon": 121.50138889,
@@ -1229,16 +1029,8 @@
         "en": "The Peninsula Shanghai",
         "local": "上海半岛酒店"
       },
-      "acceptedNames": [
-        "上海半岛酒店",
-        "The Peninsula Shanghai"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "黄浦区",
-        "中山东一路",
-        "32"
-      ],
+      "acceptedNames": ["上海半岛酒店", "The Peninsula Shanghai"],
+      "expectedLocalAddressTokens": ["上海市", "黄浦区", "中山东一路", "32"],
       "referenceCoordinate": {
         "lat": 31.2434,
         "lon": 121.4847,
@@ -1277,16 +1069,8 @@
         "en": "Kerry Hotel Pudong Shanghai",
         "local": "上海浦东嘉里大酒店"
       },
-      "acceptedNames": [
-        "上海浦东嘉里大酒店",
-        "Kerry Hotel Pudong"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "浦东新区",
-        "花木路",
-        "1388"
-      ],
+      "acceptedNames": ["上海浦东嘉里大酒店", "Kerry Hotel Pudong"],
+      "expectedLocalAddressTokens": ["上海市", "浦东新区", "花木路", "1388"],
       "referenceCoordinate": {
         "lat": 31.215,
         "lon": 121.563,
@@ -1321,17 +1105,8 @@
         "en": "Jia Jia Tang Bao, Huanghe Road Branch",
         "local": "佳家汤包黄河路店"
       },
-      "acceptedNames": [
-        "佳家汤包",
-        "Jia Jia Tang Bao",
-        "Jiajia Steamed Dumpling"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "黄浦区",
-        "黄河路",
-        "127"
-      ],
+      "acceptedNames": ["佳家汤包", "Jia Jia Tang Bao", "Jiajia Steamed Dumpling"],
+      "expectedLocalAddressTokens": ["上海市", "黄浦区", "黄河路", "127"],
       "referenceCoordinate": {
         "lat": 31.2339,
         "lon": 121.4724,
@@ -1367,16 +1142,8 @@
         "en": "Nanmen Hotpot, Expo Avenue Branch",
         "local": "南门涮肉世博大道店"
       },
-      "acceptedNames": [
-        "南门涮肉",
-        "Nanmen Hotpot"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "浦东新区",
-        "世博大道",
-        "450"
-      ],
+      "acceptedNames": ["南门涮肉", "Nanmen Hotpot"],
+      "expectedLocalAddressTokens": ["上海市", "浦东新区", "世博大道", "450"],
       "referenceCoordinate": {
         "lat": 31.199,
         "lon": 121.5,
@@ -1412,16 +1179,8 @@
         "en": "Changxinglou Restaurant, Nanxiang",
         "local": "南翔长兴楼"
       },
-      "acceptedNames": [
-        "长兴楼",
-        "Changxinglou Restaurant"
-      ],
-      "expectedLocalAddressTokens": [
-        "上海市",
-        "嘉定区",
-        "解放街",
-        "206"
-      ],
+      "acceptedNames": ["长兴楼", "Changxinglou Restaurant"],
+      "expectedLocalAddressTokens": ["上海市", "嘉定区", "解放街", "206"],
       "referenceCoordinate": {
         "lat": 31.296,
         "lon": 121.312,
@@ -1457,16 +1216,8 @@
         "en": "Sagrada Família",
         "local": "Basílica de la Sagrada Família"
       },
-      "acceptedNames": [
-        "Basílica de la Sagrada Família",
-        "Sagrada Família",
-        "Sagrada Familia"
-      ],
-      "expectedLocalAddressTokens": [
-        "Carrer de Mallorca",
-        "401",
-        "Barcelona"
-      ],
+      "acceptedNames": ["Basílica de la Sagrada Família", "Sagrada Família", "Sagrada Familia"],
+      "expectedLocalAddressTokens": ["Carrer de Mallorca", "401", "Barcelona"],
       "referenceCoordinate": {
         "lat": 41.40369,
         "lon": 2.17433,
@@ -1505,15 +1256,8 @@
         "en": "Machu Picchu",
         "local": "Machu Pikchu"
       },
-      "acceptedNames": [
-        "Machu Picchu",
-        "Huayna Picchu"
-      ],
-      "expectedLocalAddressTokens": [
-        "Cusco",
-        "Urubamba",
-        "Machu Picchu"
-      ],
+      "acceptedNames": ["Machu Picchu", "Huayna Picchu"],
+      "expectedLocalAddressTokens": ["Cusco", "Urubamba", "Machu Picchu"],
       "referenceCoordinate": {
         "lat": -13.16333333,
         "lon": -72.54555556,
@@ -1552,15 +1296,8 @@
         "en": "Acropolis of Athens",
         "local": "Ακρόπολη Αθηνών"
       },
-      "acceptedNames": [
-        "Ακρόπολη Αθηνών",
-        "Acropolis of Athens",
-        "Acrópole"
-      ],
-      "expectedLocalAddressTokens": [
-        "Αθήνα",
-        "Αττική"
-      ],
+      "acceptedNames": ["Ακρόπολη Αθηνών", "Acropolis of Athens", "Acrópole"],
+      "expectedLocalAddressTokens": ["Αθήνα", "Αττική"],
       "referenceCoordinate": {
         "lat": 37.97166667,
         "lon": 23.72611111,
@@ -1600,14 +1337,8 @@
         "en": "Golden Gate Bridge",
         "local": "Golden Gate Bridge"
       },
-      "acceptedNames": [
-        "Golden Gate Bridge",
-        "Ponte Golden Gate"
-      ],
-      "expectedLocalAddressTokens": [
-        "San Francisco",
-        "California"
-      ],
+      "acceptedNames": ["Golden Gate Bridge", "Ponte Golden Gate"],
+      "expectedLocalAddressTokens": ["San Francisco", "California"],
       "referenceCoordinate": {
         "lat": 37.81972222,
         "lon": -122.47861111,
@@ -1647,16 +1378,8 @@
         "en": "Shibuya Crossing",
         "local": "渋谷スクランブル交差点"
       },
-      "acceptedNames": [
-        "渋谷スクランブル交差点",
-        "Shibuya Scramble Crossing",
-        "Shibuya Crossing"
-      ],
-      "expectedLocalAddressTokens": [
-        "東京都",
-        "渋谷区",
-        "道玄坂"
-      ],
+      "acceptedNames": ["渋谷スクランブル交差点", "Shibuya Scramble Crossing", "Shibuya Crossing"],
+      "expectedLocalAddressTokens": ["東京都", "渋谷区", "道玄坂"],
       "referenceCoordinate": {
         "lat": 35.65950278,
         "lon": 139.70054444,
@@ -1696,14 +1419,8 @@
         "en": "Sydney Opera House",
         "local": "Sydney Opera House"
       },
-      "acceptedNames": [
-        "Sydney Opera House",
-        "Ópera de Sydney"
-      ],
-      "expectedLocalAddressTokens": [
-        "Bennelong Point",
-        "Sydney"
-      ],
+      "acceptedNames": ["Sydney Opera House", "Ópera de Sydney"],
+      "expectedLocalAddressTokens": ["Bennelong Point", "Sydney"],
       "referenceCoordinate": {
         "lat": -33.857058,
         "lon": 151.214897,
@@ -1743,14 +1460,8 @@
         "en": "L’As du Fallafel",
         "local": "L’As du Fallafel"
       },
-      "acceptedNames": [
-        "L’As du Fallafel",
-        "L’As du Fallafel Paris"
-      ],
-      "expectedLocalAddressTokens": [
-        "34 rue des Rosiers",
-        "75004 Paris"
-      ],
+      "acceptedNames": ["L’As du Fallafel", "L’As du Fallafel Paris"],
+      "expectedLocalAddressTokens": ["34 rue des Rosiers", "75004 Paris"],
       "referenceCoordinate": {
         "lat": 48.857425,
         "lon": 2.359072,
@@ -1789,14 +1500,8 @@
         "en": "Katz’s Delicatessen",
         "local": "Katz’s Delicatessen"
       },
-      "acceptedNames": [
-        "Katz’s Delicatessen",
-        "Katz’s"
-      ],
-      "expectedLocalAddressTokens": [
-        "205 East Houston Street",
-        "New York"
-      ],
+      "acceptedNames": ["Katz’s Delicatessen", "Katz’s"],
+      "expectedLocalAddressTokens": ["205 East Houston Street", "New York"],
       "referenceCoordinate": {
         "lat": 40.7223,
         "lon": -73.9874,
@@ -1835,14 +1540,8 @@
         "en": "Pizzeria Bianco",
         "local": "Pizzeria Bianco"
       },
-      "acceptedNames": [
-        "Pizzeria Bianco",
-        "Pizzeria Bianco Downtown"
-      ],
-      "expectedLocalAddressTokens": [
-        "623 East Adams Street",
-        "Phoenix"
-      ],
+      "acceptedNames": ["Pizzeria Bianco", "Pizzeria Bianco Downtown"],
+      "expectedLocalAddressTokens": ["623 East Adams Street", "Phoenix"],
       "referenceCoordinate": {
         "lat": 33.44921,
         "lon": -112.06564,
@@ -1882,13 +1581,8 @@
         "en": "Café de Flore",
         "local": "Café de Flore"
       },
-      "acceptedNames": [
-        "Café de Flore"
-      ],
-      "expectedLocalAddressTokens": [
-        "172 boulevard Saint-Germain",
-        "75006 Paris"
-      ],
+      "acceptedNames": ["Café de Flore"],
+      "expectedLocalAddressTokens": ["172 boulevard Saint-Germain", "75006 Paris"],
       "referenceCoordinate": {
         "lat": 48.854152,
         "lon": 2.332634,
@@ -1931,15 +1625,8 @@
         "en": "Din Tai Fung, Xinyi Branch",
         "local": "鼎泰豐信義店"
       },
-      "acceptedNames": [
-        "鼎泰豐信義店",
-        "Din Tai Fung Xinyi Branch"
-      ],
-      "expectedLocalAddressTokens": [
-        "台北市",
-        "信義路二段",
-        "194"
-      ],
+      "acceptedNames": ["鼎泰豐信義店", "Din Tai Fung Xinyi Branch"],
+      "expectedLocalAddressTokens": ["台北市", "信義路二段", "194"],
       "referenceCoordinate": {
         "lat": 25.0339,
         "lon": 121.5303,
@@ -1975,14 +1662,8 @@
         "en": "Shake Shack, Madison Square Park",
         "local": "Shake Shack, Madison Square Park"
       },
-      "acceptedNames": [
-        "Shake Shack",
-        "Madison Square Park Shack"
-      ],
-      "expectedLocalAddressTokens": [
-        "23rd Street and Madison Avenue",
-        "New York"
-      ],
+      "acceptedNames": ["Shake Shack", "Madison Square Park Shack"],
+      "expectedLocalAddressTokens": ["23rd Street and Madison Avenue", "New York"],
       "referenceCoordinate": {
         "lat": 40.741,
         "lon": -73.988,
@@ -2018,16 +1699,8 @@
         "en": "Ippudo, Shinjuku Branch",
         "local": "一風堂 新宿店"
       },
-      "acceptedNames": [
-        "一風堂",
-        "Ippudo"
-      ],
-      "expectedLocalAddressTokens": [
-        "東京都",
-        "渋谷区",
-        "千駄ヶ谷",
-        "5"
-      ],
+      "acceptedNames": ["一風堂", "Ippudo"],
+      "expectedLocalAddressTokens": ["東京都", "渋谷区", "千駄ヶ谷", "5"],
       "referenceCoordinate": {
         "lat": 35.6915,
         "lon": 139.703,
@@ -2063,14 +1736,8 @@
         "en": "Dishoom Covent Garden",
         "local": "Dishoom Covent Garden"
       },
-      "acceptedNames": [
-        "Dishoom Covent Garden",
-        "Dishoom"
-      ],
-      "expectedLocalAddressTokens": [
-        "12 Upper St Martin’s Lane",
-        "London"
-      ],
+      "acceptedNames": ["Dishoom Covent Garden", "Dishoom"],
+      "expectedLocalAddressTokens": ["12 Upper St Martin’s Lane", "London"],
       "referenceCoordinate": {
         "lat": 51.513,
         "lon": -0.124,
@@ -2106,14 +1773,8 @@
         "en": "The Savoy",
         "local": "The Savoy"
       },
-      "acceptedNames": [
-        "The Savoy",
-        "Savoy Hotel"
-      ],
-      "expectedLocalAddressTokens": [
-        "The Strand",
-        "WC2R 0EZ"
-      ],
+      "acceptedNames": ["The Savoy", "Savoy Hotel"],
+      "expectedLocalAddressTokens": ["The Strand", "WC2R 0EZ"],
       "referenceCoordinate": {
         "lat": 51.5097,
         "lon": -0.1201,
@@ -2152,14 +1813,8 @@
         "en": "Raffles Hotel Singapore",
         "local": "Raffles Hotel Singapore"
       },
-      "acceptedNames": [
-        "Raffles Hotel",
-        "Raffles Singapore"
-      ],
-      "expectedLocalAddressTokens": [
-        "1 Beach Road",
-        "Singapore"
-      ],
+      "acceptedNames": ["Raffles Hotel", "Raffles Singapore"],
+      "expectedLocalAddressTokens": ["1 Beach Road", "Singapore"],
       "referenceCoordinate": {
         "lat": 1.294889,
         "lon": 103.854483,
@@ -2198,16 +1853,8 @@
         "en": "The Peninsula Tokyo",
         "local": "ザ・ペニンシュラ東京"
       },
-      "acceptedNames": [
-        "ザ・ペニンシュラ東京",
-        "The Peninsula Tokyo"
-      ],
-      "expectedLocalAddressTokens": [
-        "東京都",
-        "千代田区",
-        "有楽町",
-        "1-8-1"
-      ],
+      "acceptedNames": ["ザ・ペニンシュラ東京", "The Peninsula Tokyo"],
+      "expectedLocalAddressTokens": ["東京都", "千代田区", "有楽町", "1-8-1"],
       "referenceCoordinate": {
         "lat": 35.674761,
         "lon": 139.76047,
@@ -2246,13 +1893,8 @@
         "en": "Hotel Emma",
         "local": "Hotel Emma"
       },
-      "acceptedNames": [
-        "Hotel Emma"
-      ],
-      "expectedLocalAddressTokens": [
-        "136 East Grayson Street",
-        "San Antonio"
-      ],
+      "acceptedNames": ["Hotel Emma"],
+      "expectedLocalAddressTokens": ["136 East Grayson Street", "San Antonio"],
       "referenceCoordinate": {
         "lat": 29.44277778,
         "lon": -98.48111111,
@@ -2291,14 +1933,8 @@
         "en": "Marina Bay Sands",
         "local": "Marina Bay Sands"
       },
-      "acceptedNames": [
-        "Marina Bay Sands",
-        "MBS"
-      ],
-      "expectedLocalAddressTokens": [
-        "10 Bayfront Avenue",
-        "Singapore"
-      ],
+      "acceptedNames": ["Marina Bay Sands", "MBS"],
+      "expectedLocalAddressTokens": ["10 Bayfront Avenue", "Singapore"],
       "referenceCoordinate": {
         "lat": 1.282,
         "lon": 103.858,
@@ -2337,14 +1973,8 @@
         "en": "Fairmont Banff Springs",
         "local": "Fairmont Banff Springs"
       },
-      "acceptedNames": [
-        "Fairmont Banff Springs",
-        "Banff Springs Hotel"
-      ],
-      "expectedLocalAddressTokens": [
-        "405 Spray Avenue",
-        "Banff"
-      ],
+      "acceptedNames": ["Fairmont Banff Springs", "Banff Springs Hotel"],
+      "expectedLocalAddressTokens": ["405 Spray Avenue", "Banff"],
       "referenceCoordinate": {
         "lat": 51.167,
         "lon": -115.5615,
@@ -2384,11 +2014,7 @@
         "local": "120 Broadway, New York"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "120 Broadway",
-        "New York",
-        "NY"
-      ],
+      "expectedLocalAddressTokens": ["120 Broadway", "New York", "NY"],
       "referenceCoordinate": {
         "lat": 40.7081,
         "lon": -74.0112,
@@ -2429,10 +2055,7 @@
         "local": "100 Queen Street, Auckland"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "100 Queen Street",
-        "Auckland"
-      ],
+      "expectedLocalAddressTokens": ["100 Queen Street", "Auckland"],
       "referenceCoordinate": {
         "lat": -36.8488,
         "lon": 174.7633,
@@ -2469,12 +2092,7 @@
         "local": "東京都港区芝公園4-1-1"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "東京都",
-        "港区",
-        "芝公園",
-        "4-1-1"
-      ],
+      "expectedLocalAddressTokens": ["東京都", "港区", "芝公園", "4-1-1"],
       "referenceCoordinate": {
         "lat": 35.6586,
         "lon": 139.7454,
@@ -2511,10 +2129,7 @@
         "local": "15 rue de la Paix, Paris"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "15 rue de la Paix",
-        "75002 Paris"
-      ],
+      "expectedLocalAddressTokens": ["15 rue de la Paix", "75002 Paris"],
       "referenceCoordinate": {
         "lat": 48.8681,
         "lon": 2.3316,
@@ -2551,11 +2166,7 @@
         "local": "Avenida Paulista, 1578, São Paulo"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "Avenida Paulista",
-        "1578",
-        "São Paulo"
-      ],
+      "expectedLocalAddressTokens": ["Avenida Paulista", "1578", "São Paulo"],
       "referenceCoordinate": {
         "lat": -23.563,
         "lon": -46.6542,
@@ -2592,10 +2203,7 @@
         "local": "100 King Street West, Toronto"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "100 King Street West",
-        "Toronto"
-      ],
+      "expectedLocalAddressTokens": ["100 King Street West", "Toronto"],
       "referenceCoordinate": {
         "lat": 43.6487,
         "lon": -79.3824,
@@ -2632,11 +2240,7 @@
         "local": "9 Calle de Atocha, Madrid"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "Calle de Atocha",
-        "9",
-        "Madrid"
-      ],
+      "expectedLocalAddressTokens": ["Calle de Atocha", "9", "Madrid"],
       "referenceCoordinate": {
         "lat": 40.4156,
         "lon": -3.7016,
@@ -2673,11 +2277,7 @@
         "local": "3 Via del Corso, Roma"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "Via del Corso",
-        "3",
-        "Roma"
-      ],
+      "expectedLocalAddressTokens": ["Via del Corso", "3", "Roma"],
       "referenceCoordinate": {
         "lat": 41.9006,
         "lon": 12.4835,
@@ -2714,11 +2314,7 @@
         "local": "25 King Street, Sydney"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "25 King Street",
-        "Sydney",
-        "NSW"
-      ],
+      "expectedLocalAddressTokens": ["25 King Street", "Sydney", "NSW"],
       "referenceCoordinate": {
         "lat": -33.8664,
         "lon": 151.2072,
@@ -2755,12 +2351,7 @@
         "local": "香港尖沙咀北京道12号"
       },
       "acceptedNames": [],
-      "expectedLocalAddressTokens": [
-        "香港",
-        "尖沙咀",
-        "北京道",
-        "12"
-      ],
+      "expectedLocalAddressTokens": ["香港", "尖沙咀", "北京道", "12"],
       "referenceCoordinate": {
         "lat": 22.2983,
         "lon": 114.1723,

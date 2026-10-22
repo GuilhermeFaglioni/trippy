@@ -38,7 +38,8 @@ describe('adaptador Google Places', () => {
       const url = new URL(input.toString())
       requests.push({ url, ...(init ? { init } : {}) })
       if (url.pathname.endsWith(':searchText')) return json(searchResult)
-      if (url.pathname.endsWith('/media')) return json({ photoUri: 'https://foto.google.test/temp' })
+      if (url.pathname.endsWith('/media'))
+        return json({ photoUri: 'https://foto.google.test/temp' })
       return json(detailsResult)
     })
     const provider = new GooglePlacesProvider('chave-secreta', {
@@ -64,8 +65,14 @@ describe('adaptador Google Places', () => {
       pageSize: 5,
       locationRestriction: {
         rectangle: {
-          low: expect.objectContaining({ latitude: expect.any(Number), longitude: expect.any(Number) }),
-          high: expect.objectContaining({ latitude: expect.any(Number), longitude: expect.any(Number) }),
+          low: expect.objectContaining({
+            latitude: expect.any(Number),
+            longitude: expect.any(Number),
+          }),
+          high: expect.objectContaining({
+            latitude: expect.any(Number),
+            longitude: expect.any(Number),
+          }),
         },
       },
     })
@@ -210,12 +217,9 @@ describe('adaptador Google Places', () => {
     const calls: unknown[] = []
 
     await expect(
-      provider.getDetails(
-        { name: 'Nome Geoapify', lat: 39.9163, lng: 116.3972 },
-        async (call) => {
-          calls.push(call)
-        },
-      ),
+      provider.getDetails({ name: 'Nome Geoapify', lat: 39.9163, lng: 116.3972 }, async (call) => {
+        calls.push(call)
+      }),
     ).rejects.toMatchObject({ kind: 'provider_timeout' })
 
     expect(fetcher).toHaveBeenCalledTimes(1)

@@ -22,8 +22,7 @@ export interface RecordPlacesProviderCallInput {
 }
 
 export type ConsumePlacesUsageResult =
-  | { allowed: true }
-  | { allowed: false; exceeded: 'user' | 'trip' }
+  { allowed: true } | { allowed: false; exceeded: 'user' | 'trip' }
 
 export interface PlacesUsageStore {
   consume(input: ConsumePlacesUsageInput): Promise<ConsumePlacesUsageResult>

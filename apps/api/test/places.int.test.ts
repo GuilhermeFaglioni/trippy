@@ -6,15 +6,9 @@ import {
   PostgresPlacesUsageStore,
   type PlacesUsageStore,
 } from '@trippy/adapters/places/usage-store'
-import type {
-  GooglePlacesProvider,
-  PlacesProvider,
-} from '@trippy/adapters/places/provider'
+import type { GooglePlacesProvider, PlacesProvider } from '@trippy/adapters/places/provider'
 import { PlacesProviderError } from '@trippy/adapters/places/provider'
-import type {
-  GoogleDetailsResponse,
-  PlaceSearchCandidateFields,
-} from '@trippy/domain/places'
+import type { GoogleDetailsResponse, PlaceSearchCandidateFields } from '@trippy/domain/places'
 import { migrate } from '../../../packages/db/src/migrate.ts'
 import { createApp } from '../src/app.ts'
 import { createPlacesRouter } from '../src/places/router.ts'
@@ -160,18 +154,20 @@ async function addPlace(
   return placeId
 }
 
-function createTestApp(options: {
-  geoapifyApiKey?: string
-  googlePlacesApiKey?: string
-  placesProvider?: PlacesProvider
-  googleProvider?: GooglePlacesProvider
-  searchUserLimit?: number
-  searchTripLimit?: number
-  detailsUserLimit?: number
-  detailsTripLimit?: number
-  now?: Date
-  usageStore?: PlacesUsageStore
-} = {}) {
+function createTestApp(
+  options: {
+    geoapifyApiKey?: string
+    googlePlacesApiKey?: string
+    placesProvider?: PlacesProvider
+    googleProvider?: GooglePlacesProvider
+    searchUserLimit?: number
+    searchTripLimit?: number
+    detailsUserLimit?: number
+    detailsTripLimit?: number
+    now?: Date
+    usageStore?: PlacesUsageStore
+  } = {},
+) {
   const router = createPlacesRouter(
     {
       databaseUrl: testDatabaseUrl.toString(),
@@ -206,7 +202,12 @@ function providerWithCalls(
 ): PlacesProvider {
   return {
     search: vi.fn(async (_input, onProviderCall) => {
-      await onProviderCall?.({ provider: 'geoapify', sku: 'geocoding', status: '200', latencyMs: 5 })
+      await onProviderCall?.({
+        provider: 'geoapify',
+        sku: 'geocoding',
+        status: '200',
+        latencyMs: 5,
+      })
       return candidates
     }),
   }
@@ -218,8 +219,18 @@ function googleProviderWithCalls(
   return {
     async getDetails(input, onProviderCall) {
       onDetails?.(input.name, input.lat, input.lng)
-      await onProviderCall?.({ provider: 'google', sku: 'text_search_ids_only', status: '200', latencyMs: 5 })
-      await onProviderCall?.({ provider: 'google', sku: 'place_details_pro', status: '200', latencyMs: 6 })
+      await onProviderCall?.({
+        provider: 'google',
+        sku: 'text_search_ids_only',
+        status: '200',
+        latencyMs: 5,
+      })
+      await onProviderCall?.({
+        provider: 'google',
+        sku: 'place_details_pro',
+        status: '200',
+        latencyMs: 6,
+      })
       return googleDetails
     },
   }
@@ -288,7 +299,9 @@ it('busca a tentativa pedida, assina cada candidato e registra chamadas Geoapify
     app,
     `/trips/${tripId}/places/search?q=Museu&attempt=secondary&lang=pt`,
   )
-  const result = (await response.json()) as { candidates: Array<PlaceSearchCandidateFields & { token: string }> }
+  const result = (await response.json()) as {
+    candidates: Array<PlaceSearchCandidateFields & { token: string }>
+  }
 
   expect(response.status).toBe(200)
   expect(result.candidates).toHaveLength(1)
@@ -316,14 +329,12 @@ it('respeita idioma do Accept-Language e deixa o provider aplicar o padrão sem 
   }
   const app = createTestApp({ geoapifyApiKey: 'geo-key', placesProvider: provider })
 
-  const regional = await app.request(
-    `/trips/${tripId}/places/search?q=Museu&attempt=primary`,
-    { headers: { authorization: 'Bearer organizer-token', 'accept-language': 'pt-BR,pt;q=0.9' } },
-  )
-  const noLanguage = await app.request(
-    `/trips/${tripId}/places/search?q=Museu&attempt=primary`,
-    { headers: { authorization: 'Bearer organizer-token', 'accept-language': '*' } },
-  )
+  const regional = await app.request(`/trips/${tripId}/places/search?q=Museu&attempt=primary`, {
+    headers: { authorization: 'Bearer organizer-token', 'accept-language': 'pt-BR,pt;q=0.9' },
+  })
+  const noLanguage = await app.request(`/trips/${tripId}/places/search?q=Museu&attempt=primary`, {
+    headers: { authorization: 'Bearer organizer-token', 'accept-language': '*' },
+  })
 
   expect(regional.status).toBe(200)
   expect(noLanguage.status).toBe(200)
@@ -397,7 +408,12 @@ it('carrega coordenadas e nome do banco, responde no-store e deduplica toque con
       received.push({ name: input.name, lat: input.lat, lng: input.lng })
       started()
       await gate
-      await onProviderCall?.({ provider: 'google', sku: 'text_search_ids_only', status: '200', latencyMs: 4 })
+      await onProviderCall?.({
+        provider: 'google',
+        sku: 'text_search_ids_only',
+        status: '200',
+        latencyMs: 4,
+      })
       return googleDetails
     },
   }

@@ -10,14 +10,14 @@ As fixtures em `packages/adapters/src/places/fixtures/` são **sintéticas e der
 
 ## Verificações locais
 
-- `corepack pnpm exec vitest run --project unit packages/adapters/src/places/geoapify.test.ts packages/places-spike/src/sample-25.test.ts` — 2 arquivos e 10 testes passaram.
-- `corepack pnpm test` — 27 arquivos Vitest e 229 testes passaram; o script raiz parou ao tentar chamar `pnpm` diretamente para os testes mobile, pois esse executável não está no `PATH`.
-- `corepack pnpm --filter @trippy/mobile test` — 32 suítes e 144 testes Jest passaram quando chamado via Corepack.
-- `corepack pnpm lint` — passou.
-- `corepack pnpm -r --parallel typecheck` — passou nos 10 workspaces. O script raiz `corepack pnpm typecheck` não funciona neste ambiente porque tenta executar `pnpm` diretamente; a operação recursiva equivalente passou.
-- `corepack pnpm format:check` — falhou em 14 arquivos. `packages/adapters/src/places/geoapify.ts` já falhava no HEAD anterior à T2b; os outros arquivos listados também estão fora do formato exigido. Nenhum arquivo alheio ao escopo foi formatado nesta subtarefa.
+- `corepack pnpm exec vitest run --project unit` — 27 arquivos e 229 testes passaram nesta correção.
+- `corepack pnpm --filter @trippy/mobile test` — 32 suítes e 144 testes Jest passaram nesta correção.
+- `corepack pnpm lint` — passou nesta correção.
+- `corepack pnpm -r --parallel typecheck` — passou nos 10 workspaces nesta correção.
+- `corepack pnpm format:check` — a checagem inicial falhou nos 13 arquivos da entrega cumulativa da #25 listados no histórico da issue. Todos pertencem ao diff da branch contra `origin/develop`; foram formatados nesta correção e a repetição passou globalmente. `packages/adapters/src/places/geoapify.ts` já estava formatado desde a T2b.
 - `git diff --check` — passou.
-- Integração de banco não executada: Docker e `pg_isready` não estão disponíveis neste ambiente.
+- `git apply --check docs/handoff/patch-2026-10-22-env-preparo-25.patch` — passou contra o handoff na branch `docs/handoff-semana-1`.
+- Integração de banco não executada: o CLI `docker` está disponível, mas não há o plugin `docker compose`; `pg_isready` também não está disponível, e esta worktree não tem `.env` nem banco configurado.
 
 Ambiente: Node `v24.22.1`, Corepack/pnpm `12.6.0`.
 
@@ -28,3 +28,19 @@ Ambiente: Node `v24.22.1`, Corepack/pnpm `12.6.0`.
 ## T5 — pendente
 
 Não foram feitas chamadas de medição a Geoapify ou Google. Continuam pendentes a avaliação top-1/top-5 por caso e segmento, o recorte de atrações essenciais da China, presença do candidato separada da escolha humana, ganho da segunda tentativa Places, endereço local do candidato escolhido e correspondência com Google. Também faltam chamadas/SKUs por toque, latência, erros e créditos reais conferidos nos painéis de faturamento. Portanto, T5 e a validação final do spike continuam abertos.
+
+## Preparação segura do ambiente desta branch
+
+Cada worktree da #25 precisa de um `.env` local, ignorado pelo Git, e de um banco próprio. Para criar uma worktree, copie o `.env` da checkout principal somente quando ainda não houver `.env` no destino; não copie `.env.example` por cima de um `.env` existente. Depois, ajuste `DATABASE_URL` para o banco exclusivo da worktree antes de rodar migrations ou testes de integração.
+
+Compare somente os nomes das variáveis, sem imprimir valores:
+
+```sh
+comm -23 \
+  <(awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/ {print $1}' .env.example | sort -u) \
+  <(awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/ {print $1}' .env | sort -u)
+```
+
+Esse comando lista chaves ausentes em `.env`. Complete apenas as ausentes e preserve os valores já existentes. Esta entrega acrescenta `PLACES_CANDIDATE_SECRET`, `PLACES_GEOAPIFY_SEARCH_RADIUS_METERS`, `PLACES_SEARCH_USER_DAILY_LIMIT`, `PLACES_SEARCH_TRIP_DAILY_LIMIT`, `PLACES_GOOGLE_DETAILS_USER_DAILY_LIMIT`, `PLACES_GOOGLE_DETAILS_TRIP_DAILY_LIMIT` e `PLACES_GOOGLE_RESTRICTION_RADIUS_METERS`. `PLACES_CANDIDATE_SECRET` é obrigatório e precisa ter valor local não vazio; gere um valor de desenvolvimento e não o registre em logs, terminal compartilhado ou Git. Os seis limites/raios são opcionais no carregamento da configuração. As chaves de fornecedores continuam opcionais até que uma validação real autorizada dependa delas; não são necessárias para os testes com fixtures.
+
+O handoff geral vive na branch `docs/handoff-semana-1`, fora desta worktree. O patch aplicável `docs/handoff/patch-2026-10-22-env-preparo-25.patch` acrescenta a mesma orientação ao handoff sem editar a outra branch.

@@ -1,0 +1,18 @@
+--- a/docs/handoff/2026-10-21-semana-1.md
++++ b/docs/handoff/2026-10-21-semana-1.md
+@@ -112,0 +113,15 @@
++### Preparação segura do `.env` por worktree
++
++Ao criar uma worktree, reutilize o `.env` da checkout principal apenas se ainda não existir um `.env` no destino. Nunca copie um arquivo inteiro por cima de outro `.env`: compare somente nomes com o `.env.example` da branch e acrescente as chaves ausentes, preservando os valores locais e segredos já existentes. Não imprima o conteúdo do `.env` em logs ou terminal compartilhado.
++
++Para conferir nomes ausentes sem ler valores:
++
++```sh
++comm -23 \
++  <(awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/ {print $1}' .env.example | sort -u) \
++  <(awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/ {print $1}' .env | sort -u)
++```
++
++Na branch da #25, `PLACES_CANDIDATE_SECRET` é obrigatório e precisa de valor local não vazio. Os seis limites/raios `PLACES_GEOAPIFY_SEARCH_RADIUS_METERS`, `PLACES_SEARCH_USER_DAILY_LIMIT`, `PLACES_SEARCH_TRIP_DAILY_LIMIT`, `PLACES_GOOGLE_DETAILS_USER_DAILY_LIMIT`, `PLACES_GOOGLE_DETAILS_TRIP_DAILY_LIMIT` e `PLACES_GOOGLE_RESTRICTION_RADIUS_METERS` são opcionais. Mantenha `DATABASE_URL` apontando para um banco isolado por worktree; nunca reutilize o banco da checkout principal.
++
++

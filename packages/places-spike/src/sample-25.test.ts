@@ -34,12 +34,22 @@ describe('amostra independente do spike 25', () => {
 
   it('inclui referências independentes e datum em cada caso medido', () => {
     expect(measuredSample25).toHaveLength(47)
-    expect(sample25.cases.filter((item) => item.verification.status === 'unverified')).toHaveLength(13)
+    expect(sample25.cases.filter((item) => item.verification.status === 'unverified')).toHaveLength(
+      13,
+    )
     for (const item of measuredSample25) {
       expect(item.references.length).toBeGreaterThan(0)
       expect(item.references.every((source) => /^https:\/\//.test(source.url))).toBe(true)
-      expect(item.references.some((source) => ['site-oficial', 'autoridade-turismo', 'wikidata', 'wikipedia', 'mapa-oficial'].includes(source.type))).toBe(true)
-      expect(item.references.some((source) => /openstreetmap|nominatim|geoapify/i.test(source.url))).toBe(false)
+      expect(
+        item.references.some((source) =>
+          ['site-oficial', 'autoridade-turismo', 'wikidata', 'wikipedia', 'mapa-oficial'].includes(
+            source.type,
+          ),
+        ),
+      ).toBe(true)
+      expect(
+        item.references.some((source) => /openstreetmap|nominatim|geoapify/i.test(source.url)),
+      ).toBe(false)
       expect(['WGS-84', 'GCJ-02', 'BD-09']).toContain(item.referenceCoordinate.datum)
       expect(item.toleranceMeters).toBeGreaterThan(0)
       expect(item.toleranceReason.trim()).not.toBe('')
@@ -66,10 +76,12 @@ describe('amostra independente do spike 25', () => {
     expect(() => validateSample25(missingReferences)).toThrow(/fonte independente/i)
 
     const postalOnlySource = structuredClone(sample25)
-    postalOnlySource.cases[0]!.references = [{
-      url: 'https://postal.example/address',
-      type: 'registro-postal',
-    }]
+    postalOnlySource.cases[0]!.references = [
+      {
+        url: 'https://postal.example/address',
+        type: 'registro-postal',
+      },
+    ]
     expect(() => validateSample25(postalOnlySource)).toThrow(/fonte independente/i)
 
     const missingLocalQuery = structuredClone(sample25)

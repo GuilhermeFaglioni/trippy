@@ -41,7 +41,14 @@ export async function startApiServer(
   )
   server.once(
     'close',
-    () => void Promise.all([auth.close(), trips.close(), sync.close(), invites.close(), places.close()]),
+    () =>
+      void Promise.all([
+        auth.close(),
+        trips.close(),
+        sync.close(),
+        invites.close(),
+        places.close(),
+      ]),
   )
   return server
 }

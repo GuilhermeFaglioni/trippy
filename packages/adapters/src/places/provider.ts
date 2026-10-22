@@ -1,7 +1,4 @@
-import type {
-  GoogleDetailsResponse,
-  PlaceSearchCandidateFields,
-} from '@trippy/domain/places'
+import type { GoogleDetailsResponse, PlaceSearchCandidateFields } from '@trippy/domain/places'
 
 export interface PlacesSearchInput {
   query: string

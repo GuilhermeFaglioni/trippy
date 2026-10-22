@@ -26,11 +26,12 @@ describe('single-flight', () => {
     const flight = new SingleFlight()
     const request = vi.fn(async (value: string) => value)
 
-    await expect(Promise.all([flight.run('a', () => request('a')), flight.run('b', () => request('b'))]))
-      .resolves.toEqual(['a', 'b'])
-    await expect(flight.run('falha', async () => Promise.reject(new Error('erro')))).rejects.toThrow(
-      'erro',
-    )
+    await expect(
+      Promise.all([flight.run('a', () => request('a')), flight.run('b', () => request('b'))]),
+    ).resolves.toEqual(['a', 'b'])
+    await expect(
+      flight.run('falha', async () => Promise.reject(new Error('erro'))),
+    ).rejects.toThrow('erro')
     await expect(flight.run('falha', async () => 'retomada')).resolves.toBe('retomada')
   })
 })

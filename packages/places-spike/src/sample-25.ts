@@ -15,7 +15,13 @@ export type Sample25Datum = 'WGS-84' | 'GCJ-02' | 'BD-09'
 
 export interface Sample25Reference {
   url: string
-  type: 'site-oficial' | 'autoridade-turismo' | 'wikidata' | 'wikipedia' | 'mapa-oficial' | 'registro-postal'
+  type:
+    | 'site-oficial'
+    | 'autoridade-turismo'
+    | 'wikidata'
+    | 'wikipedia'
+    | 'mapa-oficial'
+    | 'registro-postal'
 }
 
 export interface Sample25Case {
@@ -97,7 +103,8 @@ function validateCase(value: unknown, index: number): Sample25Case {
   const segment = value.segment as Sample25Segment
   const city = requireText(value.city, `${prefix}.cidade`)
   const countryCode = requireText(value.countryCode, `${prefix}.countryCode`)
-  if (!/^[a-z]{2}$/.test(countryCode)) throw new Error(`${prefix}.countryCode deve ser ISO 3166-1 alpha-2 minúsculo`)
+  if (!/^[a-z]{2}$/.test(countryCode))
+    throw new Error(`${prefix}.countryCode deve ser ISO 3166-1 alpha-2 minúsculo`)
 
   if (!isRecord(value.queries)) throw new Error(`${prefix}.consultas deve ser objeto`)
   const queries = {
@@ -109,14 +116,20 @@ function validateCase(value: unknown, index: number): Sample25Case {
     throw new Error(`${prefix}: consulta local da China deve conter caracteres chineses`)
   }
 
-  if (!Array.isArray(value.acceptedNames) || !value.acceptedNames.every((name) => typeof name === 'string' && name.trim())) {
+  if (
+    !Array.isArray(value.acceptedNames) ||
+    !value.acceptedNames.every((name) => typeof name === 'string' && name.trim())
+  ) {
     throw new Error(`${prefix}.acceptedNames deve ser lista de nomes não vazios`)
   }
   const acceptedNames = value.acceptedNames as string[]
   if (segment !== 'endereco' && acceptedNames.length === 0) {
     throw new Error(`${prefix}: POI precisa de nome ou alias aceito`)
   }
-  if (!Array.isArray(value.expectedLocalAddressTokens) || !value.expectedLocalAddressTokens.every((token) => typeof token === 'string' && token.trim())) {
+  if (
+    !Array.isArray(value.expectedLocalAddressTokens) ||
+    !value.expectedLocalAddressTokens.every((token) => typeof token === 'string' && token.trim())
+  ) {
     throw new Error(`${prefix}.expectedLocalAddressTokens deve ser lista de tokens não vazios`)
   }
   const expectedLocalAddressTokens = value.expectedLocalAddressTokens as string[]
@@ -124,12 +137,14 @@ function validateCase(value: unknown, index: number): Sample25Case {
     throw new Error(`${prefix}: endereço precisa de tokens esperados`)
   }
 
-  if (!isRecord(value.referenceCoordinate)) throw new Error(`${prefix}.referenceCoordinate deve ser objeto`)
+  if (!isRecord(value.referenceCoordinate))
+    throw new Error(`${prefix}.referenceCoordinate deve ser objeto`)
   const coordinate = value.referenceCoordinate
   if (!['WGS-84', 'GCJ-02', 'BD-09'].includes(String(coordinate.datum))) {
     throw new Error(`${prefix}.referenceCoordinate.datum inválido`)
   }
-  if (!isRecord(coordinate.wgs84)) throw new Error(`${prefix}.referenceCoordinate.wgs84 deve ser objeto`)
+  if (!isRecord(coordinate.wgs84))
+    throw new Error(`${prefix}.referenceCoordinate.wgs84 deve ser objeto`)
   const referenceCoordinate = {
     lat: requireNumber(coordinate.lat, `${prefix}.referenceCoordinate.lat`),
     lon: requireNumber(coordinate.lon, `${prefix}.referenceCoordinate.lon`),
@@ -138,28 +153,48 @@ function validateCase(value: unknown, index: number): Sample25Case {
       lat: requireNumber(coordinate.wgs84.lat, `${prefix}.referenceCoordinate.wgs84.lat`),
       lon: requireNumber(coordinate.wgs84.lon, `${prefix}.referenceCoordinate.wgs84.lon`),
     },
-    conversion: coordinate.conversion === null
-      ? null
-      : isRecord(coordinate.conversion)
-        ? {
-            method: requireText(coordinate.conversion.method, `${prefix}.referenceCoordinate.conversion.method`),
-            description: requireText(coordinate.conversion.description, `${prefix}.referenceCoordinate.conversion.description`),
-          }
-        : (() => { throw new Error(`${prefix}.referenceCoordinate.conversion deve ser objeto ou null`) })(),
+    conversion:
+      coordinate.conversion === null
+        ? null
+        : isRecord(coordinate.conversion)
+          ? {
+              method: requireText(
+                coordinate.conversion.method,
+                `${prefix}.referenceCoordinate.conversion.method`,
+              ),
+              description: requireText(
+                coordinate.conversion.description,
+                `${prefix}.referenceCoordinate.conversion.description`,
+              ),
+            }
+          : (() => {
+              throw new Error(`${prefix}.referenceCoordinate.conversion deve ser objeto ou null`)
+            })(),
   }
-  if (referenceCoordinate.lat < -90 || referenceCoordinate.lat > 90 || referenceCoordinate.wgs84.lat < -90 || referenceCoordinate.wgs84.lat > 90) {
+  if (
+    referenceCoordinate.lat < -90 ||
+    referenceCoordinate.lat > 90 ||
+    referenceCoordinate.wgs84.lat < -90 ||
+    referenceCoordinate.wgs84.lat > 90
+  ) {
     throw new Error(`${prefix}: latitude fora do intervalo`)
   }
-  if (referenceCoordinate.lon < -180 || referenceCoordinate.lon > 180 || referenceCoordinate.wgs84.lon < -180 || referenceCoordinate.wgs84.lon > 180) {
+  if (
+    referenceCoordinate.lon < -180 ||
+    referenceCoordinate.lon > 180 ||
+    referenceCoordinate.wgs84.lon < -180 ||
+    referenceCoordinate.wgs84.lon > 180
+  ) {
     throw new Error(`${prefix}: longitude fora do intervalo`)
   }
   if (referenceCoordinate.datum === 'WGS-84' && referenceCoordinate.conversion !== null) {
     throw new Error(`${prefix}: WGS-84 não deve declarar conversão`)
   }
-  if (referenceCoordinate.datum === 'WGS-84' && (
-    referenceCoordinate.lat !== referenceCoordinate.wgs84.lat ||
-    referenceCoordinate.lon !== referenceCoordinate.wgs84.lon
-  )) {
+  if (
+    referenceCoordinate.datum === 'WGS-84' &&
+    (referenceCoordinate.lat !== referenceCoordinate.wgs84.lat ||
+      referenceCoordinate.lon !== referenceCoordinate.wgs84.lon)
+  ) {
     throw new Error(`${prefix}: coordenada WGS-84 deve coincidir com o resultado WGS-84`)
   }
   if (referenceCoordinate.datum !== 'WGS-84' && referenceCoordinate.conversion === null) {
@@ -192,7 +227,8 @@ function validateCase(value: unknown, index: number): Sample25Case {
     } catch {
       throw new Error(`${prefix}.references[${referenceIndex}].url inválida`)
     }
-    if (parsedUrl.protocol !== 'https:') throw new Error(`${prefix}.references[${referenceIndex}].url deve usar HTTPS`)
+    if (parsedUrl.protocol !== 'https:')
+      throw new Error(`${prefix}.references[${referenceIndex}].url deve usar HTTPS`)
     if (/openstreetmap|nominatim|geoapify/i.test(parsedUrl.hostname)) {
       throw new Error(`${prefix}: referência dependente de OSM/Geoapify não pode ser usada`)
     }
@@ -208,15 +244,24 @@ function validateCase(value: unknown, index: number): Sample25Case {
     throw new Error(`${prefix}.verification.status inválido`)
   }
   const verifiedAt = requireText(verification.verifiedAt, `${prefix}.verification.verifiedAt`)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(verifiedAt) || Number.isNaN(Date.parse(`${verifiedAt}T00:00:00Z`))) {
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(verifiedAt) ||
+    Number.isNaN(Date.parse(`${verifiedAt}T00:00:00Z`))
+  ) {
     throw new Error(`${prefix}.verification.verifiedAt deve usar YYYY-MM-DD`)
   }
   const criterion = requireText(verification.criterion, `${prefix}.verification.criterion`)
-  const reason = verification.reason === undefined ? undefined : requireText(verification.reason, `${prefix}.verification.reason`)
+  const reason =
+    verification.reason === undefined
+      ? undefined
+      : requireText(verification.reason, `${prefix}.verification.reason`)
   if (verification.status === 'verified' && references.length === 0) {
     throw new Error(`${prefix}: caso medido precisa de fonte independente`)
   }
-  if (verification.status === 'verified' && !references.some((reference) => independentReferenceTypes.has(reference.type))) {
+  if (
+    verification.status === 'verified' &&
+    !references.some((reference) => independentReferenceTypes.has(reference.type))
+  ) {
     throw new Error(`${prefix}: caso medido precisa de fonte independente de OSM`)
   }
   if (verification.status === 'unverified' && reason === undefined) {
@@ -234,7 +279,9 @@ function validateCase(value: unknown, index: number): Sample25Case {
     referenceCoordinate,
     toleranceMeters,
     toleranceReason,
-    ...(optionalText('expectedBranchOrEntrance') === undefined ? {} : { expectedBranchOrEntrance: optionalText('expectedBranchOrEntrance')! }),
+    ...(optionalText('expectedBranchOrEntrance') === undefined
+      ? {}
+      : { expectedBranchOrEntrance: optionalText('expectedBranchOrEntrance')! }),
     ...(value.essential === undefined ? {} : { essential: value.essential }),
     references,
     verification: {
@@ -261,7 +308,8 @@ export function validateSample25(value: unknown): Sample25 {
   }
   if (!Array.isArray(value.cases)) throw new Error('Amostra #25.cases deve ser lista')
   const cases = value.cases.map(validateCase)
-  if (cases.length !== 60) throw new Error(`Amostra #25: cobertura deve conter 60 casos; encontrada ${cases.length}`)
+  if (cases.length !== 60)
+    throw new Error(`Amostra #25: cobertura deve conter 60 casos; encontrada ${cases.length}`)
 
   const ids = new Set<string>()
   for (const item of cases) {
@@ -278,12 +326,19 @@ export function validateSample25(value: unknown): Sample25 {
     ['endereço', count((item) => item.segment === 'endereco'), 10],
   ] as const
   for (const [label, actual, expected] of coverage) {
-    if (actual !== expected) throw new Error(`Amostra #25: cobertura de ${label} deve ser ${expected}; encontrada ${actual}`)
+    if (actual !== expected)
+      throw new Error(
+        `Amostra #25: cobertura de ${label} deve ser ${expected}; encontrada ${actual}`,
+      )
   }
 
   const requiredSegments: Sample25Segment[] = [
-    'china-atracao', 'china-hotel', 'china-restaurante',
-    'global-atracao', 'global-restaurante', 'global-hotel',
+    'china-atracao',
+    'china-hotel',
+    'china-restaurante',
+    'global-atracao',
+    'global-restaurante',
+    'global-hotel',
   ]
   for (const segment of requiredSegments) {
     if (count((item) => item.segment === segment) === 0) {
@@ -302,4 +357,6 @@ export function loadSample25(): Sample25 {
 }
 
 export const sample25 = loadSample25()
-export const measuredSample25 = sample25.cases.filter((item) => item.verification.status === 'verified')
+export const measuredSample25 = sample25.cases.filter(
+  (item) => item.verification.status === 'verified',
+)

@@ -255,9 +255,9 @@ describe('validação do pull', () => {
     const placeWithoutCountryCode = Object.fromEntries(
       Object.entries(place).filter(([key]) => key !== 'countryCode'),
     )
-    expect(
-      validatePullResponse({ ...bootstrap, places: [placeWithoutCountryCode] }),
-    ).toMatchObject({ success: false })
+    expect(validatePullResponse({ ...bootstrap, places: [placeWithoutCountryCode] })).toMatchObject(
+      { success: false },
+    )
   })
 })
 

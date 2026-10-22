@@ -9,7 +9,10 @@ import type {
   PlacesProvider,
 } from '@trippy/adapters/places/provider'
 import { PlacesProviderError } from '@trippy/adapters/places/provider'
-import { PostgresPlacesUsageStore, type PlacesUsageStore } from '@trippy/adapters/places/usage-store'
+import {
+  PostgresPlacesUsageStore,
+  type PlacesUsageStore,
+} from '@trippy/adapters/places/usage-store'
 import { SingleFlight } from '@trippy/adapters/places/single-flight'
 import { PostgresTripStore, type TripStore } from '@trippy/adapters/trips'
 import type { ApiConfig } from '../config.ts'
@@ -101,9 +104,15 @@ export function createPlacesRouter(config: PlacesRouterConfig, options: PlacesRo
         400,
       )
     }
-    const language = requestedLanguage(context.req.query('lang'), context.req.header('accept-language'))
+    const language = requestedLanguage(
+      context.req.query('lang'),
+      context.req.header('accept-language'),
+    )
     if (language === null) {
-      return context.json({ error: 'invalid_search', message: 'O idioma informado é inválido.' }, 400)
+      return context.json(
+        { error: 'invalid_search', message: 'O idioma informado é inválido.' },
+        400,
+      )
     }
     if (!config.geoapifyApiKey || !placesProvider) {
       return context.json(
@@ -136,9 +145,9 @@ export function createPlacesRouter(config: PlacesRouterConfig, options: PlacesRo
         (call) => usageStore.recordCall({ userId, tripId, placeId: null, touchId, call }),
       )
       return context.json({
-        candidates: candidates.slice(0, 5).map((candidate) =>
-          signPlaceSearchCandidate(candidate, config.placesCandidateSecret),
-        ),
+        candidates: candidates
+          .slice(0, 5)
+          .map((candidate) => signPlaceSearchCandidate(candidate, config.placesCandidateSecret)),
       })
     } catch (error) {
       if (error instanceof PlacesProviderError) return providerErrorResponse(context, error)
@@ -263,7 +272,9 @@ function requestedLanguage(
     return /^[a-z]{2}$/iu.test(queryLanguage) ? queryLanguage.toLowerCase() : null
   }
   const firstLanguage = acceptLanguage?.split(',')[0]?.split(';')[0]?.trim().split(/[-_]/u)[0]
-  return firstLanguage && /^[a-z]{2}$/iu.test(firstLanguage) ? firstLanguage.toLowerCase() : undefined
+  return firstLanguage && /^[a-z]{2}$/iu.test(firstLanguage)
+    ? firstLanguage.toLowerCase()
+    : undefined
 }
 
 async function readOptionalBody(
@@ -300,16 +311,25 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-function providerErrorResponse(context: Parameters<typeof handleApiError>[1], error: PlacesProviderError) {
+function providerErrorResponse(
+  context: Parameters<typeof handleApiError>[1],
+  error: PlacesProviderError,
+) {
   switch (error.kind) {
     case 'location_unavailable':
       return context.json(
-        { error: 'destination_unavailable', message: 'Não foi possível localizar o destino da viagem.' },
+        {
+          error: 'destination_unavailable',
+          message: 'Não foi possível localizar o destino da viagem.',
+        },
         422,
       )
     case 'google_place_not_found':
       return context.json(
-        { error: 'google_place_not_found', message: 'Nenhum lugar correspondente foi encontrado no Google.' },
+        {
+          error: 'google_place_not_found',
+          message: 'Nenhum lugar correspondente foi encontrado no Google.',
+        },
         404,
       )
     case 'invalid_google_place':

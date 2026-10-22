@@ -56,7 +56,9 @@ export class GooglePlacesProvider implements GooglePlacesProviderPort {
     this.restrictionRadiusMeters =
       options.restrictionRadiusMeters ?? DEFAULT_RESTRICTION_RADIUS_METERS
     this.photoWidthPx = options.photoWidthPx ?? DEFAULT_PHOTO_WIDTH_PX
-    this.sleep = options.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)))
+    this.sleep =
+      options.sleep ??
+      ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)))
     this.random = options.random ?? Math.random
   }
 
@@ -80,11 +82,7 @@ export class GooglePlacesProvider implements GooglePlacesProviderPort {
           textQuery: input.name,
           pageSize: MAX_CANDIDATES,
           locationRestriction: {
-            rectangle: rectangleAround(
-              input.lat,
-              input.lng,
-              this.restrictionRadiusMeters,
-            ),
+            rectangle: rectangleAround(input.lat, input.lng, this.restrictionRadiusMeters),
           },
         }),
       },
