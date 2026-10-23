@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import { TripPlacesScreen } from '../../features/places/trip-places-screen'
 import type { TripRole } from '../../features/trips/trips-client'
@@ -13,6 +13,7 @@ function tripRole(value: string): TripRole {
 }
 
 export default function TripRoute() {
+  const router = useRouter()
   const params = useLocalSearchParams<{
     id?: string | string[]
     tripName?: string | string[]
@@ -23,6 +24,12 @@ export default function TripRoute() {
       tripId={firstParam(params.id)}
       tripName={firstParam(params.tripName)}
       role={tripRole(firstParam(params.role))}
+      onOpenPhotos={() =>
+        router.push({
+          pathname: '/trips/[id]/photos',
+          params: { id: firstParam(params.id), tripName: firstParam(params.tripName) },
+        })
+      }
     />
   )
 }

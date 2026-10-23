@@ -1,0 +1,23 @@
+{
+  "name": "@trippy/worker-thumbs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "worker": "node --env-file-if-exists=../../.env --import tsx src/cli.ts",
+    "worker:once": "node --env-file-if-exists=../../.env --import tsx src/cli.ts --once"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1153.0",
+    "@aws-sdk/client-sqs": "3.1153.0",
+    "@trippy/adapters": "workspace:*",
+    "pg": "8.16.0",
+    "sharp": "0.35.5",
+    "tsx": "4.20.0"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.0",
+    "@types/node": "^22.18.0"
+  }
+}

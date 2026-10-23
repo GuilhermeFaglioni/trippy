@@ -8,7 +8,9 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
+
+type Pool = InstanceType<typeof pg.Pool>
 import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
 import { PostgresTripStore } from '@trippy/adapters/trips'

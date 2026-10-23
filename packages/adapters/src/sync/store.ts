@@ -10,7 +10,9 @@ import type {
   SyncSequence,
   SyncVisit,
 } from '@trippy/sync'
-import type { Pool, PoolClient } from 'pg'
+import pg, { type PoolClient } from 'pg'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface SyncStore {
   applyOperation(userId: string, operation: SyncOperation): Promise<PushOperationResult>

@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
+
+type Pool = InstanceType<typeof pg.Pool>
 import { afterAll, beforeAll, expect, it, vi } from 'vitest'
 import { PostgresTripStore } from '@trippy/adapters/trips'
 import {

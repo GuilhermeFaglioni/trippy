@@ -9,6 +9,7 @@ import { createInvitesRouter } from './invites/router.ts'
 import { createPlacesRouter } from './places/router.ts'
 import { createSyncRouter } from './sync/router.ts'
 import { createTripsRouter } from './trips/router.ts'
+import { createPhotosRouter } from './trips/photos-router.ts'
 
 export async function startApiServer(
   config: ReturnType<typeof loadConfig>,
@@ -19,6 +20,7 @@ export async function startApiServer(
   const sync = createSyncRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const invites = createInvitesRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const places = createPlacesRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
+  const photos = createPhotosRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const server = serve(
     {
       fetch: createApp(
@@ -29,6 +31,7 @@ export async function startApiServer(
         sync.router,
         invites.router,
         places.router,
+        photos.router,
       ).fetch,
       port: config.port,
       hostname: config.host,
@@ -48,6 +51,7 @@ export async function startApiServer(
         sync.close(),
         invites.close(),
         places.close(),
+        photos.close(),
       ]),
   )
   return server

@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { Hono } from 'hono'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
+
+type Pool = InstanceType<typeof pg.Pool>
 import { signPlaceSearchCandidate } from '@trippy/adapters/places'
 import { GeoapifyPlacesProvider } from '@trippy/adapters/places/geoapify'
 import { GooglePlacesProvider as GooglePlacesHttpProvider } from '@trippy/adapters/places/google'

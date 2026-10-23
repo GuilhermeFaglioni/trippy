@@ -1,5 +1,7 @@
 import type { ProviderCall } from './provider.ts'
-import type { Pool } from 'pg'
+import pg from 'pg'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export type PlacesUsageProvider = ProviderCall['provider']
 export type PlacesUsageType = 'search' | 'google_details'
