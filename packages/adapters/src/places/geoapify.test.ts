@@ -41,6 +41,29 @@ function json(body: unknown): Response {
   return new Response(JSON.stringify(body), { status: 200 })
 }
 
+type RequestStage = 'destination' | 'primary' | 'secondary'
+
+function isRequestStage(url: URL, stage: RequestStage): boolean {
+  if (stage === 'destination') return url.searchParams.get('type') === 'city'
+  if (stage === 'primary') {
+    return url.pathname === '/v1/geocode/search' && url.searchParams.get('type') !== 'city'
+  }
+  return url.pathname === '/v2/places'
+}
+
+function jsonUntilAbort(signal: AbortSignal): Response {
+  const response = new Response(null, { status: 200 })
+  vi.spyOn(response, 'json').mockImplementation(
+    () =>
+      new Promise((_, reject) => {
+        const rejectWithReason = () => reject(signal.reason)
+        if (signal.aborted) rejectWithReason()
+        else signal.addEventListener('abort', rejectWithReason, { once: true })
+      }),
+  )
+  return response
+}
+
 function syntheticPlace(id: string, name: string, lat: number, lng: number, countryCode: string) {
   return {
     type: 'Feature',
@@ -340,6 +363,73 @@ describe('adaptador Geoapify', () => {
       { provider: 'geoapify', sku: 'geocoding', status: 'timeout' },
     ])
   })
+
+  it.each([
+    { stage: 'destination' as const, attempt: 'primary' as const },
+    { stage: 'primary' as const, attempt: 'primary' as const },
+    { stage: 'secondary' as const, attempt: 'secondary' as const },
+  ])(
+    'classifica o aborto durante a leitura do corpo em $stage como timeout',
+    async ({ stage, attempt }) => {
+      const calls: unknown[] = []
+      const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const url = new URL(input.toString())
+        if (isRequestStage(url, stage)) {
+          return jsonUntilAbort(init?.signal as AbortSignal)
+        }
+        return url.searchParams.get('type') === 'city' ? json(beijing) : json({ results: [] })
+      })
+      const provider = new GeoapifyPlacesProvider('chave-teste', {
+        fetcher: fetcher as typeof fetch,
+        timeoutMs: 30,
+      })
+
+      await expect(
+        provider.search(
+          { query: 'Cidade Proibida', destination: 'Pequim, China', attempt },
+          async (call) => {
+            calls.push(call)
+          },
+        ),
+      ).rejects.toMatchObject({ kind: 'provider_timeout' })
+
+      expect(calls.at(-1)).toMatchObject({
+        sku: stage === 'secondary' ? 'places' : 'geocoding',
+        status: 'timeout',
+      })
+      expect(calls).toHaveLength(stage === 'destination' ? 1 : 2)
+    },
+  )
+
+  it.each(['destination', 'primary', 'secondary'] as const)(
+    'mantém JSON realmente inválido como provider_error/invalid_json em %s',
+    async (stage) => {
+      const calls: unknown[] = []
+      const fetcher = vi.fn(async (input: string | URL | Request) => {
+        const url = new URL(input.toString())
+        if (isRequestStage(url, stage)) return new Response('{invalid json', { status: 200 })
+        return url.searchParams.get('type') === 'city' ? json(beijing) : json({ results: [] })
+      })
+      const provider = new GeoapifyPlacesProvider('chave-teste', {
+        fetcher: fetcher as typeof fetch,
+      })
+      const attempt = stage === 'secondary' ? 'secondary' : 'primary'
+
+      await expect(
+        provider.search(
+          { query: 'Cidade Proibida', destination: 'Pequim, China', attempt },
+          async (call) => {
+            calls.push(call)
+          },
+        ),
+      ).rejects.toMatchObject({ kind: 'provider_error' })
+
+      expect(calls.at(-1)).toMatchObject({
+        sku: stage === 'secondary' ? 'places' : 'geocoding',
+        status: 'invalid_json',
+      })
+    },
+  )
 
   it('não reutiliza geocodificação do destino entre idiomas diferentes', async () => {
     const requests: URL[] = []

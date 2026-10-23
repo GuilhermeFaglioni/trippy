@@ -25,6 +25,17 @@ Ambiente: Node `v24.22.1`, Corepack/pnpm `12.6.0`.
 
 `packages/places-spike/data/amostra-25.json` contém 60 casos estruturados: 30 na China, 20 globais e 10 de endereço. A amostra marca 47 casos como `verified` e 13 como `unverified`; estes últimos são excluídos de `measuredSample25`. O teste `sample-25.test.ts` passou e verifica contagens, idiomas, referências independentes de OSM, datum/conversão e campos obrigatórios. Esta validação é estrutural: neste fechamento não reabri as fontes para revalidar cada rótulo nem medi resultados de fornecedores.
 
+### B4 — revalidação pendente antes de T5
+
+O relatório do agente macOS de 23/10/2026 registrou os pontos abaixo durante a conferência de coordenadas. Os arquivos de evidência originais permanecem no Mac e não estavam acessíveis nesta worktree; portanto, os itens são atribuídos ao relatório e não foram revalidados nesta rodada:
+
+- `cn-sh-bund` (marcado `verified`): diferença reportada de 518 m para tolerância de 150 m. Revalidar a fonte e o ponto de referência do calçadão do Bund e decidir, com evidência, se o ponto ou a tolerância está incorreto.
+- `global-banff-springs` (marcado `verified`): diferença reportada de 315 m para tolerância de 250 m. Revalidar a fonte, o ponto e a tolerância antes de medir.
+- `cn-bj-opposite-house` (marcado `unverified`): o relatório não encontrou coordenada no item Wikidata consultado. Confirmar uma referência independente ou manter o caso fora de `measuredSample25`.
+- `global-savoy`: o item consultado redireciona de Q27081583 para Q746639; o relatório indica que a coordenada está correta. Confirmar e registrar a referência canônica usada.
+
+Não alterei `packages/places-spike/data/amostra-25.json` nem ampliei tolerâncias para fazer os pontos passar. A revisão das fontes, pontos, tolerâncias e rótulos continua pendente antes de T5.
+
 ## T5 — pendente
 
 Não foram feitas chamadas de medição a Geoapify ou Google. Continuam pendentes a avaliação top-1/top-5 por caso e segmento, o recorte de atrações essenciais da China, presença do candidato separada da escolha humana, ganho da segunda tentativa Places, endereço local do candidato escolhido e correspondência com Google. Também faltam chamadas/SKUs por toque, latência, erros e créditos reais conferidos nos painéis de faturamento. Portanto, T5 e a validação final do spike continuam abertos.
@@ -80,3 +91,18 @@ O comando `corepack pnpm --filter @trippy/places-spike benchmark:sample-25:dry-r
 - Prettier nos 7 arquivos alterados e `git diff --check` — passaram.
 - O comando dry-run acima — 60 casos validados, 47 verificados, 13 excluídos, 141 chamadas primárias planejadas e 0 chamadas externas.
 - `corepack pnpm typecheck` e `corepack pnpm test` não completaram como scripts raiz porque chamam `pnpm` aninhado, ausente no PATH do ambiente; rodei os componentes equivalentes diretamente, todos aprovados conforme acima. Integração com banco, chamadas reais e validação T5 não executadas nesta rodada.
+
+### Correção após a revisão independente — 23/10/2026
+
+A revisão identificou que o catch de `response.json()` classificava o aborto do prazo total durante a leitura do corpo como `provider_error/invalid_json`. O adaptador agora preserva `provider_timeout` e status `timeout` quando o prazo expira durante a leitura, tanto ao geocodificar o destino quanto na busca primária/secundária. JSON malformado sem timeout continua como `provider_error/invalid_json`.
+
+As regressões sintéticas cobrem aborto no corpo nos três estágios e JSON inválido em cada estágio; não usam rede nem provam comportamento de respostas reais.
+
+Checks executados para esta correção:
+
+- `corepack pnpm exec vitest run --project unit packages/adapters/src/places/geoapify.test.ts packages/places-spike/src/sample-25.test.ts packages/places-spike/src/sample-25-plan.test.ts` — 3 arquivos / 23 testes passaram.
+- `corepack pnpm --filter @trippy/adapters typecheck` — passou.
+- `corepack pnpm exec eslint packages/adapters/src/places/geoapify.ts packages/adapters/src/places/geoapify.test.ts` — passou.
+- Prettier nos três arquivos desta correção e `git diff --check` — passaram.
+
+Não executei a suíte completa, integração de banco, chamadas a Geoapify/Google ou T5. As fontes e coordenadas B4 permanecem pendentes de revalidação independente antes de T5.

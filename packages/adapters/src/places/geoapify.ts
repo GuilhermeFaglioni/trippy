@@ -183,7 +183,11 @@ export class GeoapifyPlacesProvider implements PlacesProvider {
       let body: unknown
       try {
         body = await response.json()
-      } catch {
+      } catch (error) {
+        if (isTimeout(error) || this.now() >= deadlineAt) {
+          status = 'timeout'
+          throw new PlacesProviderError('provider_timeout')
+        }
         status = 'invalid_json'
         throw new PlacesProviderError('provider_error')
       }
