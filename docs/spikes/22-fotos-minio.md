@@ -15,7 +15,7 @@ Na viagem de ensaio `093a2a83-842a-49f6-adf7-6bf4b10e13e6`, a consulta direta ao
 
 O planejador leu os cinco objetos diretamente do MinIO e os decodificou com `sharp`: todos são JPEG de 2048 × 1360 px, entre 83.966 e 84.479 bytes. O worker publicou cinco mensagens da outbox e processou cada uma na fila exclusiva `trippy-w22-thumbs`. Depois, o banco mostrou cinco fotos `ready`; os cinco objetos `thumb.jpg` foram lidos e decodificados como JPEG de 512 × 340 px. Os testes de integração cobrem repetição de mensagem, falha após cópia, retry e DLQ; esses cenários não foram todos reproduzidos manualmente no lote do Simulator.
 
-**Decisão do spike:** manter cópia permanente, metadados separados do JPEG e fila SQLite com UUID estável. A implementação retoma com o app aberto ou quando ele volta à execução. Este spike não implementa um serviço nativo de transferência em segundo plano nem comprova envio enquanto o processo está suspenso ou encerrado à força. No Simulator, o lote selecionado chegou ao backend e reapareceu após reabrir. A regressão automatizada agora cobre reconexão antes de o PUT interrompido rejeitar, preservação do UUID e ausência de PUTs simultâneos; ainda falta confirmar esse cenário real no Simulator, assim como encerrar o app com itens pendentes e reabri-lo. Validar execução em segundo plano em iPhone físico antes de assumir qualquer garantia de produto.
+**Decisão do spike:** manter cópia permanente, metadados separados do JPEG e fila SQLite com UUID estável. A implementação retoma com o app aberto ou quando ele volta à execução. Este spike não implementa um serviço nativo de transferência em segundo plano nem comprova envio enquanto o processo está suspenso ou encerrado à força. O relatório do agente macOS da rodada de 23/10/2026 registra que os cenários F1, falha de PUT e encerramento/reabertura passaram no Simulator; veja o resumo atribuído abaixo. Esse relato não confirma execução em iPhone nem determina a causa original da falha de reconexão. Validar execução em segundo plano em iPhone físico antes de assumir qualquer garantia de produto.
 
 Validação da combinação após rebase, antes da correção da revisão 2: lint, formatação e typecheck passaram; 206 testes Vitest e 136 Jest passaram. A suíte de integração teve dois timeouts de 5s sob concorrência local; a repetição com `pnpm exec vitest run --project integration --maxWorkers=1` passou com 17 arquivos e 42 testes, sem mudar timeouts ou expectativas.
 
@@ -53,11 +53,13 @@ Os cinco arquivos foram adicionados com `xcrun simctl addmedia` ao Simulator `Ma
 - A viagem de ensaio foi criada na API em `localhost:3022`.
 - Depois do ensaio, o coordenador confirmou por consulta somente leitura em `trippy_w22_rebase` cinco fotos `uploaded` para essa viagem: Pequim `2026-10-20T08:12:03` / `+08:00` / `39.9042, 116.4074`; Paraty `2026-10-19T20:45:10` / `-03:00` / `-23.2237, -44.7192`; Tóquio `2026-10-18T14:20:00` / sem fuso / `35.6762, 139.6503`; duas sem EXIF com todos os campos nulos. O coordenador também confirmou leitura dos cinco objetos MinIO e validação via sharp como JPEG 2048 × 1360 (~84 KB), além de cinco mensagens publicadas na outbox e encaminhadas às filas exclusivas `trippy-w22-*`. A verificação de processamento posterior registrada no início deste relatório confirmou status `ready` e as cinco miniaturas; não foi repetida nesta revisão mobile.
 
-## Pendente
+## Pendente após a rodada de 23/10/2026
 
-- A causa da ausência de drenagem na reconexão relatada na validação anterior não foi determinada. A assinatura nativa única e a remoção da segunda leitura são correções preventivas de riscos observados no código, não prova da causa; a revalidação no Simulator macOS continua necessária.
-- O estado `Enviada` após reabertura aparece nos cinco rótulos acessíveis capturados. O fluxo Maestro falhou apenas na asserção por texto isolado `Enviada`, que buscava um elemento separado; não foi repetido.
-- O teste automatizado cobre reconexão com PUT ativo, UUID local preservado e no máximo um PUT simultâneo. Ainda não há ensaio manual de queda de rede durante o PUT nem de encerramento forçado com itens pendentes seguido de reabertura e envio.
+- O relatório do agente macOS não determina a causa original da falta de drenagem. O atraso observado no Simulator é uma observação daquele ambiente e não comprova a causa nem o comportamento em iPhone.
+- Logout/login não foi exercitado manualmente: o relatório informa que `logout()` não tem chamador na UI desta branch. Antes de repetir, verificar se já existe teste técnico aplicável ao ciclo da sessão; não há fluxo de logout na UI documentado por esta rodada.
+- O iPhone físico estava `unavailable` no `devicectl`; portanto, não foi testado.
+- O relatório atribui sucesso no Simulator a Fast Refresh, remontagem e encerramento/reabertura. Em uma abertura por `launch + openurl`, observou dois PUTs sequenciais do mesmo objeto, idempotentes e sem duplicata; isso não foi concorrência simultânea. Os logs originais permanecem no Mac e não foram conferidos nesta worktree.
+- O fluxo Maestro anterior falhou apenas na asserção por texto isolado `Enviada`, que buscava um elemento separado; o estado apareceu nos rótulos acessíveis completos e essa asserção não foi repetida.
 - Upload enquanto o app está suspenso/em segundo plano não foi testado no Simulator e não é uma garantia deste spike.
 - O ensaio criou a viagem `093a2a83-842a-49f6-adf7-6bf4b10e13e6`; os dados de teste não foram apagados.
 
@@ -78,13 +80,32 @@ O workspace estava limpo antes da atualização deste relatório, no HEAD `a2c3d
 - `corepack pnpm lint`, `corepack pnpm format:check` e `git diff --check`: passaram.
 - `corepack pnpm typecheck`: passou nos 11 workspaces. Como o script chama `pnpm` internamente e esse binário não estava no `PATH`, usei um wrapper temporário fora do repo que delegou ao Corepack 12.6.0.
 - `corepack pnpm test`: 24 arquivos e 206 testes Vitest, mais 37 suítes e 144 testes Jest, passaram com o mesmo wrapper temporário.
-- Integração não executada: o ambiente tem Docker, mas `docker compose` não está instalado (`docker: unknown command`) e `pg_isready` não está disponível; não confirmei uma instância de Postgres local. Simulator/iPhone não executado neste Linux; a revalidação real da reconexão e os cenários do roteiro seguem pendentes no macOS.
+- Naquela validação da correção F1/F2 no Linux, integração não foi executada: Docker estava presente, mas `docker compose` não estava instalado (`docker: unknown command`) e `pg_isready` não estava disponível; não foi confirmada uma instância local de Postgres. Simulator/iPhone também não foram executados naquela rodada; a revalidação macOS registrada a seguir ocorreu depois.
 
-## Roteiro manual pendente — Simulator iOS
+## Roteiro manual para repetição — Simulator iOS
+
+### Resultados informados pelo agente macOS — rodada de 23/10/2026
+
+Os itens abaixo são atribuídos ao relatório recebido; os logs e arquivos de evidência originais estão somente no Mac e não foram lidos nesta worktree. Portanto, estes resultados não são uma execução independente deste commit nem aprovam o roteiro inteiro.
+
+- Integração com banco isolado: `pnpm test:integration --maxWorkers=1` passou na repetição, com 17 arquivos e 42 testes. A primeira tentativa falhou porque o proxy `59100` estava desligado.
+- Corrida F1 no Simulator iOS 18.4: após reconexão e `drain requested source=network`, o proxy resetou o PUT antigo; um PUT novo começou 238 ms depois, com o mesmo UUID (`772cf79e…`), concorrência máxima de um e um registro `ready`.
+- Falha comum de PUT: depois do reset, o item ficou pendente até o evento de rede; então houve um PUT usando o mesmo UUID (`f252e399…`).
+- Encerramento e reabertura: o relatório descreve dois itens pendentes (um PUT retido e outro `queued`), processo encerrado e socket abortado. Após reabrir, ambos foram enviados com os UUIDs originais e sem PUTs simultâneos.
+- Fast Refresh real: após edições temporárias revertidas, cada refresh reportado iniciou uma drenagem `startup`, sem nova assinatura nativa; uma transição de rede gerou um pedido de drenagem.
+- Desmontagem/remontagem: após troca temporária da `key` do provider, revertida, houve uma drenagem por montagem e um único pedido após a transição seguinte.
+- Persistência/EXIF/objetos: o relatório contou cinco fotos locais `complete`, cinco registros únicos `ready` e cinco pares original/miniatura; `taken_tz +08:00` foi preservado e a foto sem offset ficou com `taken_tz` nulo.
+- Em cinco ciclos de conectividade, o `expo-network` reportado entregou `connected=false` imediatamente e `connected=true` apenas na transição seguinte, entre um e cinco ciclos depois. O relatório situa outras conexões do app como `satisfied` cerca de 19 s após religar. É observação do Simulator, sem confirmação em iPhone e sem conclusão da causa original.
+- Logout/login: não testado manualmente, pois o relatório diz que `logout()` não tem chamador na UI. iPhone físico: não testado, pois estava `unavailable` no `devicectl`.
+- Com `launch + openurl`, o relatório observou bundle carregado duas vezes e dois PUTs sequenciais do mesmo objeto, idempotentes e sem duplicata. Isso não indica PUTs sobrepostos nem concorrência máxima acima de um.
+
+Esses resultados são evidência atribuída ao agente macOS, não aprovação completa da issue. Permanecem pendentes logout/login manual, iPhone físico e confirmação da causa original. O envio suspenso/em segundo plano continua fora da garantia do spike.
 
 O ensaio tem duas ferramentas independentes: um proxy reverso controlável para segurar/derrubar o PUT para MinIO e um controle que gere eventos de conectividade observáveis pelo Simulator. Não trate Wi-Fi desligado no Mac como falha do PUT: o app acessa `localhost`, que continua alcançável. O Wi-Fi do Mac pode ser usado apenas como estímulo de conectividade se os logs do app confirmarem os eventos.
 
-Antes de cada cenário, use a mesma viagem e o mesmo usuário, confirme que a foto de teste ainda não está na lista remota e registre o UUID local. Configure o endpoint assinado para atravessar o proxy (por exemplo, a API assina `http://localhost:59001` e o proxy encaminha ao MinIO em `localhost:59000`). O proxy deve preservar o `Host` e o caminho usados na assinatura; não reescreva a URL depois que a API a assinar. Habilite uma regra que segure um PUT e permita encerrá-lo com reset/erro sob comando. Os logs do proxy devem omitir query string, assinatura, headers de autorização e corpo da requisição; registre só sequência, método, estado (segurado, liberado, resetado), horário e concorrência máxima.
+Antes de cada cenário, use a mesma viagem e o mesmo usuário, confirme que a foto de teste ainda não está na lista remota e registre o UUID local. Configure o endpoint assinado para atravessar o proxy (a rodada reportada usou `http://localhost:59100`, encaminhando para o MinIO em `localhost:59000`). Confirme que a porta escolhida para o proxy está livre; `59001` é a porta do console MinIO neste ambiente e não deve ser usada pelo proxy. O proxy deve preservar o `Host` e o caminho usados na assinatura; não reescreva a URL depois que a API a assinar. Habilite uma regra que segure um PUT e permita encerrá-lo com reset/erro sob comando. Os logs do proxy devem omitir query string, assinatura, headers de autorização e corpo da requisição; registre só sequência, método, estado (segurado, liberado, resetado), horário e concorrência máxima.
+
+**Portas:** não use `59001` para o proxy: ela é a porta do console MinIO neste ambiente. A rodada reportada usou proxy `59100`, controle `59101` e MinIO `59000`. Antes de iniciar, escolha portas disponíveis e distintas para proxy e controle, confirme que estão livres e que o endpoint MinIO está no endereço esperado; não use uma porta do console MinIO como proxy.
 
 Abra os logs do app pelo Console do Xcode filtrando `[photo-sync]`. Eles registram somente origem e fases da drenagem e os booleanos de conectividade, sem ID de usuário, viagem, foto, URL ou erro bruto. Para cada transição, salve a sequência de linhas `network event`, `drain requested`, `drain started` e `drain completed`/`drain failed`, com horário.
 
@@ -110,4 +131,4 @@ Abra os logs do app pelo Console do Xcode filtrando `[photo-sync]`. Eles registr
 3. Restaure a rede, reabra o app, entre na mesma viagem e abra **Fotos da viagem**.
 4. Aguarde a retomada automática e confirme `Enviada` e uma única foto correspondente no backend.
 
-Esses cenários seguem pendentes até execução e registro no Simulator. Grave os logs do app sanitizados e o relatório do proxy junto com a evidência do backend. O plano desta correção está publicado em [comentário da issue #22](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6341010017); o plano da revisão 2 está no [comentário anterior](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6329869402).
+Para uma nova execução, grave logs sanitizados do app e relatório do proxy junto com a evidência do backend. O plano desta correção está publicado em [comentário da issue #22](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6341010017); o plano da revisão 2 está no [comentário anterior](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6329869402). O plano desta atualização documental está no [comentário da rodada 3](https://github.com/GuilhermeFaglioni/trippy/issues/22#issuecomment-6371687667).
