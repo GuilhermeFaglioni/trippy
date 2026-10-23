@@ -74,6 +74,19 @@ const migrations: readonly Migration[] = [
     version: 2,
     statements: ['ALTER TABLE sync_state ADD COLUMN needs_bootstrap INTEGER NOT NULL DEFAULT 0'],
   },
+  {
+    version: 3,
+    statements: [
+      'ALTER TABLE places ADD COLUMN country_code TEXT',
+      'ALTER TABLE places ADD COLUMN provider_datasource TEXT',
+      'ALTER TABLE places ADD COLUMN attribution TEXT',
+      'ALTER TABLE places ADD COLUMN license TEXT',
+      'ALTER TABLE places ADD COLUMN google_place_id TEXT',
+      "ALTER TABLE places ADD COLUMN google_match TEXT NOT NULL DEFAULT 'none' CHECK (google_match IN ('none', 'matched', 'no_match'))",
+      'ALTER TABLE places ADD COLUMN user_local_name TEXT',
+      'ALTER TABLE places ADD COLUMN user_local_address TEXT',
+    ],
+  },
 ]
 
 export async function migrateSyncDatabase(

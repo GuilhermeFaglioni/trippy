@@ -43,7 +43,10 @@ describe('SyncProvider', () => {
   it('expõe cliente e status, sincroniza na abertura e depois de escrita local', async () => {
     const client: SyncClient = {
       addPlace: jest.fn().mockResolvedValue('place-1'),
+      addPlaceFromCandidate: jest.fn().mockResolvedValue('place-1'),
       removePlace: jest.fn().mockResolvedValue(undefined),
+      linkGooglePlace: jest.fn().mockResolvedValue(undefined),
+      setLocalDetails: jest.fn().mockResolvedValue(undefined),
       markVisit: jest.fn().mockResolvedValue(undefined),
       unmarkVisit: jest.fn().mockResolvedValue(undefined),
       syncNow: jest.fn().mockResolvedValue(undefined),

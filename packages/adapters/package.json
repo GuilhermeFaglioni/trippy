@@ -7,6 +7,12 @@
     "./auth": "./src/auth/index.ts",
     "./email": "./src/email/index.ts",
     "./invites": "./src/invites/index.ts",
+    "./places": "./src/places/index.ts",
+    "./places/provider": "./src/places/provider.ts",
+    "./places/geoapify": "./src/places/geoapify.ts",
+    "./places/google": "./src/places/google.ts",
+    "./places/usage-store": "./src/places/usage-store.ts",
+    "./places/single-flight": "./src/places/single-flight.ts",
     "./sync": "./src/sync/index.ts",
     "./photos": "./src/photos/index.ts",
     "./trips": "./src/trips/index.ts"
