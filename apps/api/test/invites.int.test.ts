@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresInviteStore } from '@trippy/adapters/invites'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
@@ -10,6 +10,8 @@ import { createInvitesRouter } from '../src/invites/router.ts'
 import { createSyncRouter } from '../src/sync/router.ts'
 import { createTripsRouter } from '../src/trips/router.ts'
 import type { HealthChecks } from '../src/health.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 const databaseUrl = process.env.DATABASE_URL
 if (!databaseUrl) throw new Error('DATABASE_URL não definido: configure o Postgres local')

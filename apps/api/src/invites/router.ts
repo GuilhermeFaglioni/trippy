@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { Hono } from 'hono'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import { tripPhase, type TripSummary } from '@trippy/domain'
 import { PostgresInviteStore, type InviteStore } from '@trippy/adapters/invites'
 import type { TripRecord } from '@trippy/adapters/trips'
@@ -9,6 +9,8 @@ import type { AccessTokenVerifier } from '@trippy/adapters/auth'
 import type { ApiConfig } from '../config.ts'
 import { authenticate, type AuthEnvironment } from '../auth/authenticate.ts'
 import { handleApiError } from '../auth/errors.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface InvitesRouterOptions {
   inviteStore?: InviteStore

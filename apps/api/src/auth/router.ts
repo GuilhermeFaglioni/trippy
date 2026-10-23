@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto'
 import { Hono } from 'hono'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import {
   EMAIL_CODE_TTL_MS,
   REFRESH_TOKEN_TTL_MS,
@@ -23,6 +23,8 @@ import { createSmtpEmailSender, type EmailSender } from '@trippy/adapters/email'
 import type { ApiConfig } from '../config.ts'
 import { AuthHttpError, handleApiError } from './errors.ts'
 import { authenticate, type AuthEnvironment } from './authenticate.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface AuthRouterOptions {
   now?: () => Date
