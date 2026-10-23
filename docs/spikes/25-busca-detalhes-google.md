@@ -44,3 +44,39 @@ comm -23 \
 Esse comando lista chaves ausentes em `.env`. Complete apenas as ausentes e preserve os valores já existentes. Esta entrega acrescenta `PLACES_CANDIDATE_SECRET`, `PLACES_GEOAPIFY_SEARCH_RADIUS_METERS`, `PLACES_SEARCH_USER_DAILY_LIMIT`, `PLACES_SEARCH_TRIP_DAILY_LIMIT`, `PLACES_GOOGLE_DETAILS_USER_DAILY_LIMIT`, `PLACES_GOOGLE_DETAILS_TRIP_DAILY_LIMIT` e `PLACES_GOOGLE_RESTRICTION_RADIUS_METERS`. `PLACES_CANDIDATE_SECRET` é obrigatório e precisa ter valor local não vazio; gere um valor de desenvolvimento e não o registre em logs, terminal compartilhado ou Git. Os seis limites/raios são opcionais no carregamento da configuração. As chaves de fornecedores continuam opcionais até que uma validação real autorizada dependa delas; não são necessárias para os testes com fixtures.
 
 O handoff geral foi atualizado em commit local `5c33a16cffca8cfef0aaa5075c4feea991a5131c`, na branch `docs/handoff-semana-1` e em worktree isolada. A orientação antiga de copiar sempre o `.env` da checkout principal foi substituída. O patch `docs/handoff/patch-2026-10-22-env-preparo-25.patch` reproduz essa substituição; ele passou por aplicação a seco sobre a versão base do handoff e o resultado foi comparado com o commit integrado.
+
+## Rodada 3 — diagnóstico offline e executor da amostra
+
+### Escopo e evidência
+
+Esta rodada parte do relatório do Simulator/macOS recebido na conversa. Os logs e respostas da Geoapify citados nesse relatório ficam no Mac e não estavam acessíveis nesta worktree. Nenhuma chamada Geoapify ou Google foi feita. Os casos "Pequim/Macau" usados nos testes são **sintéticos** e demonstram proteção local, não reproduzem nem provam a causa dos resultados reais.
+
+### Correções sustentadas pelo código
+
+- O adaptador já enviava `filter=countrycode:<país do destino>` na busca primária e `filter=circle:<destino>,<raio configurado>` na secundária, mas não verificava esses limites nas respostas. Agora a primária descarta candidatos cujo `country_code` explícito difere do país resolvido; a secundária confere a distância Haversine contra o mesmo raio enviado. Campos de país ausentes continuam aceitos porque a busca do fornecedor já recebe o filtro.
+- O cache do geocoding do destino agora inclui o idioma da consulta. Antes, duas buscas pelo mesmo texto em idiomas diferentes compartilhavam a primeira resolução.
+- Os 5 s agora são um prazo total por busca, compartilhado entre o geocoding do destino e a consulta primária/secundária. Antes, cada requisição sequencial tinha seu próprio timeout de 5 s, permitindo quase 10 s combinados. Um teste com relógio sintético prova que uma segunda resposta além do prazo termina como `provider_timeout` e registra o timeout sem expor conteúdo remoto.
+
+Essas proteções impedem respostas explicitamente fora dos filtros solicitados e limitam o tempo composto. **Elas não provam que a resolução real de “Pequim, China” foi correta**: o relatório recebido não inclui a resposta de geocoding do destino. Se o próprio destino for resolvido para outra cidade dentro do mesmo país, a busca ainda pode ser enviesada para lá; é necessária evidência sanitizada da requisição de destino e de sua resolução.
+
+### Plano offline T5
+
+O comando `corepack pnpm --filter @trippy/places-spike benchmark:sample-25:dry-run` carrega e valida `data/amostra-25.json`, exclui os 13 casos não verificados e lista 141 consultas primárias (47 casos verificados × PT/EN/local) por segmento. A tentativa Places aparece como condicional a primária vazia ou rejeição humana; o dry-run não a despacha, faz zero chamadas e deixa métricas nulas. Isso é preparação de execução, não medição T5: não fornece top-1/top-5, ganho real da segunda tentativa, endereço local escolhido, correspondência Google, latência, erros ou créditos.
+
+### Decisões e pendências
+
+- O ranking continua na ordem devolvida pelo fornecedor. A #25 mede top-1/top-5, mas não define um algoritmo local de reordenação. A observação de que “Torré” ficou à frente de “Torre Eiffel” veio do relatório macOS; a resposta bruta não está disponível para análise. **Pedir decisão humana** antes de introduzir ordenação por relevância, incluindo normalização de acentos/idioma.
+- A busca secundária retorna os resultados que o Places fornecer; não há retry automático nem mesclagem com Geocoding. Isso preserva o fluxo da #25 e o ADR 0001, que exigem medir o ganho antes de decidir automação.
+- T5 continua bloqueado: falta orçamento numérico aprovado para chamadas e falta a escolha humana dos candidatos. A execução real também depende de respostas Geoapify sanitizadas, fontes/rótulos T4 revalidados e acesso aos créditos reais no painel.
+- A causa da falha reportada para China, o ranking real em português e os timeouts de produção continuam **não comprovados por esta rodada offline**. Revalidar depois no ambiente macOS, dentro de orçamento definido.
+
+### Checks desta rodada
+
+- `corepack pnpm exec vitest run --project unit packages/adapters/src/places/geoapify.test.ts packages/places-spike/src/sample-25.test.ts packages/places-spike/src/sample-25-plan.test.ts` — 3 arquivos, 17 testes passaram.
+- `corepack pnpm lint` — passou globalmente.
+- `corepack pnpm -r --parallel typecheck` — passou nos 10 workspaces.
+- `corepack pnpm exec vitest run --project unit` — 28 arquivos, 236 testes passaram.
+- `corepack pnpm --filter @trippy/mobile test` — 32 suítes, 144 testes passaram.
+- Prettier nos 7 arquivos alterados e `git diff --check` — passaram.
+- O comando dry-run acima — 60 casos validados, 47 verificados, 13 excluídos, 141 chamadas primárias planejadas e 0 chamadas externas.
+- `corepack pnpm typecheck` e `corepack pnpm test` não completaram como scripts raiz porque chamam `pnpm` aninhado, ausente no PATH do ambiente; rodei os componentes equivalentes diretamente, todos aprovados conforme acima. Integração com banco, chamadas reais e validação T5 não executadas nesta rodada.
