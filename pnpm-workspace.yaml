@@ -35,6 +35,10 @@ minimumReleaseAgeExclude:
   - '@aws-sdk/token-providers@3.1153.0'
   - expo-router@58.0.24
 
+# GHSA-mrhx-c7xc-m3w5: Remotion 4.0.512 fixa Zod 4.4.3; remover quando o Studio subir para >=4.6.6.
+overrides:
+  "@remotion/studio@4.0.512>zod@4.4.3": 4.6.7
+
 # Exceções da auditoria. Revisar quando o Dependabot trouxer versão corrigida.
 # Ambas são transitivas das ferramentas de desenvolvimento do Expo (CLI e Metro), sem correção publicada
 # em 19/out/2026, e não vão para o app nem para a API.
