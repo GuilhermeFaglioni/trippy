@@ -22,6 +22,7 @@ COPY apps/worker-render/package.json apps/worker-render/package.json
 COPY packages/dev-env/package.json packages/dev-env/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/domain/package.json packages/domain/package.json
+COPY patches/ patches/
 
 RUN --mount=type=cache,id=trippy-worker-render-pnpm,target=/root/.local/share/pnpm/store \
   corepack enable \
