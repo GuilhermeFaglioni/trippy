@@ -1,6 +1,11 @@
 packages:
   - apps/*
   - packages/*
+overrides:
+  '@expo/cli>zod': 4.6.7
+  '@expo/mcp-tunnel>zod': 4.6.7
+  'expo-mcp>@expo/mcp-tunnel': 0.3.1
+  'expo-mcp>zod': 4.6.7
 allowBuilds:
   '@parcel/watcher': false
   esbuild: true
@@ -42,3 +47,7 @@ auditConfig:
   ignoreGhsas:
     - GHSA-86w9-cpqp-85rv # node-forge, via @expo/code-signing-certificates
     - GHSA-vfj7-8cjw-p6xm # braces, via metro > micromatch
+patchedDependencies:
+  '@expo/cli@58.1.13': patches/@expo__cli@58.1.13.patch
+  '@expo/mcp-tunnel@0.3.1': patches/@expo__mcp-tunnel@0.3.1.patch
+  expo-mcp@0.2.4: patches/expo-mcp@0.2.4.patch
