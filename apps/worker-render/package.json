@@ -15,17 +15,17 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.1153.0",
     "@aws-sdk/client-sqs": "3.1153.0",
-    "@remotion/bundler": "4.0.512",
-    "@remotion/renderer": "4.0.512",
+    "@remotion/bundler": "4.0.536",
+    "@remotion/renderer": "4.0.536",
     "@trippy/domain": "workspace:*",
-    "pg": "8.16.0",
+    "pg": "8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "remotion": "4.0.512",
-    "tsx": "4.20.0"
+    "react-dom": "19.3.1",
+    "remotion": "4.0.536",
+    "tsx": "4.23.15"
   },
   "devDependencies": {
-    "@types/pg": "8.15.0",
+    "@types/pg": "8.23.1",
     "@types/react": "19.3.0"
   }
 }
