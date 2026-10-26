@@ -17,7 +17,7 @@ services:
       retries: 10
 
   minio:
-    image: cgr.dev/chainguard/minio:latest-dev@sha256:1195e844c6b5594ea26def1dd88dae4d9ee766c4db6b3ff7a2d2f0398e7dd164
+    image: cgr.dev/chainguard/minio:latest-dev@sha256:07c9af246c5900123b442508b7831afe389e93fb133a53d19e04816a1367701d
     command: ['server', '/data', '--console-address', ':9001']
     environment:
       MINIO_ROOT_USER: '${AWS_ACCESS_KEY_ID:-trippy}'
