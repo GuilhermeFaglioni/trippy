@@ -8,8 +8,11 @@ import { TripPlacesScreen } from '../trip-places-screen'
 
 const currentUserId = 'user-1'
 const mockRequest = jest.fn<Promise<Response>, [string, RequestInit?]>()
+const mockPush = jest.fn()
 
-jest.mock('expo-router', () => ({}))
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }))
+jest.mock('expo-image', () => ({ Image: 'Image' }))
+jest.mock('../../sync/use-network-gate', () => ({ useNetworkOffline: () => false }))
 
 jest.spyOn(sessionProvider, 'useSession').mockImplementation(
   () =>
@@ -31,10 +34,18 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     tripId: 'trip-1',
     provider: null,
     providerRef: null,
+    countryCode: null,
+    providerDatasource: null,
+    attribution: null,
+    license: null,
     name: 'Café do Porto',
     localName: null,
     address: null,
     localAddress: null,
+    googlePlaceId: null,
+    googleMatch: 'none',
+    userLocalName: null,
+    userLocalAddress: null,
     lat: null,
     lng: null,
     suggestedBy: currentUserId,
@@ -45,6 +56,8 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     deletedAt: null,
     createdAt: '2026-10-20T12:00:00.000Z',
     visitedByMe: false,
+    localNameStatus: 'missing',
+    localAddressStatus: 'missing',
     ...overrides,
   }
 }
@@ -60,10 +73,13 @@ function createClient(initialPlaces: LivePlace[] = [createPlace()]) {
       notify()
       return added.id
     }),
+    addPlaceFromCandidate: jest.fn(async () => 'place-2'),
     removePlace: jest.fn(async (_tripId, placeId) => {
       places = places.filter((place) => place.id !== placeId)
       notify()
     }),
+    linkGooglePlace: jest.fn().mockResolvedValue(undefined),
+    setLocalDetails: jest.fn().mockResolvedValue(undefined),
     markVisit: jest.fn(async (_tripId, placeId) => {
       places = places.map((place) =>
         place.id === placeId ? { ...place, visitedByMe: true } : place,
@@ -116,7 +132,7 @@ describe('tela da viagem e lugares locais', () => {
     )
   })
 
-  it('lista SQLite, adiciona só nome, alterna Eu fui e mostra status honesto', async () => {
+  it('lista SQLite, abre Adicionar lugar, alterna Eu fui e mostra status honesto', async () => {
     const fake = createClient()
     const screen = await renderScreen(fake.client)
 
@@ -125,12 +141,11 @@ describe('tela da viagem e lugares locais', () => {
     expect(screen.getByTestId('trip-sync-status')).toHaveTextContent(/1 pendentes/)
     expect(screen.getByTestId('trip-sync-not-sent')).toHaveTextContent(/1 operações não enviadas/)
 
-    await fireEvent.changeText(screen.getByTestId('add-place-name'), 'Museu Nacional')
     await fireEvent.press(screen.getByTestId('add-place-button'))
-    await waitFor(() =>
-      expect(fake.client.addPlace).toHaveBeenCalledWith('trip-1', 'Museu Nacional'),
-    )
-    expect(fake.getPlaces().map((place) => place.name)).toContain('Museu Nacional')
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/trips/[id]/add-place',
+      params: { id: 'trip-1', tripName: 'Fim de semana', role: 'member' },
+    })
 
     await fireEvent.press(screen.getByTestId('place-visit-cafe-do-porto'))
     await waitFor(() => expect(fake.client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1'))

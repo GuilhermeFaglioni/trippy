@@ -3,6 +3,7 @@ import { loadConfig } from '../src/config.ts'
 
 const validEnvironment: NodeJS.ProcessEnv = {
   DATABASE_URL: 'postgres://trippy:trippy@localhost:54329/trippy',
+  PLACES_CANDIDATE_SECRET: 'segredo-de-candidato-de-teste-com-entropia-suficiente',
   S3_BUCKET_PHOTOS: 'trippy-photos',
   SQS_QUEUE_THUMBS: 'trippy-thumbs',
   SMTP_HOST: 'localhost',
@@ -14,6 +15,12 @@ const validEnvironment: NodeJS.ProcessEnv = {
 it('valida configuração obrigatória com o nome da variável ausente', () => {
   expect(() => loadConfig({ ...validEnvironment, DATABASE_URL: undefined })).toThrow(
     'Variável obrigatória não definida: DATABASE_URL.',
+  )
+})
+
+it('exige o segredo usado para validar candidatos de lugar', () => {
+  expect(() => loadConfig({ ...validEnvironment, PLACES_CANDIDATE_SECRET: undefined })).toThrow(
+    'Variável obrigatória não definida: PLACES_CANDIDATE_SECRET.',
   )
 })
 
@@ -37,6 +44,7 @@ it('aplica valores padrão e lê configurações locais', () => {
     authCodeSecret: validEnvironment.AUTH_CODE_SECRET,
     authDevJwtPrivateKey: validEnvironment.AUTH_DEV_JWT_PRIVATE_KEY,
     databaseUrl: validEnvironment.DATABASE_URL,
+    placesCandidateSecret: validEnvironment.PLACES_CANDIDATE_SECRET,
     awsRegion: 'us-east-2',
     s3Endpoint: 'http://localhost:59000',
     s3ForcePathStyle: true,

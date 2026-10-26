@@ -11,7 +11,7 @@
     "format:check": "prettier --check .",
     "db:migrate": "pnpm --filter @trippy/db migrate",
     "typecheck": "pnpm -r --parallel typecheck",
-    "test": "vitest run --project unit && pnpm --filter @trippy/mobile test",
+    "test": "vitest run --project unit && pnpm --filter @trippy/mobile test && pnpm --filter @trippy/mobile test:expo-mcp",
     "test:integration": "vitest run --project integration",
     "bootstrap": "pnpm --filter @trippy/dev-env bootstrap"
   },

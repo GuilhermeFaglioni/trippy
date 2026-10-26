@@ -8,6 +8,7 @@ import type { HealthChecks } from '../src/health.ts'
 
 const environment: NodeJS.ProcessEnv = {
   DATABASE_URL: 'postgres://trippy:trippy@localhost:54329/trippy',
+  PLACES_CANDIDATE_SECRET: 'segredo-de-candidato-de-teste-com-entropia-suficiente',
   S3_BUCKET_PHOTOS: 'trippy-photos',
   SQS_QUEUE_THUMBS: 'trippy-thumbs',
   SMTP_HOST: 'localhost',
