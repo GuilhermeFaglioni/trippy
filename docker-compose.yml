@@ -44,7 +44,7 @@ services:
       start_period: 10s
 
   elasticmq:
-    image: softwaremill/elasticmq:1.6.16@sha256:7c401d18fbf6ac5db2bc688f468793904658f15e6625f7a45596d5fcfb7a6952
+    image: softwaremill/elasticmq:1.7.1@sha256:f1de391a9b8c18fd3f2ce37b4f7d1b8989857e8a8e18bb01284fff899e69da82
     user: '0:0'
     ports:
       - '127.0.0.1:59324:9324'
