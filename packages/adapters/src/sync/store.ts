@@ -694,8 +694,12 @@ export class PostgresSyncStore implements SyncStore {
           listPageRows<PullPlaceRow>(
             client,
             'places',
-            `id, trip_id AS "tripId", provider, provider_ref AS "providerRef", name,
+            `id, trip_id AS "tripId", provider, provider_ref AS "providerRef",
+             country_code AS "countryCode",
+             provider_datasource AS "providerDatasource", attribution, license, name,
              local_name AS "localName", address, local_address AS "localAddress", lat, lng,
+             google_place_id AS "googlePlaceId", google_match AS "googleMatch",
+             user_local_name AS "userLocalName", user_local_address AS "userLocalAddress",
              suggested_by AS "suggestedBy", comment, day_index AS "dayIndex", position,
              seq::text AS seq, deleted_at AS "deletedAt", created_at AS "createdAt"`,
             'deleted_at',
