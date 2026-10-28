@@ -200,12 +200,12 @@ xcrun simctl uninstall "$UDID_A" app.trippy.mobile >/dev/null 2>&1 || true
 xcrun simctl uninstall "$UDID_B" app.trippy.mobile >/dev/null 2>&1 || true
 xcrun simctl install "$UDID_A" "$APP_PATH"
 xcrun simctl install "$UDID_B" "$APP_PATH"
-xcrun simctl spawn "$UDID_A" defaults write app.trippy.mobile RCT_jsLocation "localhost:$METRO_PORT"
-xcrun simctl spawn "$UDID_B" defaults write app.trippy.mobile RCT_jsLocation "localhost:$METRO_PORT"
+# O dev client (expo-dev-client) ignora RCT_jsLocation: os fluxos de primeiro lançamento abrem este link.
+DEV_CLIENT_URL="trippy://expo-development-client/?url=http%3A%2F%2Flocalhost%3A$METRO_PORT&disableOnboarding=1"
 
 log 'A autentica, cria a viagem e gera convite pelo app.'
 run_maestro "$UDID_A" a-cria-viagem-convite.yaml \
-  -e "A_EMAIL=$A_EMAIL" -e "TRIP_NAME=$TRIP_NAME"
+  -e "A_EMAIL=$A_EMAIL" -e "TRIP_NAME=$TRIP_NAME" -e "DEV_CLIENT_URL=$DEV_CLIENT_URL"
 INVITE_CODE="$(rg --no-filename -o 'JsConsole: INVITE_TOKEN=[A-Za-z0-9_-]+' \
   "$TMP_DIR/maestro-a-cria-viagem-convite" --glob 'maestro.log' | sed -E 's/.*=//' | tail -n 1)"
 if [[ ! "$INVITE_CODE" =~ ^[A-Za-z0-9_-]{40,}$ ]]; then
@@ -238,7 +238,7 @@ assert_equal "$(psql_value "SELECT string_agg(name, '|' ORDER BY position) FROM 
 
 log 'B autentica e entra pelo convite.'
 run_maestro "$UDID_B" b-aceita-convite.yaml \
-  -e "B_EMAIL=$B_EMAIL" -e "INVITE_CODE=$INVITE_CODE" -e "TRIP_NAME=$TRIP_NAME"
+  -e "B_EMAIL=$B_EMAIL" -e "INVITE_CODE=$INVITE_CODE" -e "TRIP_NAME=$TRIP_NAME" -e "DEV_CLIENT_URL=$DEV_CLIENT_URL"
 B_USER_ID="$(psql_value "SELECT id FROM users WHERE email = '$B_EMAIL'")"
 if [[ ! "$B_USER_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
   printf 'Não foi possível consultar o usuário B no Postgres.\n' >&2

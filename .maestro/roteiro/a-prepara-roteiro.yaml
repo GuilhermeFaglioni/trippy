@@ -9,23 +9,35 @@ appId: app.trippy.mobile
 - assertVisible:
     id: viagem-abas
 - tapOn:
-    id: add-place-name
+    id: add-place-button
+- tapOn:
+    id: place-search-query
 - inputText: ${PLACE_1}
 - hideKeyboard
 - tapOn:
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
+- tapOn:
     id: add-place-button
 - tapOn:
-    id: add-place-name
+    id: place-search-query
 - inputText: ${PLACE_2}
 - hideKeyboard
 - tapOn:
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
+- tapOn:
     id: add-place-button
 - tapOn:
-    id: add-place-name
+    id: place-search-query
 - inputText: ${PLACE_3}
 - hideKeyboard
 - tapOn:
-    id: add-place-button
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
 - tapOn:
     id: trip-tab-roteiro
 - assertVisible:

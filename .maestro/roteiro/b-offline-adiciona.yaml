@@ -19,11 +19,15 @@ appId: app.trippy.mobile
 - tapOn:
     id: trip-tab-lugares
 - tapOn:
-    id: add-place-name
+    id: add-place-button
+- tapOn:
+    id: place-search-query
 - inputText: ${PLACE_PENDENTE}
 - hideKeyboard
 - tapOn:
-    id: add-place-button
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
 - scrollUntilVisible:
     element:
       id: trip-sync-status
