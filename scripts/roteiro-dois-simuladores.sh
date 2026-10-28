@@ -166,7 +166,7 @@ log "API local: $API_URL"
 log "Metro: porta $METRO_PORT"
 (
   cd "$ROOT_DIR/apps/api"
-  PORT="$API_PORT" node --env-file-if-exists=../../.env --import tsx src/server.ts
+  PORT="$API_PORT" PLACES_CANDIDATE_SECRET="${PLACES_CANDIDATE_SECRET:-trippy-dev-places-candidate-secret-change-in-production-2026}" node --env-file-if-exists=../../.env --import tsx src/server.ts
 ) >"$TMP_DIR/api.log" 2>&1 &
 API_PID=$!
 wait_for_http "$API_URL/health" "$API_PID" "$TMP_DIR/api.log"
