@@ -1,11 +1,13 @@
 import { Hono } from 'hono'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import { tripPhase, validateCreateTripInput, type TripSummary } from '@trippy/domain'
 import { PostgresTripStore, type TripStore } from '@trippy/adapters/trips'
 import type { AccessTokenVerifier } from '@trippy/adapters/auth'
 import type { ApiConfig } from '../config.ts'
 import { authenticate, type AuthEnvironment } from '../auth/authenticate.ts'
 import { handleApiError } from '../auth/errors.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface TripsRouterOptions {
   tripStore?: TripStore

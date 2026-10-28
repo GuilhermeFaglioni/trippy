@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
 import { PostgresTripStore } from '@trippy/adapters/trips'
@@ -20,6 +20,8 @@ testDatabaseUrl.pathname = `/${testDatabaseName}`
 
 const tokenUsers = new Map<string, string>()
 let databaseCreated = false
+const candidateSecret = 'segredo-de-candidato-integração-com-entropia-suficiente'
+type Pool = InstanceType<typeof pg.Pool>
 let pool: Pool
 let app: ReturnType<typeof createApp>
 let organizerId: string
@@ -128,7 +130,7 @@ beforeAll(async () => {
     },
   )
   const sync = createSyncRouter(
-    { databaseUrl: testDatabaseUrl.toString() },
+    { databaseUrl: testDatabaseUrl.toString(), placesCandidateSecret: candidateSecret },
     {
       accessTokenVerifier: async (token) => {
         const verified = verifier(token)
@@ -180,9 +182,9 @@ it('aplica um único arrange concorrente e reproduz o conflito pelo mesmo op_id'
   const poolA = new pg.Pool({ connectionString: testDatabaseUrl.toString(), max: 1 })
   const poolB = new pg.Pool({ connectionString: testDatabaseUrl.toString(), max: 1 })
   const syncA = createSyncRouter(
-    { databaseUrl: testDatabaseUrl.toString() },
+    { databaseUrl: testDatabaseUrl.toString(), placesCandidateSecret: candidateSecret },
     {
-      syncStore: new PostgresSyncStore(poolA),
+      syncStore: new PostgresSyncStore(poolA, candidateSecret),
       accessTokenVerifier: async (token) => {
         const verified = verifier(token)
         if (!verified) throw new Error('Token inválido')
@@ -191,9 +193,9 @@ it('aplica um único arrange concorrente e reproduz o conflito pelo mesmo op_id'
     },
   )
   const syncB = createSyncRouter(
-    { databaseUrl: testDatabaseUrl.toString() },
+    { databaseUrl: testDatabaseUrl.toString(), placesCandidateSecret: candidateSecret },
     {
-      syncStore: new PostgresSyncStore(poolB),
+      syncStore: new PostgresSyncStore(poolB, candidateSecret),
       accessTokenVerifier: async (token) => {
         const verified = verifier(token)
         if (!verified) throw new Error('Token inválido')

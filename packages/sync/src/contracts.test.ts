@@ -21,6 +21,22 @@ const otherUserId = 'd109e726-e366-4c6a-b852-d33650af093b'
 const placeId = '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f'
 const secondPlaceId = 'd79c4c77-534c-4c0a-b4e4-06f4e8ec44ca'
 const opId = '88362a44-f59f-437e-a682-79966a68650a'
+const candidate = {
+  provider: 'geoapify' as const,
+  providerRef: 'geo-123',
+  name: 'Museu do Amanhã',
+  localName: null,
+  address: 'Praça Mauá, 1',
+  localAddress: 'Praça Mauá, 1',
+  lat: -22.894,
+  lng: -43.179,
+  countryCode: 'br',
+  datasource: 'openstreetmap',
+  attribution: '© OpenStreetMap contributors',
+  license: 'ODbL',
+  method: 'geocoding' as const,
+  token: 'assinatura',
+}
 
 describe('validação das operações e do push', () => {
   it('valida UUID e sequência bigint em formato seguro para JSON', () => {
@@ -46,6 +62,87 @@ describe('validação das operações e do push', () => {
       success: true,
       value: { type: 'place.add', opId, tripId, placeId, name: 'Museu do Amanhã' },
     })
+  })
+
+  it('aceita candidate assinado dentro de place.add', () => {
+    expect(
+      validateSyncOperation({
+        type: 'place.add',
+        opId,
+        tripId,
+        placeId,
+        name: candidate.name,
+        candidate,
+      }),
+    ).toEqual({
+      success: true,
+      value: { type: 'place.add', opId, tripId, placeId, name: candidate.name, candidate },
+    })
+  })
+
+  it('valida place.google_link e rejeita IDs com espaços ou URL', () => {
+    expect(
+      validateSyncOperation({
+        type: 'place.google_link',
+        opId,
+        tripId,
+        placeId,
+        googlePlaceId: 'ChIJgUbEo8cfqokR5lP9_Wh_DaM',
+      }),
+    ).toMatchObject({ success: true })
+    expect(
+      validateSyncOperation({
+        type: 'place.google_link',
+        opId,
+        tripId,
+        placeId,
+        googlePlaceId: null,
+      }),
+    ).toMatchObject({ success: true })
+    expect(
+      validateSyncOperation({
+        type: 'place.google_link',
+        opId,
+        tripId,
+        placeId,
+        googlePlaceId: 'https://maps.google.com/place/abc',
+      }),
+    ).toMatchObject({ success: false, issues: [{ path: 'googlePlaceId' }] })
+    expect(
+      validateSyncOperation({
+        type: 'place.google_link',
+        opId,
+        tripId,
+        placeId,
+        googlePlaceId: 'not a place id',
+      }),
+    ).toMatchObject({ success: false, issues: [{ path: 'googlePlaceId' }] })
+  })
+
+  it('normaliza detalhes locais e exige pelo menos um campo', () => {
+    expect(
+      validateSyncOperation({
+        type: 'place.set_local',
+        opId,
+        tripId,
+        placeId,
+        localName: '  nome local  ',
+        localAddress: null,
+      }),
+    ).toEqual({
+      success: true,
+      value: {
+        type: 'place.set_local',
+        opId,
+        tripId,
+        placeId,
+        localName: 'nome local',
+        localAddress: null,
+      },
+    })
+    expect(validateSyncOperation({ type: 'place.set_local', opId, tripId, placeId })).toMatchObject(
+      { success: false, issues: [{ path: 'localName' }] },
+    )
   })
 
   it('recusa identificadores inválidos e nome vazio', () => {
@@ -206,10 +303,37 @@ describe('validação do pull', () => {
   })
 
   it('valida páginas de bootstrap e o erro bootstrap_required', () => {
+    const place = {
+      id: placeId,
+      tripId,
+      provider: null,
+      providerRef: null,
+      providerDatasource: null,
+      attribution: null,
+      license: null,
+      name: 'Lugar',
+      localName: null,
+      address: null,
+      localAddress: null,
+      countryCode: null,
+      googlePlaceId: null,
+      googleMatch: 'none',
+      userLocalName: null,
+      userLocalAddress: null,
+      lat: null,
+      lng: null,
+      suggestedBy: userId,
+      comment: null,
+      dayIndex: null,
+      position: null,
+      seq: '1',
+      deletedAt: null,
+      createdAt: '2026-10-20T12:00:00.000Z',
+    }
     const bootstrap = {
       mode: 'bootstrap',
       snapshotSeq: '42',
-      places: [],
+      places: [place],
       visits: [],
       members: [],
       itinerary: { version: 2, atSeq: '42' },
@@ -231,6 +355,12 @@ describe('validação do pull', () => {
     expect(
       validatePullResponse({ ...bootstrap, itinerary: { version: -1, atSeq: '42' } }),
     ).toMatchObject({ success: false })
+    const placeWithoutCountryCode = Object.fromEntries(
+      Object.entries(place).filter(([key]) => key !== 'countryCode'),
+    )
+    expect(validatePullResponse({ ...bootstrap, places: [placeWithoutCountryCode] })).toMatchObject(
+      { success: false },
+    )
   })
 })
 
@@ -255,10 +385,18 @@ describe('canonicalTripState', () => {
     tripId,
     provider: null,
     providerRef: null,
+    providerDatasource: null,
+    attribution: null,
+    license: null,
+    countryCode: null,
     name: 'Lugar',
     localName: null,
     address: null,
     localAddress: null,
+    googlePlaceId: null,
+    googleMatch: 'none',
+    userLocalName: null,
+    userLocalAddress: null,
     lat: null,
     lng: null,
     suggestedBy: userId,

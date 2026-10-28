@@ -1,0 +1,22 @@
+diff --git a/package.json b/package.json
+index 28a7559534f2cd828861bc33b62c0deaf1242417..33b6d8a2d2a318b8a8aa017bd761fe019ca2c6ca 100644
+--- a/package.json
++++ b/package.json
+@@ -32,7 +32,7 @@
+   "author": "650 Industries, Inc.",
+   "license": "MIT",
+   "dependencies": {
+-    "@expo/mcp-tunnel": "~0.2.3",
++    "@expo/mcp-tunnel": "~0.3.1",
+     "@modelcontextprotocol/sdk": "^1.26.0",
+     "debug": "^4.4.3",
+     "glob": "^11.0.3",
+@@ -40,7 +40,7 @@
+     "resolve-from": "^5.0.0",
+     "ws": "^8.18.3",
+     "xml2js": "^0.6.2",
+-    "zod": "^3.25.76",
++    "zod": "^4.6.6",
+     "zx": "^8.8.1"
+   },
+   "devDependencies": {

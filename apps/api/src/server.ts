@@ -6,8 +6,10 @@ import { createAuthRouter } from './auth/router.ts'
 import { loadConfig } from './config.ts'
 import { createHealthChecks, type HealthChecks } from './health.ts'
 import { createInvitesRouter } from './invites/router.ts'
+import { createPlacesRouter } from './places/router.ts'
 import { createSyncRouter } from './sync/router.ts'
 import { createTripsRouter } from './trips/router.ts'
+import { createPhotosRouter } from './trips/photos-router.ts'
 
 export async function startApiServer(
   config: ReturnType<typeof loadConfig>,
@@ -17,10 +19,20 @@ export async function startApiServer(
   const trips = createTripsRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const sync = createSyncRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const invites = createInvitesRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
+  const places = createPlacesRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
+  const photos = createPhotosRouter(config, { accessTokenVerifier: auth.verifyAccessToken })
   const server = serve(
     {
-      fetch: createApp(healthChecks, 1_000, auth.router, trips.router, sync.router, invites.router)
-        .fetch,
+      fetch: createApp(
+        healthChecks,
+        1_000,
+        auth.router,
+        trips.router,
+        sync.router,
+        invites.router,
+        places.router,
+        photos.router,
+      ).fetch,
       port: config.port,
       hostname: config.host,
     },
@@ -32,7 +44,15 @@ export async function startApiServer(
   )
   server.once(
     'close',
-    () => void Promise.all([auth.close(), trips.close(), sync.close(), invites.close()]),
+    () =>
+      void Promise.all([
+        auth.close(),
+        trips.close(),
+        sync.close(),
+        invites.close(),
+        places.close(),
+        photos.close(),
+      ]),
   )
   return server
 }

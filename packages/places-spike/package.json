@@ -8,6 +8,7 @@
   },
   "scripts": {
     "benchmark": "node --experimental-strip-types --env-file-if-exists=../../.env src/cli.ts",
+    "benchmark:sample-25:dry-run": "node --experimental-strip-types src/sample-25-dry-run.ts",
     "benchmark:links": "node --experimental-strip-types --experimental-transform-types src/links-cli.ts",
     "typecheck": "tsc --noEmit"
   },

@@ -1,6 +1,12 @@
 packages:
   - apps/*
   - packages/*
+overrides:
+  '@expo/cli>zod': 4.6.7
+  '@expo/mcp-tunnel>zod': 4.6.7
+  'expo-mcp>@expo/mcp-tunnel': 0.3.1
+  'expo-mcp>zod': 4.6.7
+  '@remotion/studio@4.0.512>zod@4.4.3': 4.6.7
 allowBuilds:
   '@parcel/watcher': false
   esbuild: true
@@ -35,6 +41,8 @@ minimumReleaseAgeExclude:
   - '@aws-sdk/token-providers@3.1153.0'
   - expo-router@58.0.24
 
+# GHSA-mrhx-c7xc-m3w5: Remotion 4.0.512 fixa Zod 4.4.3; remover quando o Studio subir para >=4.6.6.
+
 # Exceções da auditoria. Revisar quando o Dependabot trouxer versão corrigida.
 # Ambas são transitivas das ferramentas de desenvolvimento do Expo (CLI e Metro), sem correção publicada
 # em 19/out/2026, e não vão para o app nem para a API.
@@ -42,3 +50,7 @@ auditConfig:
   ignoreGhsas:
     - GHSA-86w9-cpqp-85rv # node-forge, via @expo/code-signing-certificates
     - GHSA-vfj7-8cjw-p6xm # braces, via metro > micromatch
+patchedDependencies:
+  '@expo/cli@58.1.13': patches/@expo__cli@58.1.13.patch
+  '@expo/mcp-tunnel@0.3.1': patches/@expo__mcp-tunnel@0.3.1.patch
+  expo-mcp@0.2.4: patches/expo-mcp@0.2.4.patch

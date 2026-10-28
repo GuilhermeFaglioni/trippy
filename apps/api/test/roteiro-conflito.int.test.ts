@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresInviteStore } from '@trippy/adapters/invites'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
@@ -50,6 +50,8 @@ const tokenUsers = new Map<string, UUID>()
 const clients: Array<{ database: NodeSqlDatabase; client: SyncClient }> = []
 let databaseCreated = false
 let sqliteDirectory: string | undefined
+const candidateSecret = 'segredo-de-candidato-integração-com-entropia-suficiente'
+type Pool = InstanceType<typeof pg.Pool>
 let pool: Pool
 let app: ReturnType<typeof createApp>
 let organizerId: UUID
@@ -285,8 +287,8 @@ beforeAll(async () => {
     { tripStore: new PostgresTripStore(pool), accessTokenVerifier },
   )
   const sync = createSyncRouter(
-    { databaseUrl: testDatabaseUrl.toString() },
-    { syncStore: new PostgresSyncStore(pool), accessTokenVerifier },
+    { databaseUrl: testDatabaseUrl.toString(), placesCandidateSecret: candidateSecret },
+    { syncStore: new PostgresSyncStore(pool, candidateSecret), accessTokenVerifier },
   )
   const invites = createInvitesRouter(
     { databaseUrl: testDatabaseUrl.toString() },
@@ -338,8 +340,8 @@ it('preserva conflito de roteiro, exige papel apto e bloqueia alterações após
     'cliente-b.sqlite',
     controlsB,
   )
-  let databaseA = openedA.database
-  let clientA = openedA.client
+  const databaseA = openedA.database
+  const clientA = openedA.client
   let databaseB = openedB.database
   let clientB = openedB.client
 

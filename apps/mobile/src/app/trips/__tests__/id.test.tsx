@@ -15,7 +15,10 @@ const mockParams = {
 }
 const mockRequest = jest.fn<Promise<Response>, [string, RequestInit?]>()
 
-jest.mock('expo-router', () => ({ useLocalSearchParams: () => mockParams }))
+jest.mock('expo-router', () => ({
+  useLocalSearchParams: () => mockParams,
+  useRouter: () => ({ push: jest.fn() }),
+}))
 
 jest
   .spyOn(sessionProvider, 'useSession')

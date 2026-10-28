@@ -7,13 +7,22 @@
     "./auth": "./src/auth/index.ts",
     "./email": "./src/email/index.ts",
     "./invites": "./src/invites/index.ts",
+    "./places": "./src/places/index.ts",
+    "./places/provider": "./src/places/provider.ts",
+    "./places/geoapify": "./src/places/geoapify.ts",
+    "./places/google": "./src/places/google.ts",
+    "./places/usage-store": "./src/places/usage-store.ts",
+    "./places/single-flight": "./src/places/single-flight.ts",
     "./sync": "./src/sync/index.ts",
+    "./photos": "./src/photos/index.ts",
     "./trips": "./src/trips/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1153.0",
+    "@aws-sdk/s3-request-presigner": "3.1153.0",
     "@trippy/domain": "workspace:*",
     "@trippy/sync": "workspace:*",
     "jose": "^6.1.0",
@@ -23,7 +32,7 @@
   "devDependencies": {
     "@types/node": "^22.18.0",
     "@types/nodemailer": "^7.0.4",
-    "@types/pg": "^8.15.0",
+    "@types/pg": "8.15.0",
     "typescript": "~6.0.3"
   }
 }

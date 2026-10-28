@@ -1,10 +1,12 @@
-import type { Pool, PoolClient } from 'pg'
+import pg, { type PoolClient } from 'pg'
 import {
   evaluateEmailCodeAttempt,
   evaluateRefreshTokenRotation,
   isEmailCodeRequestThrottled,
 } from '@trippy/domain'
 import { compareEmailCodeHmac } from './secrets.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface AuthUser {
   id: string

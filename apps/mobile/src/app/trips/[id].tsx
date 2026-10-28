@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Platform, View } from 'react-native'
-import { useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { Button, Card, Notice } from '../../components'
@@ -104,6 +104,7 @@ function TripTabs({
 }
 
 export default function TripRoute() {
+  const router = useRouter()
   const params = useLocalSearchParams<{
     id?: string | string[]
     tripName?: string | string[]
@@ -172,8 +173,20 @@ export default function TripRoute() {
       return <ItineraryScreen tripId={tripId} startDate={startDate} endDate={endDate} />
     }
     if (section === 'grupo') return <MembersScreen tripId={tripId} />
-    return <TripPlacesScreen tripId={tripId} tripName={displayName} role={role} />
-  }, [displayName, endDate, role, section, startDate, tripId])
+    return (
+      <TripPlacesScreen
+        tripId={tripId}
+        tripName={displayName}
+        role={role}
+        onOpenPhotos={() =>
+          router.push({
+            pathname: '/trips/[id]/photos',
+            params: { id: tripId, tripName: displayName },
+          })
+        }
+      />
+    )
+  }, [displayName, endDate, role, router, section, startDate, tripId])
 
   if (membership === 'loading') {
     return (

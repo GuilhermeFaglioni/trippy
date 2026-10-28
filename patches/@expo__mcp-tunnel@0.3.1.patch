@@ -1,0 +1,22 @@
+diff --git a/dist/TunnelMcpServerProxy.js b/dist/TunnelMcpServerProxy.js
+index 08f9d48cf0df296a06f9f98cc4d50c8079318c9d..a97666a95dbd8f76181a0a95658b82fb70640427 100644
+--- a/dist/TunnelMcpServerProxy.js
++++ b/dist/TunnelMcpServerProxy.js
+@@ -48,7 +48,7 @@ export class TunnelMcpServerProxy {
+             name,
+             title: config.title,
+             description: config.description,
+-            inputSchema: config.inputSchema ? z.toJSONSchema(z.object(config.inputSchema)) : undefined,
++            inputSchema: config.inputSchema ? z.toJSONSchema(z.object(config.inputSchema), { io: 'input' }) : undefined,
+             outputSchema: config.outputSchema ? z.toJSONSchema(z.object(config.outputSchema)) : undefined,
+             annotations: config.annotations,
+             _meta: config._meta,
+@@ -65,7 +65,7 @@ export class TunnelMcpServerProxy {
+             name,
+             title: config.title,
+             description: config.description,
+-            argsSchema: config.argsSchema ? z.toJSONSchema(z.object(config.argsSchema)) : undefined,
++            argsSchema: config.argsSchema ? z.toJSONSchema(z.object(config.argsSchema), { io: 'input' }) : undefined,
+             callback,
+         };
+         this.registeredPrompts.set(name, serializedPrompt);

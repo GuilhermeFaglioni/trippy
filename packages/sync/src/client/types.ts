@@ -5,11 +5,16 @@ import type {
   PullResponse,
   PushRequest,
   PushResponse,
+  LivePlaceLocalStatuses,
   SyncPlace,
   UUID,
 } from '../types.ts'
+import type { PlaceSearchCandidate } from '@trippy/domain'
 
-export type LivePlace = Omit<SyncPlace, 'deletedAt'> & { deletedAt: null; visitedByMe: boolean }
+export type LivePlace = Omit<SyncPlace, 'deletedAt'> & {
+  deletedAt: null
+  visitedByMe: boolean
+} & LivePlaceLocalStatuses
 
 export interface ItineraryDraft {
   opId: UUID
@@ -36,7 +41,14 @@ export interface SyncClientStatus {
 
 export interface SyncClient {
   addPlace(tripId: UUID, name: string): Promise<UUID>
+  addPlaceFromCandidate(tripId: UUID, candidate: PlaceSearchCandidate): Promise<UUID>
   removePlace(tripId: UUID, placeId: UUID): Promise<void>
+  linkGooglePlace(tripId: UUID, placeId: UUID, googlePlaceId: string | null): Promise<void>
+  setLocalDetails(
+    tripId: UUID,
+    placeId: UUID,
+    details: { localName?: string | null; localAddress?: string | null },
+  ): Promise<void>
   markVisit(tripId: UUID, placeId: UUID): Promise<void>
   unmarkVisit(tripId: UUID, placeId: UUID): Promise<void>
   /** Enfileira uma única alteração com a ordem completa dos dias informados. */
@@ -58,7 +70,7 @@ export interface SyncClient {
   /** Conta as operações da viagem marcadas como não enviadas. */
   countNotSent(tripId: UUID): Promise<number>
   syncNow(): Promise<void>
-  listPlaces(tripId: UUID): Promise<LivePlace[]>
+  listPlaces(tripId: UUID, _countryCode?: string | null): Promise<LivePlace[]>
   subscribe(listener: () => void): () => void
   getStatus(): SyncClientStatus
 }

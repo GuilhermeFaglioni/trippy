@@ -1,5 +1,7 @@
 import type { Role } from '@trippy/domain'
-import type { Pool, PoolClient } from 'pg'
+import pg, { type PoolClient } from 'pg'
+
+type Pool = InstanceType<typeof pg.Pool>
 import type { TripRecord } from '../trips/store.ts'
 
 export interface CreateInviteRecord {

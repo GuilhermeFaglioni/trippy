@@ -86,6 +86,7 @@ it('aceita banner SMTP fragmentado somente quando recebe CRLF', async () => {
     authIssuer: 'trippy-dev-auth',
     authAudience: 'trippy-dev',
     databaseUrl: 'postgres://trippy:trippy@localhost:54329/trippy',
+    placesCandidateSecret: 'segredo-de-candidato-de-teste-com-entropia-suficiente',
     awsRegion: 'us-east-1',
     s3ForcePathStyle: false,
     s3BucketPhotos: 'trippy-photos',

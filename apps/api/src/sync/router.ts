@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import {
   validatePullQuery,
   validatePullResponse,
@@ -11,6 +11,8 @@ import type { AccessTokenVerifier } from '@trippy/adapters/auth'
 import type { ApiConfig } from '../config.ts'
 import { authenticate, type AuthEnvironment } from '../auth/authenticate.ts'
 import { handleApiError } from '../auth/errors.ts'
+
+type Pool = InstanceType<typeof pg.Pool>
 
 export interface SyncRouterOptions {
   syncStore?: SyncStore
@@ -35,13 +37,13 @@ async function readBody(request: Request): Promise<unknown> {
 }
 
 export function createSyncRouter(
-  config: Pick<ApiConfig, 'databaseUrl'>,
+  config: Pick<ApiConfig, 'databaseUrl' | 'placesCandidateSecret'>,
   options: SyncRouterOptions,
 ) {
   const pool: Pool | undefined = options.syncStore
     ? undefined
     : new pg.Pool({ connectionString: config.databaseUrl, max: 5 })
-  const store = options.syncStore ?? new PostgresSyncStore(pool!)
+  const store = options.syncStore ?? new PostgresSyncStore(pool!, config.placesCandidateSecret)
   const authenticateRequest = authenticate(options.accessTokenVerifier)
   const router = new Hono<AuthEnvironment>()
 

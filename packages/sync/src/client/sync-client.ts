@@ -1,4 +1,6 @@
 import type { SqlDatabase } from '../database.ts'
+import { classifyLocalDetail } from '@trippy/domain/places'
+import type { PlaceSearchCandidate } from '@trippy/domain'
 import {
   type ItineraryDay,
   type PullPageData,
@@ -71,10 +73,18 @@ interface PlaceRow extends Record<string, unknown> {
   trip_id: UUID
   provider: string | null
   provider_ref: string | null
+  country_code: string | null
+  provider_datasource: string | null
+  attribution: string | null
+  license: string | null
   name: string
   local_name: string | null
   address: string | null
   local_address: string | null
+  google_place_id: string | null
+  google_match: SyncPlace['googleMatch']
+  user_local_name: string | null
+  user_local_address: string | null
   lat: number | null
   lng: number | null
   suggested_by: UUID
@@ -179,8 +189,45 @@ class LocalSyncClient implements SyncClient {
     return placeId
   }
 
+  async addPlaceFromCandidate(tripId: UUID, candidate: PlaceSearchCandidate): Promise<UUID> {
+    const placeId = this.idGenerator()
+    await this.writeOperation({
+      type: 'place.add',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      name: candidate.name,
+      candidate,
+    })
+    return placeId
+  }
+
   async removePlace(tripId: UUID, placeId: UUID): Promise<void> {
     await this.writeOperation({ type: 'place.remove', opId: this.idGenerator(), tripId, placeId })
+  }
+
+  async linkGooglePlace(tripId: UUID, placeId: UUID, googlePlaceId: string | null): Promise<void> {
+    await this.writeOperation({
+      type: 'place.google_link',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      googlePlaceId,
+    })
+  }
+
+  async setLocalDetails(
+    tripId: UUID,
+    placeId: UUID,
+    details: { localName?: string | null; localAddress?: string | null },
+  ): Promise<void> {
+    await this.writeOperation({
+      type: 'place.set_local',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      ...details,
+    })
   }
 
   async markVisit(tripId: UUID, placeId: UUID): Promise<void> {
@@ -334,7 +381,8 @@ class LocalSyncClient implements SyncClient {
     return promise
   }
 
-  async listPlaces(tripId: UUID): Promise<LivePlace[]> {
+  async listPlaces(tripId: UUID, _countryCode?: string | null): Promise<LivePlace[]> {
+    void _countryCode
     const rows = await this.database.all<PlaceRow & { visited_by_me: number }>(
       `SELECT places.*, EXISTS (
          SELECT 1 FROM visits
@@ -358,11 +406,26 @@ class LocalSyncClient implements SyncClient {
        ORDER BY places.position IS NULL, places.position, places.created_at, places.id`,
       [this.userId, tripId, this.userId],
     )
-    return rows.map((row) => ({
-      ...this.placeFromRow(row),
-      deletedAt: null,
-      visitedByMe: row.visited_by_me !== 0,
-    }))
+    return rows.map((row) => {
+      const place = this.placeFromRow(row)
+      return {
+        ...place,
+        deletedAt: null,
+        visitedByMe: row.visited_by_me !== 0,
+        localNameStatus: classifyLocalDetail({
+          userValue: place.userLocalName,
+          providerValue: place.localName,
+          countryCode: place.countryCode,
+          kind: 'name',
+        }),
+        localAddressStatus: classifyLocalDetail({
+          userValue: place.userLocalAddress,
+          providerValue: place.localAddress,
+          countryCode: place.countryCode,
+          kind: 'address',
+        }),
+      }
+    })
   }
 
   subscribe(listener: () => void): () => void {
@@ -823,15 +886,77 @@ class LocalSyncClient implements SyncClient {
     createdAt: string,
   ): Promise<void> {
     if (operation.type === 'place.add') {
+      const candidate = operation.candidate
       await transaction.run(
         `INSERT INTO places (
-           id, trip_id, provider, provider_ref, name, local_name, address, local_address, lat, lng,
-           suggested_by, comment, day_index, position, seq, deleted_at, created_at
-         ) VALUES (?, ?, NULL, NULL, ?, NULL, NULL, NULL, NULL, NULL, ?, NULL, NULL, NULL, '0', NULL, ?)
+           id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,
+           name, local_name, address, local_address, lat, lng, google_place_id, google_match,
+           user_local_name, user_local_address, suggested_by, comment, day_index, position,
+           seq, deleted_at, created_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'none', NULL, NULL, ?, NULL, NULL, NULL, '0', NULL, ?)
          ON CONFLICT (id) DO UPDATE SET
-           trip_id = excluded.trip_id, name = excluded.name, suggested_by = excluded.suggested_by,
+           trip_id = excluded.trip_id, provider = excluded.provider,
+           provider_ref = excluded.provider_ref, country_code = excluded.country_code,
+           provider_datasource = excluded.provider_datasource,
+           attribution = excluded.attribution, license = excluded.license, name = excluded.name,
+           local_name = excluded.local_name, address = excluded.address,
+           local_address = excluded.local_address, lat = excluded.lat, lng = excluded.lng,
+           google_place_id = excluded.google_place_id, google_match = excluded.google_match,
+           user_local_name = excluded.user_local_name,
+           user_local_address = excluded.user_local_address, suggested_by = excluded.suggested_by,
            seq = '0', deleted_at = NULL, created_at = excluded.created_at`,
-        [operation.placeId, operation.tripId, operation.name, this.userId, createdAt],
+        [
+          operation.placeId,
+          operation.tripId,
+          candidate?.provider ?? null,
+          candidate?.providerRef ?? null,
+          candidate?.countryCode ?? null,
+          candidate?.datasource ?? null,
+          candidate?.attribution ?? null,
+          candidate?.license ?? null,
+          operation.name,
+          candidate?.localName ?? null,
+          candidate?.address ?? null,
+          candidate?.localAddress ?? null,
+          candidate?.lat ?? null,
+          candidate?.lng ?? null,
+          this.userId,
+          createdAt,
+        ],
+      )
+      return
+    }
+
+    if (operation.type === 'place.google_link') {
+      await transaction.run(
+        `UPDATE places SET google_place_id = ?, google_match = ?, seq = '0'
+         WHERE id = ? AND trip_id = ?`,
+        [
+          operation.googlePlaceId,
+          operation.googlePlaceId === null ? 'no_match' : 'matched',
+          operation.placeId,
+          operation.tripId,
+        ],
+      )
+      return
+    }
+
+    if (operation.type === 'place.set_local') {
+      const assignments: string[] = []
+      const parameters: Array<string | null> = []
+      if (Object.hasOwn(operation, 'localName')) {
+        assignments.push('user_local_name = ?')
+        parameters.push(operation.localName ?? null)
+      }
+      if (Object.hasOwn(operation, 'localAddress')) {
+        assignments.push('user_local_address = ?')
+        parameters.push(operation.localAddress ?? null)
+      }
+      assignments.push("seq = '0'")
+      parameters.push(operation.placeId, operation.tripId)
+      await transaction.run(
+        `UPDATE places SET ${assignments.join(', ')} WHERE id = ? AND trip_id = ?`,
+        parameters,
       )
       return
     }
@@ -917,13 +1042,20 @@ class LocalSyncClient implements SyncClient {
   private async upsertPlace(transaction: SqlDatabase, place: SyncPlace): Promise<void> {
     await transaction.run(
       `INSERT INTO places (
-         id, trip_id, provider, provider_ref, name, local_name, address, local_address, lat, lng,
-         suggested_by, comment, day_index, position, seq, deleted_at, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,
+         name, local_name, address, local_address, lat, lng, google_place_id, google_match,
+         user_local_name, user_local_address, suggested_by, comment, day_index, position,
+         seq, deleted_at, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (id) DO UPDATE SET
          trip_id = excluded.trip_id, provider = excluded.provider, provider_ref = excluded.provider_ref,
+         country_code = excluded.country_code,
+         provider_datasource = excluded.provider_datasource, attribution = excluded.attribution,
+         license = excluded.license,
          name = excluded.name, local_name = excluded.local_name, address = excluded.address,
          local_address = excluded.local_address, lat = excluded.lat, lng = excluded.lng,
+         google_place_id = excluded.google_place_id, google_match = excluded.google_match,
+         user_local_name = excluded.user_local_name, user_local_address = excluded.user_local_address,
          suggested_by = excluded.suggested_by, comment = excluded.comment,
          day_index = excluded.day_index, position = excluded.position, seq = excluded.seq,
          deleted_at = excluded.deleted_at, created_at = excluded.created_at`,
@@ -932,12 +1064,20 @@ class LocalSyncClient implements SyncClient {
         place.tripId,
         place.provider,
         place.providerRef,
+        place.countryCode,
+        place.providerDatasource,
+        place.attribution,
+        place.license,
         place.name,
         place.localName,
         place.address,
         place.localAddress,
         place.lat,
         place.lng,
+        place.googlePlaceId,
+        place.googleMatch,
+        place.userLocalName,
+        place.userLocalAddress,
         place.suggestedBy,
         place.comment,
         place.dayIndex,
@@ -1080,10 +1220,18 @@ class LocalSyncClient implements SyncClient {
       tripId: row.trip_id,
       provider: row.provider,
       providerRef: row.provider_ref,
+      countryCode: row.country_code,
+      providerDatasource: row.provider_datasource,
+      attribution: row.attribution,
+      license: row.license,
       name: row.name,
       localName: row.local_name,
       address: row.address,
       localAddress: row.local_address,
+      googlePlaceId: row.google_place_id,
+      googleMatch: row.google_match,
+      userLocalName: row.user_local_name,
+      userLocalAddress: row.user_local_address,
       lat: row.lat,
       lng: row.lng,
       suggestedBy: row.suggested_by,

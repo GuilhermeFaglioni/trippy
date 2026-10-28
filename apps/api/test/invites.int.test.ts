@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresInviteStore } from '@trippy/adapters/invites'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
@@ -11,8 +11,11 @@ import { createSyncRouter } from '../src/sync/router.ts'
 import { createTripsRouter } from '../src/trips/router.ts'
 import type { HealthChecks } from '../src/health.ts'
 
+type Pool = InstanceType<typeof pg.Pool>
+
 const databaseUrl = process.env.DATABASE_URL
 if (!databaseUrl) throw new Error('DATABASE_URL não definido: configure o Postgres local')
+const candidateSecret = 'segredo-de-candidato-integração-com-entropia-suficiente'
 
 const testDatabaseName = `trippy_api_invites_${process.pid}_${randomUUID().replaceAll('-', '').slice(0, 12)}`
 const adminUrl = new URL(databaseUrl)
@@ -103,8 +106,8 @@ beforeAll(async () => {
     return { userId: verifiedUserId }
   }
   const sync = createSyncRouter(
-    { databaseUrl: testDatabaseUrl.toString() },
-    { syncStore: new PostgresSyncStore(pool), accessTokenVerifier },
+    { databaseUrl: testDatabaseUrl.toString(), placesCandidateSecret: candidateSecret },
+    { syncStore: new PostgresSyncStore(pool, candidateSecret), accessTokenVerifier },
   )
   const invites = createInvitesRouter(
     { databaseUrl: testDatabaseUrl.toString() },

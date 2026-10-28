@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { canRemovePlace, validatePlaceName } from './places.ts'
+import {
+  canConfirmGooglePlace,
+  canRemovePlace,
+  classifyLocalDetail,
+  validatePlaceName,
+} from './places.ts'
 
 describe('canRemovePlace', () => {
   it('permite que quem sugeriu remova o lugar', () => {
@@ -12,6 +17,96 @@ describe('canRemovePlace', () => {
 
   it('não permite que outro membro remova o lugar', () => {
     expect(canRemovePlace({ role: 'member', userId: 'user-b', suggestedBy: 'user-a' })).toBe(false)
+  })
+})
+
+describe('canConfirmGooglePlace', () => {
+  it('usa a mesma regra de remoção', () => {
+    const cases = [
+      { role: 'member' as const, userId: 'user-a', suggestedBy: 'user-a' },
+      { role: 'organizer' as const, userId: 'user-b', suggestedBy: 'user-a' },
+      { role: 'coorganizer' as const, userId: 'user-b', suggestedBy: 'user-a' },
+      { role: 'member' as const, userId: 'user-b', suggestedBy: 'user-a' },
+    ]
+
+    for (const input of cases) {
+      expect(canConfirmGooglePlace(input)).toBe(canRemovePlace(input))
+    }
+  })
+})
+
+describe('classifyLocalDetail', () => {
+  it('marca vazio como ausente e prefere valor da pessoa ao do fornecedor', () => {
+    expect(
+      classifyLocalDetail({
+        userValue: '  ',
+        providerValue: null,
+        countryCode: null,
+        kind: 'name',
+      }),
+    ).toBe('missing')
+    expect(
+      classifyLocalDetail({
+        userValue: '4 Jingshan Front St',
+        providerValue: '北京市东城区景山前街4号',
+        countryCode: 'CN',
+        kind: 'address',
+      }),
+    ).toBe('not_local_language')
+  })
+
+  it('marca endereço curto ou sem número e sem marcador de via como incompleto', () => {
+    expect(
+      classifyLocalDetail({
+        userValue: null,
+        providerValue: 'Rua 1',
+        countryCode: 'BR',
+        kind: 'address',
+      }),
+    ).toBe('incomplete')
+    expect(
+      classifyLocalDetail({
+        userValue: null,
+        providerValue: 'Jingshan Front',
+        countryCode: 'CN',
+        kind: 'address',
+      }),
+    ).toBe('incomplete')
+    expect(
+      classifyLocalDetail({
+        userValue: null,
+        providerValue: 'Avenida Paulista',
+        countryCode: 'BR',
+        kind: 'address',
+      }),
+    ).toBe('ok')
+    expect(
+      classifyLocalDetail({
+        userValue: null,
+        providerValue: 'Av. Paulista',
+        countryCode: 'BR',
+        kind: 'address',
+      }),
+    ).toBe('ok')
+  })
+
+  it('não marca nome como incompleto nem infere idioma sem contexto local', () => {
+    expect(
+      classifyLocalDetail({
+        userValue: null,
+        providerValue: 'KFC',
+        countryCode: 'US',
+        kind: 'name',
+      }),
+    ).toBe('ok')
+    expect(
+      classifyLocalDetail({
+        userValue: null,
+        providerValue: 'Forbidden City',
+        countryCode: null,
+        kind: 'name',
+      }),
+    ).toBe('ok')
   })
 })
 

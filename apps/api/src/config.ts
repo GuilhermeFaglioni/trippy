@@ -9,6 +9,15 @@ export interface ApiConfig {
   authDevJwtPrivateKey?: string
   authJwksUrl?: string
   databaseUrl: string
+  placesCandidateSecret: string
+  geoapifyApiKey?: string
+  googlePlacesApiKey?: string
+  placesSearchUserDailyLimit?: number
+  placesSearchTripDailyLimit?: number
+  placesGoogleDetailsUserDailyLimit?: number
+  placesGoogleDetailsTripDailyLimit?: number
+  placesGoogleRestrictionRadiusMeters?: number
+  placesGeoapifySearchRadiusMeters?: number
   awsRegion: string
   awsAccessKeyId?: string
   awsSecretAccessKey?: string
@@ -40,6 +49,10 @@ function integer(environment: NodeJS.ProcessEnv, name: string, fallback?: number
     throw new Error(`Variável ${name} precisa ser um inteiro positivo.`)
   }
   return parsed
+}
+
+function optionalInteger(environment: NodeJS.ProcessEnv, name: string): number | undefined {
+  return optional(environment, name) ? integer(environment, name) : undefined
 }
 
 export function loadConfig(environment: NodeJS.ProcessEnv = process.env): ApiConfig {
@@ -94,6 +107,26 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): ApiCon
 
   const s3Endpoint = optional(environment, 'S3_ENDPOINT')
   const sqsEndpoint = optional(environment, 'SQS_ENDPOINT')
+  const geoapifyApiKey = optional(environment, 'GEOAPIFY_API_KEY')
+  const googlePlacesApiKey = optional(environment, 'GOOGLE_PLACES_API_KEY')
+  const placesSearchUserDailyLimit = optionalInteger(environment, 'PLACES_SEARCH_USER_DAILY_LIMIT')
+  const placesSearchTripDailyLimit = optionalInteger(environment, 'PLACES_SEARCH_TRIP_DAILY_LIMIT')
+  const placesGoogleDetailsUserDailyLimit = optionalInteger(
+    environment,
+    'PLACES_GOOGLE_DETAILS_USER_DAILY_LIMIT',
+  )
+  const placesGoogleDetailsTripDailyLimit = optionalInteger(
+    environment,
+    'PLACES_GOOGLE_DETAILS_TRIP_DAILY_LIMIT',
+  )
+  const placesGoogleRestrictionRadiusMeters = optionalInteger(
+    environment,
+    'PLACES_GOOGLE_RESTRICTION_RADIUS_METERS',
+  )
+  const placesGeoapifySearchRadiusMeters = optionalInteger(
+    environment,
+    'PLACES_GEOAPIFY_SEARCH_RADIUS_METERS',
+  )
 
   return {
     port: integer(environment, 'PORT', 3000),
@@ -106,6 +139,21 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env): ApiCon
     ...(authDevJwtPrivateKey ? { authDevJwtPrivateKey } : {}),
     ...(authJwksUrl ? { authJwksUrl } : {}),
     databaseUrl: required(environment, 'DATABASE_URL'),
+    placesCandidateSecret: required(environment, 'PLACES_CANDIDATE_SECRET'),
+    ...(geoapifyApiKey ? { geoapifyApiKey } : {}),
+    ...(googlePlacesApiKey ? { googlePlacesApiKey } : {}),
+    ...(placesSearchUserDailyLimit !== undefined ? { placesSearchUserDailyLimit } : {}),
+    ...(placesSearchTripDailyLimit !== undefined ? { placesSearchTripDailyLimit } : {}),
+    ...(placesGoogleDetailsUserDailyLimit !== undefined
+      ? { placesGoogleDetailsUserDailyLimit }
+      : {}),
+    ...(placesGoogleDetailsTripDailyLimit !== undefined
+      ? { placesGoogleDetailsTripDailyLimit }
+      : {}),
+    ...(placesGoogleRestrictionRadiusMeters !== undefined
+      ? { placesGoogleRestrictionRadiusMeters }
+      : {}),
+    ...(placesGeoapifySearchRadiusMeters !== undefined ? { placesGeoapifySearchRadiusMeters } : {}),
     awsRegion: optional(environment, 'AWS_REGION') ?? 'us-east-1',
     ...(accessKeyId ? { awsAccessKeyId: accessKeyId } : {}),
     ...(secretAccessKey ? { awsSecretAccessKey: secretAccessKey } : {}),

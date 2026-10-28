@@ -1,4 +1,4 @@
-import type { Role } from '@trippy/domain'
+import type { LocalDetailStatus, PlaceSearchCandidate, Role } from '@trippy/domain'
 
 export type UUID = string
 
@@ -14,6 +14,7 @@ export interface AddPlaceOperation extends OperationMetadata {
   type: 'place.add'
   placeId: UUID
   name: string
+  candidate?: PlaceSearchCandidate
 }
 
 export interface RemovePlaceOperation extends OperationMetadata {
@@ -53,6 +54,19 @@ export interface SetMemberRoleOperation extends OperationMetadata {
   role: 'coorganizer' | 'member'
 }
 
+export interface LinkGooglePlaceOperation extends OperationMetadata {
+  type: 'place.google_link'
+  placeId: UUID
+  googlePlaceId: string | null
+}
+
+export interface SetLocalDetailsOperation extends OperationMetadata {
+  type: 'place.set_local'
+  placeId: UUID
+  localName?: string | null
+  localAddress?: string | null
+}
+
 export type SyncOperation =
   | AddPlaceOperation
   | RemovePlaceOperation
@@ -61,6 +75,8 @@ export type SyncOperation =
   | ArrangeItineraryOperation
   | RemoveMemberOperation
   | SetMemberRoleOperation
+  | LinkGooglePlaceOperation
+  | SetLocalDetailsOperation
 
 export interface PushRequest {
   operations: SyncOperation[]
@@ -83,10 +99,18 @@ export interface SyncPlace {
   tripId: UUID
   provider: string | null
   providerRef: string | null
+  countryCode: string | null
+  providerDatasource: string | null
+  attribution: string | null
+  license: string | null
   name: string
   localName: string | null
   address: string | null
   localAddress: string | null
+  googlePlaceId: string | null
+  googleMatch: 'none' | 'matched' | 'no_match'
+  userLocalName: string | null
+  userLocalAddress: string | null
   lat: number | null
   lng: number | null
   suggestedBy: UUID
@@ -96,6 +120,11 @@ export interface SyncPlace {
   seq: SyncSequence
   deletedAt: string | null
   createdAt: string
+}
+
+export interface LivePlaceLocalStatuses {
+  localNameStatus: LocalDetailStatus
+  localAddressStatus: LocalDetailStatus
 }
 
 export interface SyncVisit {

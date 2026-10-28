@@ -77,6 +77,19 @@ const migrations: readonly Migration[] = [
   {
     version: 3,
     statements: [
+      'ALTER TABLE places ADD COLUMN country_code TEXT',
+      'ALTER TABLE places ADD COLUMN provider_datasource TEXT',
+      'ALTER TABLE places ADD COLUMN attribution TEXT',
+      'ALTER TABLE places ADD COLUMN license TEXT',
+      'ALTER TABLE places ADD COLUMN google_place_id TEXT',
+      "ALTER TABLE places ADD COLUMN google_match TEXT NOT NULL DEFAULT 'none' CHECK (google_match IN ('none', 'matched', 'no_match'))",
+      'ALTER TABLE places ADD COLUMN user_local_name TEXT',
+      'ALTER TABLE places ADD COLUMN user_local_address TEXT',
+    ],
+  },
+  {
+    version: 4,
+    statements: [
       'ALTER TABLE sync_state ADD COLUMN itinerary_version INTEGER',
       'ALTER TABLE sync_state ADD COLUMN removed_at TEXT',
       `CREATE TABLE itinerary_drafts (

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import pg, { type Pool } from 'pg'
+import pg from 'pg'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresTripStore } from '@trippy/adapters/trips'
 import { migrate } from '../../../packages/db/src/migrate.ts'
@@ -19,6 +19,8 @@ testDatabaseUrl.pathname = `/${testDatabaseName}`
 
 const tokenUsers = new Map<string, string>()
 let databaseCreated = false
+const candidateSecret = 'segredo-de-candidato-integração-com-entropia-suficiente'
+type Pool = InstanceType<typeof pg.Pool>
 let pool: Pool
 let app: ReturnType<typeof createApp>
 let organizerId: string
@@ -112,7 +114,7 @@ beforeAll(async () => {
     },
   )
   const sync = createSyncRouter(
-    { databaseUrl: testDatabaseUrl.toString() },
+    { databaseUrl: testDatabaseUrl.toString(), placesCandidateSecret: candidateSecret },
     {
       accessTokenVerifier: async (token) => {
         const userId = tokenUsers.get(token)

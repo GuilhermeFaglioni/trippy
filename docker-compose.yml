@@ -2,7 +2,7 @@ name: trippy
 
 services:
   postgres:
-    image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
+    image: postgres:17@sha256:b8faeff7712663c2773a190181e1246e37e364b887611c04658c28b44e2408fe
     environment:
       POSTGRES_USER: trippy
       POSTGRES_PASSWORD: trippy
@@ -44,7 +44,7 @@ services:
       start_period: 10s
 
   elasticmq:
-    image: softwaremill/elasticmq:1.6.16@sha256:7c401d18fbf6ac5db2bc688f468793904658f15e6625f7a45596d5fcfb7a6952
+    image: softwaremill/elasticmq:1.7.1@sha256:f1de391a9b8c18fd3f2ce37b4f7d1b8989857e8a8e18bb01284fff899e69da82
     user: '0:0'
     ports:
       - '127.0.0.1:59324:9324'
@@ -60,7 +60,7 @@ services:
       start_period: 10s
 
   mailpit:
-    image: axllent/mailpit:v1.31.2@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+    image: axllent/mailpit:v1.32.0@sha256:0790692be935ea4420d085694f7985b1f692ca6a8771ab0e0bd8ba75ac180498
     ports:
       - '127.0.0.1:51025:1025'
       - '127.0.0.1:58025:8025'
