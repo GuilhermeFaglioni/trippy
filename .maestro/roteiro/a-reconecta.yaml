@@ -1,0 +1,33 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///diagnostics
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: simulate-offline-toggle
+- tapOn:
+    id: simulate-offline-toggle
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: trip-tab-roteiro
+- scrollUntilVisible:
+    element:
+      id: roteiro-lugar-${PLACE_2_SLUG}
+    direction: DOWN
+- assertVisible:
+    id: roteiro-lugar-${PLACE_2_SLUG}
+- tapOn:
+    id: trip-tab-lugares
+- scrollUntilVisible:
+    element:
+      id: trip-sync-status
+    direction: DOWN
+- assertVisible: 0 pendentes

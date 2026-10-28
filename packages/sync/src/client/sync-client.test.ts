@@ -20,10 +20,12 @@ import { createSyncClient } from './sync-client.ts'
 import { NodeSqlDatabase } from './node-sqlite.ts'
 
 const tripId = '11111111-1111-4111-8111-111111111111'
+const otherTripId = '88888888-8888-4888-8888-888888888888'
 const userA = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const userB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 const placeA = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 const placeB = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+const placeC = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'
 const fixedTime = '2026-10-21T12:00:00.000Z'
 
 const databases: NodeSqlDatabase[] = []
@@ -80,7 +82,7 @@ function createClient(
   transport: FakeSyncTransport,
   userId = userA,
   getTripIds: () => readonly UUID[] | Promise<readonly UUID[]> = () => [tripId],
-  options: { pageSize?: number; pushBatchSize?: number } = {},
+  options: { pageSize?: number; pushBatchSize?: number; idGenerator?: () => UUID } = {},
 ) {
   let id = 0
   return createSyncClient({
@@ -88,7 +90,8 @@ function createClient(
     transport,
     userId,
     getTripIds,
-    idGenerator: () => `00000000-0000-4000-8000-${String(++id).padStart(12, '0')}`,
+    idGenerator:
+      options.idGenerator ?? (() => `00000000-0000-4000-8000-${String(++id).padStart(12, '0')}`),
     now: () => fixedTime,
     timeZone: 'UTC',
     pageSize: options.pageSize ?? 2,
@@ -200,6 +203,7 @@ interface FakeServerState {
   visits: Map<string, SyncVisit>
   members: Map<string, SyncMember>
   sequence: bigint
+  itineraryVersion: number
   requireBootstrapOnce: boolean
 }
 
@@ -210,6 +214,7 @@ function newFakeServerState(): FakeServerState {
     visits: new Map(),
     members: new Map(),
     sequence: 0n,
+    itineraryVersion: 0,
     requireBootstrapOnce: false,
   }
 }
@@ -221,6 +226,7 @@ class FakeSyncTransport {
   failBeforePullCall: number | null = null
   losePushResponseCall: number | null = null
   rejectReason: 'not_member' | 'forbidden' | 'invalid' | null = null
+  notMemberOnPull = false
 
   constructor(
     readonly userId = userA,
@@ -245,6 +251,12 @@ class FakeSyncTransport {
   }
   set sequence(value: bigint) {
     this.sharedState.sequence = value
+  }
+  get itineraryVersion(): number {
+    return this.sharedState.itineraryVersion
+  }
+  set itineraryVersion(value: number) {
+    this.sharedState.itineraryVersion = value
   }
   get requireBootstrapOnce(): boolean {
     return this.sharedState.requireBootstrapOnce
@@ -282,6 +294,29 @@ class FakeSyncTransport {
     this.members.set(userId, { ...member, seq: String(this.sequence), deletedAt: fixedTime })
   }
 
+  arrangeOnServer(days: Array<{ dayIndex: number; placeIds: UUID[] }>): void {
+    const dayIndexes = new Set(days.map((day) => day.dayIndex))
+    const placements = new Map<UUID, { dayIndex: number; position: number }>()
+    for (const day of days) {
+      day.placeIds.forEach((placeId, position) => {
+        placements.set(placeId, { dayIndex: day.dayIndex, position })
+      })
+    }
+
+    for (const place of this.places.values()) {
+      const placement = placements.get(place.id)
+      const leavesListedDay =
+        place.dayIndex !== null && dayIndexes.has(place.dayIndex) && !placement
+      if (!placement && !leavesListedDay) continue
+      const dayIndex = placement?.dayIndex ?? null
+      const position = placement?.position ?? null
+      if (place.dayIndex === dayIndex && place.position === position) continue
+      this.sequence += 1n
+      this.places.set(place.id, { ...place, dayIndex, position, seq: String(this.sequence) })
+    }
+    this.itineraryVersion += 1
+  }
+
   async push(request: PushRequest): Promise<PushResponse> {
     const callNumber = this.pushes.length + 1
     this.pushes.push(request.operations.map((operation) => ({ ...operation })))
@@ -289,7 +324,11 @@ class FakeSyncTransport {
 
     const results = request.operations.map((operation) => {
       const prior = this.applied.get(operation.opId)
-      if (prior) return { opId: operation.opId, status: 'duplicate' as const }
+      if (prior) {
+        return prior.status === 'conflict'
+          ? prior
+          : { opId: operation.opId, status: 'duplicate' as const }
+      }
 
       if (this.rejectReason) {
         const rejected = {
@@ -297,7 +336,7 @@ class FakeSyncTransport {
           status: 'rejected' as const,
           reason: this.rejectReason,
         }
-        this.applied.set(operation.opId, rejected)
+        if (this.rejectReason !== 'invalid') this.applied.set(operation.opId, rejected)
         return rejected
       }
 
@@ -315,6 +354,7 @@ class FakeSyncTransport {
     const callNumber = this.pulls.length + 1
     this.pulls.push(query)
     if (this.failBeforePullCall === callNumber) throw new Error('falha de rede durante o pull')
+    if (this.notMemberOnPull) return { error: 'not_member' }
     if (this.requireBootstrapOnce && query.mode === 'incremental') {
       this.requireBootstrapOnce = false
       return { error: 'bootstrap_required' }
@@ -384,6 +424,10 @@ class FakeSyncTransport {
       members: page
         .filter((event) => event.kind === 'member')
         .map((event) => event.value as SyncMember),
+      itinerary: {
+        version: this.itineraryVersion,
+        atSeq: String(snapshotSeq ?? this.sequence),
+      },
       nextCursor,
       hasMore: events.length > page.length,
     }
@@ -409,6 +453,14 @@ class FakeSyncTransport {
   }
 
   private apply(operation: SyncOperation): PushResponse['results'][number] {
+    if (operation.type === 'itinerary.arrange' && operation.baseVersion !== this.itineraryVersion) {
+      return {
+        opId: operation.opId,
+        status: 'conflict',
+        currentVersion: this.itineraryVersion,
+      }
+    }
+
     if (operation.type === 'place.add' && this.places.has(operation.placeId)) {
       return { opId: operation.opId, status: 'duplicate' }
     }
@@ -428,6 +480,37 @@ class FakeSyncTransport {
       if (operation.type === 'visit.unmark' && (!visit || visit.deletedAt !== null)) {
         return { opId: operation.opId, status: 'duplicate' }
       }
+    }
+
+    if (operation.type === 'itinerary.arrange') {
+      this.arrangeOnServer(operation.days)
+      return { opId: operation.opId, status: 'applied' }
+    }
+
+    if (operation.type === 'member.remove') {
+      const member = this.members.get(operation.userId)
+      if (member && member.deletedAt === null) {
+        this.sequence += 1n
+        this.members.set(member.userId, {
+          ...member,
+          seq: String(this.sequence),
+          deletedAt: fixedTime,
+        })
+      }
+      return { opId: operation.opId, status: 'applied' }
+    }
+
+    if (operation.type === 'member.set_role') {
+      const member = this.members.get(operation.userId)
+      if (member && member.deletedAt === null) {
+        this.sequence += 1n
+        this.members.set(member.userId, {
+          ...member,
+          role: operation.role,
+          seq: String(this.sequence),
+        })
+      }
+      return { opId: operation.opId, status: 'applied' }
     }
 
     if (operation.type === 'place.google_link' || operation.type === 'place.set_local') {
@@ -485,7 +568,242 @@ class FakeSyncTransport {
   }
 }
 
+class PausedPullSyncTransport extends FakeSyncTransport {
+  private pullPause:
+    | {
+        started: () => void
+        startedPromise: Promise<void>
+        releasedPromise: Promise<void>
+        release: () => void
+      }
+    | undefined
+
+  pauseNextPull(): { started: Promise<void>; release: () => void } {
+    let started!: () => void
+    let release!: () => void
+    const startedPromise = new Promise<void>((resolve) => {
+      started = resolve
+    })
+    const releasedPromise = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    this.pullPause = { started, startedPromise, releasedPromise, release }
+    return { started: startedPromise, release }
+  }
+
+  override async pull(query: PullQuery): Promise<PullResponse> {
+    const pause = this.pullPause
+    if (pause) {
+      this.pullPause = undefined
+      pause.started()
+      await pause.releasedPromise
+    }
+    return super.pull(query)
+  }
+}
+
 describe('SyncClient', () => {
+  it('preserva rascunho de conflito após reabrir e mostra o roteiro do servidor', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'trippy-sync-'))
+    temporaryDirectories.push(directory)
+    const path = join(directory, 'client.sqlite')
+    let database = createDatabase(path)
+    const transport = new FakeSyncTransport()
+    transport.itineraryVersion = 4
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace({ ...createPlace(placeA, 'Praça', userA, '2'), dayIndex: 0, position: 0 })
+    transport.seedPlace({ ...createPlace(placeB, 'Museu', userA, '3'), dayIndex: 0, position: 1 })
+    let client = await createClient(database, transport)
+    await client.syncNow()
+
+    await client.arrangeItinerary(tripId, [{ dayIndex: 0, placeIds: [placeB, placeA] }])
+    transport.arrangeOnServer([{ dayIndex: 0, placeIds: [placeA, placeB] }])
+    await client.syncNow()
+
+    const draft = (await client.listItineraryDrafts(tripId))[0]
+    expect(draft).toMatchObject({
+      opId: '00000000-0000-4000-8000-000000000001',
+      tripId,
+      baseVersion: 4,
+      currentVersion: 5,
+      days: [{ dayIndex: 0, placeIds: [placeB, placeA] }],
+      createdAt: fixedTime,
+    })
+    expect(
+      (await client.listPlaces(tripId))
+        .map(({ id, dayIndex, position }) => ({ id, dayIndex, position }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual([
+      { id: placeA, dayIndex: 0, position: 0 },
+      { id: placeB, dayIndex: 0, position: 1 },
+    ])
+
+    database.close()
+    databases.splice(databases.indexOf(database), 1)
+    database = createDatabase(path)
+    client = await createClient(database, transport)
+    expect(await client.listItineraryDrafts(tripId)).toEqual([draft])
+    expect(
+      (await client.listPlaces(tripId))
+        .map(({ id, dayIndex, position }) => ({ id, dayIndex, position }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual([
+      { id: placeA, dayIndex: 0, position: 0 },
+      { id: placeB, dayIndex: 0, position: 1 },
+    ])
+  })
+
+  it('reaplica rascunho com novo op_id e versão atual conhecida', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.itineraryVersion = 2
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace({ ...createPlace(placeA, 'Praça', userA, '2'), dayIndex: 0, position: 0 })
+    transport.seedPlace({ ...createPlace(placeB, 'Museu', userA, '3'), dayIndex: 0, position: 1 })
+    let id = 0
+    const idGenerator = () => `00000000-0000-4000-8000-${String(++id).padStart(12, '0')}`
+    const client = await createClient(database, transport, userA, undefined, { idGenerator })
+    await client.syncNow()
+    await client.arrangeItinerary(tripId, [{ dayIndex: 0, placeIds: [placeB, placeA] }])
+    transport.arrangeOnServer([{ dayIndex: 0, placeIds: [placeA, placeB] }])
+    await client.syncNow()
+
+    const [draft] = await client.listItineraryDrafts(tripId)
+    expect(draft).toBeDefined()
+    await client.reapplyItineraryDraft(draft!.opId)
+    expect(await client.listItineraryDrafts(tripId)).toEqual([])
+    await client.syncNow()
+
+    const reapplied = transport.pushes.at(-1)?.[0]
+    expect(reapplied).toMatchObject({
+      type: 'itinerary.arrange',
+      opId: '00000000-0000-4000-8000-000000000002',
+      baseVersion: 3,
+      days: [{ dayIndex: 0, placeIds: [placeB, placeA] }],
+    })
+  })
+
+  it('projeta arranjos por dia e encadeia versões dos arranjos pendentes', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.itineraryVersion = 7
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace({ ...createPlace(placeA, 'Praça', userA, '2'), dayIndex: 0, position: 0 })
+    transport.seedPlace({ ...createPlace(placeB, 'Museu', userA, '3'), dayIndex: 0, position: 1 })
+    transport.seedPlace({ ...createPlace(placeC, 'Café', userA, '4'), dayIndex: 1, position: 0 })
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    await client.arrangeItinerary(tripId, [
+      { dayIndex: 0, placeIds: [placeB] },
+      { dayIndex: 1, placeIds: [] },
+    ])
+    expect(
+      (await client.listPlaces(tripId))
+        .map(({ id, dayIndex, position }) => ({ id, dayIndex, position }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual([
+      { id: placeA, dayIndex: null, position: null },
+      { id: placeB, dayIndex: 0, position: 0 },
+      { id: placeC, dayIndex: null, position: null },
+    ])
+
+    await client.arrangeItinerary(tripId, [
+      { dayIndex: 0, placeIds: [] },
+      { dayIndex: 1, placeIds: [placeA] },
+    ])
+    transport.failBeforePushCall = 1
+    await expect(client.syncNow()).rejects.toThrow('falha de rede antes do push')
+
+    expect(
+      transport.pushes[0]?.map((operation) =>
+        operation.type === 'itinerary.arrange' ? operation.baseVersion : null,
+      ),
+    ).toEqual([7, 8])
+    expect(
+      (await client.listPlaces(tripId))
+        .map(({ id, dayIndex, position }) => ({ id, dayIndex, position }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual([
+      { id: placeA, dayIndex: 1, position: 0 },
+      { id: placeB, dayIndex: null, position: null },
+      { id: placeC, dayIndex: null, position: null },
+    ])
+  })
+
+  it('usa versão do arrange aplicado quando outro toque chega antes do pull', async () => {
+    const database = createDatabase()
+    const transport = new PausedPullSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedPlace({ ...createPlace(placeA, 'Praça', userA, '2'), dayIndex: 0, position: 0 })
+    transport.seedPlace({ ...createPlace(placeB, 'Museu', userA, '3'), dayIndex: 0, position: 1 })
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    await client.arrangeItinerary(tripId, [{ dayIndex: 0, placeIds: [placeB, placeA] }])
+    const pause = transport.pauseNextPull()
+    const firstSync = client.syncNow()
+    await pause.started
+
+    expect(transport.itineraryVersion).toBe(1)
+    expect(
+      await database.get<{ count: number } & Record<string, unknown>>(
+        'SELECT COUNT(*) AS count FROM outbox WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ count: 0 })
+    await client.arrangeItinerary(tripId, [{ dayIndex: 0, placeIds: [placeA, placeB] }])
+    const pending = await database.get<{ payload: string } & Record<string, unknown>>(
+      `SELECT payload FROM outbox WHERE trip_id = ? AND type = 'itinerary.arrange'`,
+      [tripId],
+    )
+    expect(JSON.parse(pending!.payload)).toMatchObject({ baseVersion: 1 })
+
+    pause.release()
+    await firstSync
+    await client.syncNow()
+
+    expect(await client.listItineraryDrafts(tripId)).toEqual([])
+    expect(transport.itineraryVersion).toBe(2)
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+  })
+
+  it('projeta papel e remoção de membro e reaplica as pendências após pull', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.seedMember({ ...createMember(userA, '1'), role: 'organizer' })
+    transport.seedMember(createMember(userB, '2'))
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    await client.setMemberRole(tripId, userB, 'coorganizer')
+    expect(await client.listMembers(tripId)).toContainEqual({
+      userId: userB,
+      role: 'coorganizer',
+      joinedAt: fixedTime,
+    })
+
+    transport.rejectReason = 'invalid'
+    await client.syncNow()
+    expect(await client.listMembers(tripId)).toContainEqual({
+      userId: userB,
+      role: 'coorganizer',
+      joinedAt: fixedTime,
+    })
+
+    await client.removeMember(tripId, userB)
+    expect(await client.listMembers(tripId)).toEqual([
+      { userId: userA, role: 'organizer', joinedAt: fixedTime },
+    ])
+    await client.syncNow()
+    expect(await client.listMembers(tripId)).toEqual([
+      { userId: userA, role: 'organizer', joinedAt: fixedTime },
+    ])
+    expect(client.getStatus()).toMatchObject({ pending: 2, notSent: 0 })
+  })
+
   it('sincroniza candidato, confirmação do Google e detalhes locais sem token no registro', async () => {
     const database = createDatabase()
     const transport = new FakeSyncTransport()
@@ -638,6 +956,7 @@ describe('SyncClient', () => {
     transport.seedVisit(createVisit(placeA, userA, '3', '2026-10-20T09:30:00.000Z'))
     let client = await createClient(database, transport, userA, undefined, { pageSize: 1 })
     await client.syncNow()
+    transport.itineraryVersion = 2
     await client.markVisit(tripId, placeA)
     transport.failBeforePullCall = transport.pulls.length + 2
 
@@ -647,6 +966,12 @@ describe('SyncClient', () => {
         { needs_bootstrap: number; snapshot_seq: string | null } & Record<string, unknown>
       >('SELECT needs_bootstrap, snapshot_seq FROM sync_state WHERE trip_id = ?', [tripId]),
     ).toMatchObject({ needs_bootstrap: 1, snapshot_seq: '3' })
+    expect(
+      await database.get<{ itinerary_version: number | null } & Record<string, unknown>>(
+        'SELECT itinerary_version FROM sync_state WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ itinerary_version: 0 })
 
     database.close()
     databases.splice(databases.indexOf(database), 1)
@@ -663,6 +988,12 @@ describe('SyncClient', () => {
         { needs_bootstrap: number; snapshot_seq: string | null } & Record<string, unknown>
       >('SELECT needs_bootstrap, snapshot_seq FROM sync_state WHERE trip_id = ?', [tripId]),
     ).toMatchObject({ needs_bootstrap: 0, snapshot_seq: null })
+    expect(
+      await database.get<{ itinerary_version: number | null } & Record<string, unknown>>(
+        'SELECT itinerary_version FROM sync_state WHERE trip_id = ?',
+        [tripId],
+      ),
+    ).toMatchObject({ itinerary_version: 2 })
   })
 
   it('refaz o bootstrap do zero quando duplicate chega com snapshot parcial', async () => {
@@ -966,6 +1297,56 @@ describe('SyncClient', () => {
     await client.syncNow()
 
     expect(await client.listPlaces(tripId)).toEqual([])
+  })
+
+  it('marca viagem removida, retém pendências não enviadas e espera redescoberta', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedMember(createMember(userB, '2'))
+    transport.seedPlace(createPlace(placeA, 'Roteiro', userB, '3'))
+    let discoveredTrips: readonly UUID[] = [tripId]
+    const client = await createClient(database, transport, userA, () => discoveredTrips)
+    await client.syncNow()
+
+    await client.addPlace(tripId, 'Pendente')
+    await client.markVisit(tripId, placeA)
+    transport.rejectReason = 'not_member'
+    transport.notMemberOnPull = true
+    await client.syncNow()
+
+    expect(client.getStatus()).toMatchObject({ pending: 0, notSent: 2 })
+    expect(await client.listPlaces(tripId)).toEqual([])
+    expect(await client.listMembers(tripId)).toEqual([])
+    expect(await client.listRemovedTrips()).toEqual([tripId])
+    const clientWithNotSentCount = client as typeof client & {
+      countNotSent: (requestedTripId: UUID) => Promise<number>
+    }
+    expect(await clientWithNotSentCount.countNotSent(tripId)).toBe(2)
+    expect(await clientWithNotSentCount.countNotSent(otherTripId)).toBe(0)
+    expect(
+      await database.all<{ status: string } & Record<string, unknown>>(
+        'SELECT status FROM outbox ORDER BY position',
+      ),
+    ).toEqual([{ status: 'not_sent' }, { status: 'not_sent' }])
+
+    discoveredTrips = []
+    transport.notMemberOnPull = false
+    const previousPullCount = transport.pulls.length
+    await client.syncNow()
+    expect(transport.pulls).toHaveLength(previousPullCount)
+    expect(transport.pushes).toHaveLength(1)
+
+    discoveredTrips = [tripId]
+    await client.syncNow()
+    expect(
+      transport.pulls.slice(previousPullCount).some((query) => query.mode === 'bootstrap'),
+    ).toBe(true)
+    expect(await client.listRemovedTrips()).toEqual([])
+    expect(await client.listPlaces(tripId)).toEqual([
+      expect.objectContaining({ id: placeA, name: 'Roteiro' }),
+    ])
+    expect(client.getStatus()).toMatchObject({ pending: 0, notSent: 2 })
   })
 
   it('continua sync de viagens locais quando getTripIds falha', async () => {

@@ -1,3 +1,4 @@
+import { canEditItinerary, canRemoveMember, canSetMemberRole, type Member } from '@trippy/domain'
 import { canConfirmGooglePlace, canRemovePlace } from '@trippy/domain/places'
 import { verifyPlaceSearchCandidate } from '../places/candidate-token.ts'
 import type {
@@ -23,6 +24,8 @@ interface TripRow {
   id: string
   timezone: string
   seq_counter: string
+  itinerary_version: number
+  trip_days: number
 }
 
 interface AppliedOperationRow {
@@ -47,6 +50,9 @@ interface VisitLookupRow {
 interface PullTripRow {
   seq_counter: string
   sync_floor_seq: string
+  itinerary_version: number
+  member_user_id: string | null
+  left_at: Date | null
 }
 
 interface PullPlaceRow extends Omit<SyncPlace, 'createdAt' | 'deletedAt'> {
@@ -83,6 +89,21 @@ async function inTransaction<T>(client: PoolClient, operation: () => Promise<T>)
   }
 }
 
+async function inReadOnlyRepeatableRead<T>(
+  client: PoolClient,
+  operation: () => Promise<T>,
+): Promise<T> {
+  await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+  try {
+    const value = await operation()
+    await client.query('COMMIT')
+    return value
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  }
+}
+
 function duplicateResult(operation: SyncOperation): PushOperationResult {
   return { opId: operation.opId, status: 'duplicate' }
 }
@@ -100,7 +121,7 @@ function replayResult(
   prior: AppliedOperationRow,
 ): PushOperationResult {
   if (prior.user_id !== userId) return rejectedResult(operation, 'invalid')
-  if (prior.result.status === 'rejected') {
+  if (prior.result.status === 'rejected' || prior.result.status === 'conflict') {
     return { ...prior.result, opId: operation.opId }
   }
   return duplicateResult(operation)
@@ -297,6 +318,137 @@ async function applyVisit(
   return { opId: operation.opId, status: 'applied' }
 }
 
+async function applyItineraryArrange(
+  client: PoolClient,
+  userId: string,
+  role: SyncMember['role'],
+  operation: Extract<SyncOperation, { type: 'itinerary.arrange' }>,
+  trip: TripRow,
+): Promise<PushOperationResult> {
+  if (!canEditItinerary(role)) return rejectedResult(operation, 'forbidden')
+  if (operation.days.some((day) => day.dayIndex >= trip.trip_days)) {
+    return rejectedResult(operation, 'invalid')
+  }
+
+  const placeIds = operation.days.flatMap((day) =>
+    day.placeIds.map((placeId) => placeId.toLowerCase()),
+  )
+  const dayIndexes = operation.days.map((day) => day.dayIndex)
+  const validPlaces = await client.query<{ id: string }>(
+    `SELECT id FROM places
+     WHERE trip_id = $1 AND deleted_at IS NULL AND id = ANY($2::uuid[])
+     FOR UPDATE`,
+    [operation.tripId, placeIds],
+  )
+  if (validPlaces.rowCount !== placeIds.length) return rejectedResult(operation, 'invalid')
+
+  const version = await client.query<{ itinerary_version: number }>(
+    `UPDATE trips
+     SET itinerary_version = itinerary_version + 1
+     WHERE id = $1 AND itinerary_version = $2
+     RETURNING itinerary_version`,
+    [operation.tripId, operation.baseVersion],
+  )
+  if (!version.rows[0]) {
+    const current = await client.query<{ itinerary_version: number }>(
+      'SELECT itinerary_version FROM trips WHERE id = $1',
+      [operation.tripId],
+    )
+    return {
+      opId: operation.opId,
+      status: 'conflict',
+      currentVersion: current.rows[0]!.itinerary_version,
+    }
+  }
+
+  const affected = await client.query<{
+    id: string
+    day_index: number | null
+    position: number | null
+  }>(
+    `SELECT id, day_index, position FROM places
+     WHERE trip_id = $1 AND deleted_at IS NULL
+       AND (id = ANY($2::uuid[]) OR day_index = ANY($3::int[]))
+     ORDER BY id
+     FOR UPDATE`,
+    [operation.tripId, placeIds, dayIndexes],
+  )
+  const placements = new Map<string, { dayIndex: number; position: number }>()
+  for (const day of operation.days) {
+    day.placeIds.forEach((placeId, position) => {
+      placements.set(placeId.toLowerCase(), { dayIndex: day.dayIndex, position })
+    })
+  }
+
+  for (const place of affected.rows) {
+    const placement = placements.get(place.id)
+    const dayIndex = placement?.dayIndex ?? null
+    const position = placement?.position ?? null
+    if (place.day_index === dayIndex && place.position === position) continue
+
+    const sequence = await nextSequence(client, operation.tripId)
+    await client.query('UPDATE places SET day_index = $2, position = $3, seq = $4 WHERE id = $1', [
+      place.id,
+      dayIndex,
+      position,
+      sequence,
+    ])
+  }
+
+  return { opId: operation.opId, status: 'applied' }
+}
+
+async function findActiveTargetMember(
+  client: PoolClient,
+  tripId: string,
+  userId: string,
+): Promise<Member | null> {
+  const result = await client.query<{ user_id: string; role: SyncMember['role'] }>(
+    `SELECT user_id, role FROM trip_members
+     WHERE trip_id = $1 AND user_id = $2 AND left_at IS NULL
+     FOR UPDATE`,
+    [tripId, userId],
+  )
+  const target = result.rows[0]
+  return target ? { userId: target.user_id, role: target.role } : null
+}
+
+async function applyMemberRemove(
+  client: PoolClient,
+  actor: Member,
+  operation: Extract<SyncOperation, { type: 'member.remove' }>,
+): Promise<PushOperationResult> {
+  const target = await findActiveTargetMember(client, operation.tripId, operation.userId)
+  if (!target) return rejectedResult(operation, 'invalid')
+  if (!canRemoveMember(actor, target)) return rejectedResult(operation, 'forbidden')
+
+  const sequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    `UPDATE trip_members SET left_at = now(), seq = $3
+     WHERE trip_id = $1 AND user_id = $2`,
+    [operation.tripId, operation.userId, sequence],
+  )
+  return { opId: operation.opId, status: 'applied' }
+}
+
+async function applyMemberSetRole(
+  client: PoolClient,
+  actor: Member,
+  operation: Extract<SyncOperation, { type: 'member.set_role' }>,
+): Promise<PushOperationResult> {
+  const target = await findActiveTargetMember(client, operation.tripId, operation.userId)
+  if (!target) return rejectedResult(operation, 'invalid')
+  if (!canSetMemberRole(actor, target)) return rejectedResult(operation, 'forbidden')
+
+  const sequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    `UPDATE trip_members SET role = $3, seq = $4
+     WHERE trip_id = $1 AND user_id = $2`,
+    [operation.tripId, operation.userId, operation.role, sequence],
+  )
+  return { opId: operation.opId, status: 'applied' }
+}
+
 async function applyGoogleLink(
   client: PoolClient,
   userId: string,
@@ -386,6 +538,12 @@ async function applyNewOperation(
     case 'visit.mark':
     case 'visit.unmark':
       return applyVisit(client, userId, operation, trip.timezone)
+    case 'itinerary.arrange':
+      return applyItineraryArrange(client, userId, role, operation, trip)
+    case 'member.remove':
+      return applyMemberRemove(client, { userId, role }, operation)
+    case 'member.set_role':
+      return applyMemberSetRole(client, { userId, role }, operation)
   }
 }
 
@@ -439,7 +597,9 @@ export class PostgresSyncStore implements SyncStore {
           }
 
           const tripResult = await client.query<TripRow>(
-            `SELECT id, timezone, seq_counter::text AS seq_counter
+            `SELECT id, timezone, seq_counter::text AS seq_counter,
+                    itinerary_version,
+                    COALESCE(end_date - start_date + 1, 0)::int AS trip_days
              FROM trips
              WHERE id = $1 AND deleted_at IS NULL
              FOR UPDATE`,
@@ -486,135 +646,145 @@ export class PostgresSyncStore implements SyncStore {
   }
 
   async pull(userId: string, query: PullQuery): Promise<PullResponse | null> {
-    const tripResult = await this.pool.query<PullTripRow>(
-      `SELECT trips.seq_counter::text AS seq_counter,
-              trips.sync_floor_seq::text AS sync_floor_seq
-       FROM trips
-       JOIN trip_members ON trip_members.trip_id = trips.id
-       WHERE trips.id = $1
-         AND trips.deleted_at IS NULL
-         AND trip_members.user_id = $2
-         AND trip_members.left_at IS NULL`,
-      [query.tripId, userId],
-    )
-    const trip = tripResult.rows[0]
-    if (!trip) return null
+    const client = await this.pool.connect()
+    try {
+      return await inReadOnlyRepeatableRead(client, async () => {
+        const tripResult = await client.query<PullTripRow>(
+          `SELECT trips.seq_counter::text AS seq_counter,
+                  trips.itinerary_version,
+                  trips.sync_floor_seq::text AS sync_floor_seq,
+                  trip_members.user_id AS member_user_id,
+                  trip_members.left_at
+           FROM trips
+           LEFT JOIN trip_members
+             ON trip_members.trip_id = trips.id AND trip_members.user_id = $2
+           WHERE trips.id = $1 AND trips.deleted_at IS NULL`,
+          [query.tripId, userId],
+        )
+        const trip = tripResult.rows[0]
+        if (!trip || !trip.member_user_id) return null
+        if (trip.left_at) return { error: 'not_member' }
 
-    const bootstrap = query.mode === 'bootstrap'
-    const firstBootstrapPage = bootstrap && !('snapshotSeq' in query)
-    const snapshotSeq = bootstrap
-      ? firstBootstrapPage
-        ? trip.seq_counter
-        : query.snapshotSeq
-      : trip.seq_counter
-    const cursor = bootstrap ? (firstBootstrapPage ? '0' : query.cursor) : query.cursor
-    const currentSeq = BigInt(trip.seq_counter)
-    const floorSeq = BigInt(trip.sync_floor_seq)
-    const cursorSeq = BigInt(cursor)
-    const snapshotValue = BigInt(snapshotSeq)
+        const bootstrap = query.mode === 'bootstrap'
+        const firstBootstrapPage = bootstrap && !('snapshotSeq' in query)
+        const snapshotSeq = bootstrap
+          ? firstBootstrapPage
+            ? trip.seq_counter
+            : query.snapshotSeq
+          : trip.seq_counter
+        const cursor = bootstrap ? (firstBootstrapPage ? '0' : query.cursor) : query.cursor
+        const currentSeq = BigInt(trip.seq_counter)
+        const floorSeq = BigInt(trip.sync_floor_seq)
+        const cursorSeq = BigInt(cursor)
+        const snapshotValue = BigInt(snapshotSeq)
 
-    if (cursorSeq > currentSeq || (!firstBootstrapPage && cursorSeq < floorSeq)) {
-      return { error: 'bootstrap_required' }
-    }
-    if (bootstrap && (snapshotValue > currentSeq || cursorSeq > snapshotValue)) {
-      return { error: 'bootstrap_required' }
-    }
-    if (!firstBootstrapPage && bootstrap && snapshotValue < floorSeq) {
-      return { error: 'bootstrap_required' }
-    }
-
-    const pageLimit = query.limit
-    const selectedLimit = pageLimit + 1
-    const [placeRows, visitRows, memberRows] = await Promise.all([
-      listPageRows<PullPlaceRow>(
-        this.pool,
-        'places',
-        `id, trip_id AS "tripId", provider, provider_ref AS "providerRef",
-         country_code AS "countryCode",
-         provider_datasource AS "providerDatasource", attribution, license, name,
-         local_name AS "localName", address, local_address AS "localAddress", lat, lng,
-         google_place_id AS "googlePlaceId", google_match AS "googleMatch",
-         user_local_name AS "userLocalName", user_local_address AS "userLocalAddress",
-         suggested_by AS "suggestedBy", comment, day_index AS "dayIndex", position,
-         seq::text AS seq, deleted_at AS "deletedAt", created_at AS "createdAt"`,
-        'deleted_at',
-        query.tripId,
-        cursor,
-        snapshotSeq,
-        selectedLimit,
-        bootstrap,
-      ),
-      listPageRows<PullVisitRow>(
-        this.pool,
-        'visits',
-        `place_id AS "placeId", trip_id AS "tripId", user_id AS "userId",
-         marked_by AS "markedBy", visited_at AS "visitedAt", visited_tz AS "visitedTz",
-         seq::text AS seq, deleted_at AS "deletedAt"`,
-        'deleted_at',
-        query.tripId,
-        cursor,
-        snapshotSeq,
-        selectedLimit,
-        bootstrap,
-      ),
-      listPageRows<PullMemberRow>(
-        this.pool,
-        'trip_members',
-        `trip_id AS "tripId", user_id AS "userId", role, joined_at AS "joinedAt",
-         seq::text AS seq, left_at AS "deletedAt"`,
-        'left_at',
-        query.tripId,
-        cursor,
-        snapshotSeq,
-        selectedLimit,
-        bootstrap,
-      ),
-    ])
-    const records: PullRecord[] = [
-      ...placeRows.map((row) => {
-        const value: SyncPlace = {
-          ...row,
-          createdAt: row.createdAt.toISOString(),
-          deletedAt: row.deletedAt?.toISOString() ?? null,
+        if (cursorSeq > currentSeq || (!firstBootstrapPage && cursorSeq < floorSeq)) {
+          return { error: 'bootstrap_required' }
         }
-        return { kind: 'place' as const, seq: value.seq, id: value.id, value }
-      }),
-      ...visitRows.map((row) => {
-        const value: SyncVisit = {
-          ...row,
-          visitedAt: row.visitedAt.toISOString(),
-          deletedAt: row.deletedAt?.toISOString() ?? null,
+        if (bootstrap && (snapshotValue > currentSeq || cursorSeq > snapshotValue)) {
+          return { error: 'bootstrap_required' }
         }
-        return {
-          kind: 'visit' as const,
-          seq: value.seq,
-          id: `${value.placeId}:${value.userId}`,
-          value,
+        if (!firstBootstrapPage && bootstrap && snapshotValue < floorSeq) {
+          return { error: 'bootstrap_required' }
         }
-      }),
-      ...memberRows.map((row) => {
-        const value: SyncMember = {
-          ...row,
-          joinedAt: row.joinedAt.toISOString(),
-          deletedAt: row.deletedAt?.toISOString() ?? null,
-        }
-        return { kind: 'member' as const, seq: value.seq, id: value.userId, value }
-      }),
-    ].sort(comparePullRecords)
-    const hasMore = records.length > pageLimit
-    const page = records.slice(0, pageLimit)
-    const nextCursor = hasMore ? page.at(-1)!.seq : snapshotSeq
 
-    const responseData = {
-      places: page.flatMap((record) => (record.kind === 'place' ? [record.value] : [])),
-      visits: page.flatMap((record) => (record.kind === 'visit' ? [record.value] : [])),
-      members: page.flatMap((record) => (record.kind === 'member' ? [record.value] : [])),
-      nextCursor,
-      hasMore,
+        const pageLimit = query.limit
+        const selectedLimit = pageLimit + 1
+        const [placeRows, visitRows, memberRows] = await Promise.all([
+          listPageRows<PullPlaceRow>(
+            client,
+            'places',
+            `id, trip_id AS "tripId", provider, provider_ref AS "providerRef",
+             country_code AS "countryCode",
+             provider_datasource AS "providerDatasource", attribution, license, name,
+             local_name AS "localName", address, local_address AS "localAddress", lat, lng,
+             google_place_id AS "googlePlaceId", google_match AS "googleMatch",
+             user_local_name AS "userLocalName", user_local_address AS "userLocalAddress",
+             suggested_by AS "suggestedBy", comment, day_index AS "dayIndex", position,
+             seq::text AS seq, deleted_at AS "deletedAt", created_at AS "createdAt"`,
+            'deleted_at',
+            query.tripId,
+            cursor,
+            snapshotSeq,
+            selectedLimit,
+            bootstrap,
+          ),
+          listPageRows<PullVisitRow>(
+            client,
+            'visits',
+            `place_id AS "placeId", trip_id AS "tripId", user_id AS "userId",
+             marked_by AS "markedBy", visited_at AS "visitedAt", visited_tz AS "visitedTz",
+             seq::text AS seq, deleted_at AS "deletedAt"`,
+            'deleted_at',
+            query.tripId,
+            cursor,
+            snapshotSeq,
+            selectedLimit,
+            bootstrap,
+          ),
+          listPageRows<PullMemberRow>(
+            client,
+            'trip_members',
+            `trip_id AS "tripId", user_id AS "userId", role, joined_at AS "joinedAt",
+             seq::text AS seq, left_at AS "deletedAt"`,
+            'left_at',
+            query.tripId,
+            cursor,
+            snapshotSeq,
+            selectedLimit,
+            bootstrap,
+          ),
+        ])
+        const records: PullRecord[] = [
+          ...placeRows.map((row) => {
+            const value: SyncPlace = {
+              ...row,
+              createdAt: row.createdAt.toISOString(),
+              deletedAt: row.deletedAt?.toISOString() ?? null,
+            }
+            return { kind: 'place' as const, seq: value.seq, id: value.id, value }
+          }),
+          ...visitRows.map((row) => {
+            const value: SyncVisit = {
+              ...row,
+              visitedAt: row.visitedAt.toISOString(),
+              deletedAt: row.deletedAt?.toISOString() ?? null,
+            }
+            return {
+              kind: 'visit' as const,
+              seq: value.seq,
+              id: `${value.placeId}:${value.userId}`,
+              value,
+            }
+          }),
+          ...memberRows.map((row) => {
+            const value: SyncMember = {
+              ...row,
+              joinedAt: row.joinedAt.toISOString(),
+              deletedAt: row.deletedAt?.toISOString() ?? null,
+            }
+            return { kind: 'member' as const, seq: value.seq, id: value.userId, value }
+          }),
+        ].sort(comparePullRecords)
+        const hasMore = records.length > pageLimit
+        const page = records.slice(0, pageLimit)
+        const nextCursor = hasMore ? page.at(-1)!.seq : snapshotSeq
+
+        const responseData = {
+          places: page.flatMap((record) => (record.kind === 'place' ? [record.value] : [])),
+          visits: page.flatMap((record) => (record.kind === 'visit' ? [record.value] : [])),
+          members: page.flatMap((record) => (record.kind === 'member' ? [record.value] : [])),
+          itinerary: { version: trip.itinerary_version, atSeq: trip.seq_counter },
+          nextCursor,
+          hasMore,
+        }
+
+        return bootstrap
+          ? { mode: 'bootstrap', snapshotSeq, ...responseData }
+          : { mode: 'incremental', ...responseData }
+      })
+    } finally {
+      client.release()
     }
-
-    return bootstrap
-      ? { mode: 'bootstrap', snapshotSeq, ...responseData }
-      : { mode: 'incremental', ...responseData }
   }
 }

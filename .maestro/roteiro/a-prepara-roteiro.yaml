@@ -1,0 +1,62 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: add-place-button
+- tapOn:
+    id: place-search-query
+- inputText: ${PLACE_1}
+- hideKeyboard
+- tapOn:
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: add-place-button
+- tapOn:
+    id: place-search-query
+- inputText: ${PLACE_2}
+- hideKeyboard
+- tapOn:
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: add-place-button
+- tapOn:
+    id: place-search-query
+- inputText: ${PLACE_3}
+- hideKeyboard
+- tapOn:
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: trip-tab-roteiro
+- assertVisible:
+    id: tela-roteiro
+- scrollUntilVisible:
+    element:
+      id: roteiro-lugar-${PLACE_1_SLUG}-por-no-dia
+    direction: DOWN
+- tapOn:
+    id: roteiro-lugar-${PLACE_1_SLUG}-por-no-dia
+- scrollUntilVisible:
+    element:
+      id: roteiro-lugar-${PLACE_2_SLUG}-por-no-dia
+    direction: DOWN
+- tapOn:
+    id: roteiro-lugar-${PLACE_2_SLUG}-por-no-dia
+- scrollUntilVisible:
+    element:
+      id: roteiro-lugar-${PLACE_3_SLUG}-por-no-dia
+    direction: DOWN
+- tapOn:
+    id: roteiro-lugar-${PLACE_3_SLUG}-por-no-dia

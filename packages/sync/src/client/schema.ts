@@ -87,6 +87,22 @@ const migrations: readonly Migration[] = [
       'ALTER TABLE places ADD COLUMN user_local_address TEXT',
     ],
   },
+  {
+    version: 4,
+    statements: [
+      'ALTER TABLE sync_state ADD COLUMN itinerary_version INTEGER',
+      'ALTER TABLE sync_state ADD COLUMN removed_at TEXT',
+      `CREATE TABLE itinerary_drafts (
+        op_id TEXT PRIMARY KEY NOT NULL,
+        trip_id TEXT NOT NULL,
+        base_version INTEGER NOT NULL,
+        current_version INTEGER NOT NULL,
+        payload TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )`,
+      'CREATE INDEX itinerary_drafts_trip_id_idx ON itinerary_drafts (trip_id, created_at)',
+    ],
+  },
 ]
 
 export async function migrateSyncDatabase(

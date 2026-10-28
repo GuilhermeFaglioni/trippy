@@ -1,0 +1,72 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    clearKeychain: true
+- openLink: ${DEV_CLIENT_URL}
+- tapOn:
+    text: Abrir
+    optional: true
+- extendedWaitUntil:
+    visible: Go home
+    timeout: 90000
+    optional: true
+- tapOn:
+    point: 91%,48%
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: login-email-input
+    timeout: 30000
+- tapOn:
+    id: login-email-input
+- inputText: ${A_EMAIL}
+- tapOn:
+    id: login-email-submit
+- assertVisible:
+    id: login-code-input
+- runScript:
+    file: ../scripts/codigo-mailpit.js
+    env:
+      EMAIL: ${A_EMAIL}
+- tapOn:
+    id: login-code-input
+- inputText: ${output.codigo}
+- pressKey: enter
+- assertVisible:
+    id: my-trips-screen
+- tapOn:
+    id: my-trips-empty-create
+- assertVisible: Nova viagem
+- evalScript: ${output.startDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
+- evalScript: ${output.endDate = new Date(Date.now() + 63 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
+- tapOn:
+    id: new-trip-name
+- inputText: ${TRIP_NAME}
+- tapOn: Destino
+- tapOn:
+    id: new-trip-destination
+- inputText: Recife
+- tapOn: Data de ida
+- tapOn:
+    id: new-trip-start-date
+- inputText: ${output.startDate}
+- tapOn:
+    id: trippy-wordmark
+- tapOn:
+    id: new-trip-end-date
+- inputText: ${output.endDate}
+- tapOn:
+    id: trippy-wordmark
+- tapOn:
+    id: new-trip-submit
+- assertVisible: ${TRIP_NAME}, Recife
+- tapOn: ${TRIP_NAME}, Recife
+- assertVisible:
+    id: trip-detail-screen
+- tapOn:
+    id: create-trip-invite
+- assertVisible:
+    id: invite-code-value
+- copyTextFrom:
+    id: invite-code-value
+- evalScript: ${console.log('INVITE_TOKEN=' + maestro.copiedText)}

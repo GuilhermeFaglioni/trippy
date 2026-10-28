@@ -1,0 +1,22 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: viagem-abas
+- tapOn:
+    id: trip-tab-grupo
+- scrollUntilVisible:
+    element:
+      id: grupo-membro-${B_USER_ID}-remover
+    direction: DOWN
+- assertVisible:
+    id: grupo-membro-${B_USER_ID}
+- tapOn:
+    id: grupo-membro-${B_USER_ID}-remover
+- assertNotVisible:
+    id: grupo-membro-${B_USER_ID}

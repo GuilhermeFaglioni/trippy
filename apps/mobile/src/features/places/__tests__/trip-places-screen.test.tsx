@@ -92,6 +92,15 @@ function createClient(initialPlaces: LivePlace[] = [createPlace()]) {
       )
       notify()
     }),
+    arrangeItinerary: jest.fn().mockResolvedValue(undefined),
+    listItineraryDrafts: jest.fn().mockResolvedValue([]),
+    discardItineraryDraft: jest.fn().mockResolvedValue(undefined),
+    reapplyItineraryDraft: jest.fn().mockResolvedValue(undefined),
+    listMembers: jest.fn().mockResolvedValue([]),
+    removeMember: jest.fn().mockResolvedValue(undefined),
+    setMemberRole: jest.fn().mockResolvedValue(undefined),
+    listRemovedTrips: jest.fn().mockResolvedValue([]),
+    countNotSent: jest.fn().mockResolvedValue(0),
     syncNow: jest.fn().mockResolvedValue(undefined),
     listPlaces: jest.fn(async () => places),
     subscribe: jest.fn((listener) => {

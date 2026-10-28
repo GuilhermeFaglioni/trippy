@@ -11,9 +11,11 @@ const mockPush = jest.fn()
 const mockRequest = jest.fn<Promise<Response>, [string, RequestInit?]>()
 const mockRememberTripIds = jest.fn()
 const mockSyncNow = jest.fn<Promise<void>, []>()
-const mockSyncClient = { syncNow: mockSyncNow }
+const mockListRemovedTrips = jest.fn<Promise<string[]>, []>()
+const mockSyncClient = { syncNow: mockSyncNow, listRemovedTrips: mockListRemovedTrips }
 const mockUseEffect = reactUseEffect
 let mockFocusCallback: (() => void | (() => void)) | undefined
+let mockRemovedTrips: readonly string[] = []
 
 jest.mock('expo-router', () => {
   return {
@@ -37,6 +39,7 @@ jest.spyOn(syncProvider, 'useSync').mockImplementation(
       status: { lastSyncedAt: null, pending: 0, notSent: 0 },
       ready: true,
       error: null,
+      removedTrips: mockRemovedTrips,
       rememberTripId: jest.fn(),
       rememberTripIds: mockRememberTripIds,
     }) as unknown as ReturnType<typeof syncProvider.useSync>,
@@ -70,7 +73,9 @@ describe('tela Minhas viagens', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockSyncNow.mockResolvedValue(undefined)
+    mockListRemovedTrips.mockResolvedValue([])
     mockFocusCallback = undefined
+    mockRemovedTrips = []
   })
 
   it('mostra carregamento enquanto busca as viagens', async () => {
@@ -136,7 +141,13 @@ describe('tela Minhas viagens', () => {
     await fireEvent.press(screen.getByTestId('trip-card-58f75ed5-b524-46f8-b387-650d9b43ee36'))
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/trips/[id]',
-      params: { id: trip.id, tripName: trip.name, role: trip.role },
+      params: {
+        id: trip.id,
+        tripName: trip.name,
+        role: trip.role,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+      },
     })
     expect(mockRememberTripIds).toHaveBeenCalledWith([
       trip.id,
@@ -173,5 +184,33 @@ describe('tela Minhas viagens', () => {
     })
 
     await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(2))
+  })
+
+  it('oculta viagens marcadas como removidas e não as lembra para sincronização', async () => {
+    mockListRemovedTrips.mockResolvedValue([trip.id])
+    mockRequest.mockResolvedValue(response([trip]))
+    const screen = await renderScreen()
+
+    expect(await screen.findByText('Você ainda não tem viagens.')).toBeOnTheScreen()
+    expect(screen.queryByTestId(`trip-card-${trip.id}`)).toBeNull()
+    expect(mockRememberTripIds).toHaveBeenCalledWith([])
+  })
+
+  it('oculta uma viagem quando sincronização sinaliza remoção após carregar a lista', async () => {
+    mockRequest.mockResolvedValue(response([trip]))
+    const screen = await renderScreen()
+
+    expect(await screen.findByTestId(`trip-card-${trip.id}`)).toBeOnTheScreen()
+
+    mockRemovedTrips = [trip.id]
+    await screen.rerender(
+      <DesignSystemProvider>
+        <MyTripsScreen />
+      </DesignSystemProvider>,
+    )
+
+    expect(screen.queryByTestId(`trip-card-${trip.id}`)).toBeNull()
+    expect(screen.getByText('Você ainda não tem viagens.')).toBeOnTheScreen()
+    expect(mockRememberTripIds).toHaveBeenLastCalledWith([trip.id])
   })
 })

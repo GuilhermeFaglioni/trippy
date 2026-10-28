@@ -2,6 +2,7 @@ import type { SqlDatabase } from '../database.ts'
 import { classifyLocalDetail } from '@trippy/domain/places'
 import type { PlaceSearchCandidate } from '@trippy/domain'
 import {
+  type ItineraryDay,
   type PullPageData,
   type PullQuery,
   type PushOperationResult,
@@ -18,7 +19,14 @@ import {
   validateSyncOperation,
 } from '../validation.ts'
 import { migrateSyncDatabase } from './schema.ts'
-import type { LivePlace, SyncClient, SyncClientStatus, SyncTransport } from './types.ts'
+import type {
+  ItineraryDraft,
+  LiveMember,
+  LivePlace,
+  SyncClient,
+  SyncClientStatus,
+  SyncTransport,
+} from './types.ts'
 
 const DEFAULT_PAGE_SIZE = 100
 const DEFAULT_PUSH_BATCH_SIZE = 50
@@ -44,6 +52,8 @@ interface SyncStateRow extends Record<string, unknown> {
   snapshot_seq: string | null
   last_synced_at: string | null
   needs_bootstrap: number
+  itinerary_version: number | null
+  removed_at: string | null
 }
 
 interface OutboxRow extends Record<string, unknown> {
@@ -84,6 +94,21 @@ interface PlaceRow extends Record<string, unknown> {
   seq: string
   deleted_at: string | null
   created_at: string
+}
+
+interface ItineraryDraftRow extends Record<string, unknown> {
+  op_id: UUID
+  trip_id: UUID
+  base_version: number
+  current_version: number
+  payload: string
+  created_at: string
+}
+
+interface MemberRow extends Record<string, unknown> {
+  user_id: UUID
+  role: LiveMember['role']
+  joined_at: string
 }
 
 interface StatusCounts extends Record<string, unknown> {
@@ -213,6 +238,134 @@ class LocalSyncClient implements SyncClient {
     await this.writeOperation({ type: 'visit.unmark', opId: this.idGenerator(), tripId, placeId })
   }
 
+  async arrangeItinerary(tripId: UUID, days: ItineraryDay[]): Promise<void> {
+    const opId = this.idGenerator()
+    const createdAt = this.now()
+    await this.database.transaction(async (transaction) => {
+      await this.ensureSyncState(transaction, tripId)
+      const baseVersion = await this.nextItineraryBaseVersion(transaction, tripId)
+      const validation = validateSyncOperation({
+        type: 'itinerary.arrange',
+        opId,
+        tripId,
+        baseVersion,
+        days,
+      })
+      if (!validation.success)
+        throw new Error(validation.issues.map((issue) => issue.message).join(' '))
+      await this.applyOperation(transaction, validation.value, createdAt)
+      await transaction.run(
+        `INSERT INTO outbox (op_id, trip_id, type, payload, created_at, status, attempts, last_error)
+         VALUES (?, ?, ?, ?, ?, 'pending', 0, NULL)`,
+        [opId, tripId, validation.value.type, JSON.stringify(validation.value), createdAt],
+      )
+    })
+    await this.refreshStatus()
+    this.notifyListeners()
+  }
+
+  async listItineraryDrafts(tripId: UUID): Promise<ItineraryDraft[]> {
+    const rows = await this.database.all<ItineraryDraftRow>(
+      `SELECT op_id, trip_id, base_version, current_version, payload, created_at
+       FROM itinerary_drafts WHERE trip_id = ? ORDER BY created_at, op_id`,
+      [tripId],
+    )
+    return rows.map((row) => ({
+      opId: row.op_id,
+      tripId: row.trip_id,
+      baseVersion: row.base_version,
+      currentVersion: row.current_version,
+      days: this.itineraryDaysFromDraft(row),
+      createdAt: row.created_at,
+    }))
+  }
+
+  async discardItineraryDraft(opId: UUID): Promise<void> {
+    await this.database.run('DELETE FROM itinerary_drafts WHERE op_id = ?', [opId])
+  }
+
+  async reapplyItineraryDraft(opId: UUID): Promise<void> {
+    const createdAt = this.now()
+    await this.database.transaction(async (transaction) => {
+      const row = await transaction.get<ItineraryDraftRow>(
+        `SELECT op_id, trip_id, base_version, current_version, payload, created_at
+         FROM itinerary_drafts WHERE op_id = ?`,
+        [opId],
+      )
+      if (!row) throw new Error(`Rascunho de roteiro não encontrado: ${opId}.`)
+
+      await this.ensureSyncState(transaction, row.trip_id)
+      const baseVersion = await this.nextItineraryBaseVersion(transaction, row.trip_id)
+      const validation = validateSyncOperation({
+        type: 'itinerary.arrange',
+        opId: this.idGenerator(),
+        tripId: row.trip_id,
+        baseVersion,
+        days: this.itineraryDaysFromDraft(row),
+      })
+      if (!validation.success)
+        throw new Error(validation.issues.map((issue) => issue.message).join(' '))
+      await this.applyOperation(transaction, validation.value, createdAt)
+      await transaction.run(
+        `INSERT INTO outbox (op_id, trip_id, type, payload, created_at, status, attempts, last_error)
+         VALUES (?, ?, ?, ?, ?, 'pending', 0, NULL)`,
+        [
+          validation.value.opId,
+          row.trip_id,
+          validation.value.type,
+          JSON.stringify(validation.value),
+          createdAt,
+        ],
+      )
+      await transaction.run('DELETE FROM itinerary_drafts WHERE op_id = ?', [opId])
+    })
+    await this.refreshStatus()
+    this.notifyListeners()
+  }
+
+  async listMembers(tripId: UUID): Promise<LiveMember[]> {
+    const rows = await this.database.all<MemberRow>(
+      `SELECT user_id, role, joined_at FROM members
+       WHERE trip_id = ? AND deleted_at IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM sync_state WHERE sync_state.trip_id = members.trip_id
+             AND sync_state.removed_at IS NOT NULL
+         )
+       ORDER BY joined_at, user_id`,
+      [tripId],
+    )
+    return rows.map((row) => ({ userId: row.user_id, role: row.role, joinedAt: row.joined_at }))
+  }
+
+  async removeMember(tripId: UUID, userId: UUID): Promise<void> {
+    await this.writeOperation({ type: 'member.remove', opId: this.idGenerator(), tripId, userId })
+  }
+
+  async setMemberRole(tripId: UUID, userId: UUID, role: 'coorganizer' | 'member'): Promise<void> {
+    await this.writeOperation({
+      type: 'member.set_role',
+      opId: this.idGenerator(),
+      tripId,
+      userId,
+      role,
+    })
+  }
+
+  async listRemovedTrips(): Promise<UUID[]> {
+    const rows = await this.database.all<{ trip_id: UUID } & Record<string, unknown>>(
+      'SELECT trip_id FROM sync_state WHERE removed_at IS NOT NULL ORDER BY removed_at, trip_id',
+    )
+    return rows.map((row) => row.trip_id)
+  }
+
+  async countNotSent(tripId: UUID): Promise<number> {
+    const row = await this.database.get<{ count: number } & Record<string, unknown>>(
+      "SELECT COUNT(*) AS count FROM outbox WHERE trip_id = ? AND status = 'not_sent'",
+      [tripId],
+    )
+    return Number(row?.count ?? 0)
+  }
+
   syncNow(): Promise<void> {
     if (this.syncPromise) return this.syncPromise
     const promise = this.performSync()
@@ -245,6 +398,10 @@ class LocalSyncClient implements SyncClient {
            WHERE members.trip_id = places.trip_id
              AND members.user_id = ?
              AND members.deleted_at IS NOT NULL
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM sync_state
+           WHERE sync_state.trip_id = places.trip_id AND sync_state.removed_at IS NOT NULL
          )
        ORDER BY places.position IS NULL, places.position, places.created_at, places.id`,
       [this.userId, tripId, this.userId],
@@ -311,10 +468,14 @@ class LocalSyncClient implements SyncClient {
       await this.refreshStatus()
       this.notifyListeners()
       const tripIds = new Set<UUID>()
+      const discoveredTripIds = new Set<UUID>()
       let discoveryError: string | null = null
       try {
         for (const tripId of await this.discoverTripIds()) {
-          if (isUuid(tripId)) tripIds.add(tripId)
+          if (isUuid(tripId)) {
+            tripIds.add(tripId)
+            discoveredTripIds.add(tripId)
+          }
         }
       } catch (error) {
         discoveryError = errorMessage(error)
@@ -331,6 +492,17 @@ class LocalSyncClient implements SyncClient {
       for (const row of localTripRows) tripIds.add(row.trip_id)
       for (const tripId of [...tripIds].sort()) {
         await this.withTripLock(tripId, async () => {
+          const state = await this.getSyncState(tripId)
+          if (state.removed_at !== null) {
+            if (!discoveredTripIds.has(tripId)) return
+            await this.database.transaction(async (transaction) => {
+              await transaction.run(
+                `UPDATE sync_state SET removed_at = NULL, cursor = NULL, snapshot_seq = NULL,
+                   itinerary_version = NULL, needs_bootstrap = 1 WHERE trip_id = ?`,
+                [tripId],
+              )
+            })
+          }
           await this.pushTrip(tripId)
           await this.pullTrip(tripId)
           await this.database.transaction(async (transaction) => {
@@ -424,14 +596,49 @@ class LocalSyncClient implements SyncClient {
           const result = results.get(opId)!
           if (result.status === 'applied' || result.status === 'duplicate') {
             await transaction.run('DELETE FROM outbox WHERE op_id = ?', [opId])
+            if (result.status === 'applied') {
+              const entry = batch.find(({ row }) => row.op_id === opId)
+              if (entry?.operation.type === 'itinerary.arrange') {
+                const nextVersion = entry.operation.baseVersion + 1
+                await transaction.run(
+                  `UPDATE sync_state SET itinerary_version = ?
+                   WHERE trip_id = ? AND (itinerary_version IS NULL OR itinerary_version < ?)`,
+                  [nextVersion, tripId, nextVersion],
+                )
+              }
+            }
             if (result.status === 'duplicate') needsBootstrap = true
-          } else if (result.reason === 'not_member' || result.reason === 'forbidden') {
+          } else if (result.status === 'conflict') {
+            const entry = batch.find(({ row }) => row.op_id === opId)
+            if (!entry || entry.operation.type !== 'itinerary.arrange') {
+              throw new Error(`Conflito inesperado para operação ${opId}.`)
+            }
+            const operation = entry.operation
+            await transaction.run('DELETE FROM outbox WHERE op_id = ?', [opId])
+            await transaction.run(
+              `INSERT INTO itinerary_drafts
+                 (op_id, trip_id, base_version, current_version, payload, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)`,
+              [
+                operation.opId,
+                operation.tripId,
+                operation.baseVersion,
+                result.currentVersion,
+                JSON.stringify(operation.days),
+                entry.row.created_at,
+              ],
+            )
+            needsBootstrap = true
+          } else if (
+            result.status === 'rejected' &&
+            (result.reason === 'not_member' || result.reason === 'forbidden')
+          ) {
             needsBootstrap = true
             await transaction.run(
               `UPDATE outbox SET status = 'not_sent', last_error = ? WHERE op_id = ?`,
               [result.reason, opId],
             )
-          } else {
+          } else if (result.status === 'rejected') {
             await transaction.run('UPDATE outbox SET last_error = ? WHERE op_id = ?', [
               `rejected: ${result.reason}`,
               opId,
@@ -489,9 +696,15 @@ class LocalSyncClient implements SyncClient {
       }
       let needsReset = false
       if (state.needs_bootstrap !== 0 || state.snapshot_seq !== null || state.cursor === null) {
-        needsReset = await this.pullBootstrap(tripId, state)
+        const outcome = await this.pullBootstrap(tripId, state)
+        if (outcome === 'removed') return
+        needsReset = outcome
       }
-      if (!needsReset) needsReset = await this.pullIncremental(tripId)
+      if (!needsReset) {
+        const outcome = await this.pullIncremental(tripId)
+        if (outcome === 'removed') return
+        needsReset = outcome
+      }
       if (!needsReset) return
       if (resetCount === 1)
         throw new Error(`Servidor exigiu novo bootstrap repetidamente para ${tripId}.`)
@@ -500,7 +713,7 @@ class LocalSyncClient implements SyncClient {
   }
 
   /** Retorna true quando o servidor exigiu reiniciar o bootstrap. */
-  private async pullBootstrap(tripId: UUID, state: SyncStateRow): Promise<boolean> {
+  private async pullBootstrap(tripId: UUID, state: SyncStateRow): Promise<boolean | 'removed'> {
     let snapshotSeq = state.snapshot_seq
     let cursor = state.cursor
 
@@ -510,7 +723,13 @@ class LocalSyncClient implements SyncClient {
           ? { tripId, mode: 'bootstrap', limit: this.pageSize }
           : { tripId, mode: 'bootstrap', limit: this.pageSize, snapshotSeq, cursor: cursor ?? '0' }
       const response = await this.pullPage(query)
-      if ('error' in response) return true
+      if ('error' in response) {
+        if (response.error === 'not_member') {
+          await this.markTripRemoved(tripId)
+          return 'removed'
+        }
+        return true
+      }
       if (response.mode !== 'bootstrap')
         throw new Error('Servidor respondeu modo incorreto durante bootstrap.')
       if (snapshotSeq !== null && response.snapshotSeq !== snapshotSeq) {
@@ -543,7 +762,7 @@ class LocalSyncClient implements SyncClient {
   }
 
   /** Retorna true quando o cursor expirou e é necessário limpar/refazer bootstrap. */
-  private async pullIncremental(tripId: UUID): Promise<boolean> {
+  private async pullIncremental(tripId: UUID): Promise<boolean | 'removed'> {
     while (true) {
       const state = await this.getSyncState(tripId)
       if (state.cursor === null) throw new Error(`Cursor ausente após bootstrap de ${tripId}.`)
@@ -554,7 +773,13 @@ class LocalSyncClient implements SyncClient {
         cursor: state.cursor,
       }
       const response = await this.pullPage(query)
-      if ('error' in response) return true
+      if ('error' in response) {
+        if (response.error === 'not_member') {
+          await this.markTripRemoved(tripId)
+          return 'removed'
+        }
+        return true
+      }
       if (response.mode !== 'incremental')
         throw new Error('Servidor respondeu modo incorreto durante pull incremental.')
       if (response.hasMore && compareSequence(response.nextCursor, state.cursor) <= 0) {
@@ -600,6 +825,31 @@ class LocalSyncClient implements SyncClient {
       if (member.tripId !== tripId) throw new Error('Pull incluiu membro de outra viagem.')
       await this.upsertMember(transaction, member)
     }
+    if (compareSequence(page.nextCursor, page.itinerary.atSeq) === 0) {
+      await transaction.run('UPDATE sync_state SET itinerary_version = ? WHERE trip_id = ?', [
+        page.itinerary.version,
+        tripId,
+      ])
+    }
+  }
+
+  private async markTripRemoved(tripId: UUID): Promise<void> {
+    await this.database.transaction(async (transaction) => {
+      await this.ensureSyncState(transaction, tripId)
+      await transaction.run('DELETE FROM places WHERE trip_id = ?', [tripId])
+      await transaction.run('DELETE FROM visits WHERE trip_id = ?', [tripId])
+      await transaction.run('DELETE FROM members WHERE trip_id = ?', [tripId])
+      await transaction.run(
+        `UPDATE outbox SET status = 'not_sent', last_error = 'not_member'
+         WHERE trip_id = ? AND status = 'pending'`,
+        [tripId],
+      )
+      await transaction.run(
+        `UPDATE sync_state SET cursor = NULL, snapshot_seq = NULL, needs_bootstrap = 0,
+           itinerary_version = NULL, removed_at = ? WHERE trip_id = ?`,
+        [this.now(), tripId],
+      )
+    })
   }
 
   private async clearTripForBootstrap(tripId: UUID): Promise<void> {
@@ -719,6 +969,44 @@ class LocalSyncClient implements SyncClient {
       return
     }
 
+    if (operation.type === 'itinerary.arrange') {
+      const dayIndexes = operation.days.map(({ dayIndex }) => dayIndex)
+      const placeholders = dayIndexes.map(() => '?').join(', ')
+      await transaction.run(
+        `UPDATE places SET day_index = NULL, position = NULL, seq = '0'
+         WHERE trip_id = ? AND deleted_at IS NULL AND day_index IN (${placeholders})`,
+        [operation.tripId, ...dayIndexes],
+      )
+      for (const day of operation.days) {
+        for (const [position, placeId] of day.placeIds.entries()) {
+          await transaction.run(
+            `UPDATE places SET day_index = ?, position = ?, seq = '0'
+             WHERE id = ? AND trip_id = ? AND deleted_at IS NULL`,
+            [day.dayIndex, position, placeId, operation.tripId],
+          )
+        }
+      }
+      return
+    }
+
+    if (operation.type === 'member.remove') {
+      await transaction.run(
+        `UPDATE members SET deleted_at = ?, seq = '0'
+         WHERE trip_id = ? AND user_id = ? AND deleted_at IS NULL`,
+        [createdAt, operation.tripId, operation.userId],
+      )
+      return
+    }
+
+    if (operation.type === 'member.set_role') {
+      await transaction.run(
+        `UPDATE members SET role = ?, seq = '0'
+         WHERE trip_id = ? AND user_id = ? AND deleted_at IS NULL`,
+        [operation.role, operation.tripId, operation.userId],
+      )
+      return
+    }
+
     if (operation.type === 'visit.mark') {
       await transaction.run(
         `INSERT INTO visits (
@@ -834,6 +1122,38 @@ class LocalSyncClient implements SyncClient {
     )
   }
 
+  private async nextItineraryBaseVersion(transaction: SqlDatabase, tripId: UUID): Promise<number> {
+    const state = await transaction.get<
+      { itinerary_version: number | null } & Record<string, unknown>
+    >('SELECT itinerary_version FROM sync_state WHERE trip_id = ?', [tripId])
+    const pending = await transaction.get<{ count: number } & Record<string, unknown>>(
+      `SELECT COUNT(*) AS count FROM outbox
+       WHERE trip_id = ? AND type = 'itinerary.arrange' AND status = 'pending'`,
+      [tripId],
+    )
+    return (state?.itinerary_version ?? 0) + Number(pending?.count ?? 0)
+  }
+
+  private itineraryDaysFromDraft(row: ItineraryDraftRow): ItineraryDay[] {
+    let payload: unknown
+    try {
+      payload = JSON.parse(row.payload)
+    } catch {
+      throw new Error(`Payload inválido no rascunho de roteiro ${row.op_id}.`)
+    }
+    const validation = validateSyncOperation({
+      type: 'itinerary.arrange',
+      opId: row.op_id,
+      tripId: row.trip_id,
+      baseVersion: row.base_version,
+      days: payload,
+    })
+    if (!validation.success || validation.value.type !== 'itinerary.arrange') {
+      throw new Error(`Rascunho de roteiro inválido: ${row.op_id}.`)
+    }
+    return validation.value.days
+  }
+
   private async ensureSyncState(transaction: SqlDatabase, tripId: UUID): Promise<void> {
     await transaction.run('INSERT OR IGNORE INTO sync_state (trip_id) VALUES (?)', [tripId])
   }
@@ -843,7 +1163,8 @@ class LocalSyncClient implements SyncClient {
       this.ensureSyncState(transaction, tripId),
     )
     const state = await this.database.get<SyncStateRow>(
-      `SELECT trip_id, cursor, snapshot_seq, last_synced_at, needs_bootstrap
+      `SELECT trip_id, cursor, snapshot_seq, last_synced_at, needs_bootstrap,
+         itinerary_version, removed_at
        FROM sync_state WHERE trip_id = ?`,
       [tripId],
     )

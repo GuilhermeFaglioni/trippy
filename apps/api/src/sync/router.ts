@@ -111,6 +111,12 @@ export function createSyncRouter(
     if (!response) {
       return context.json({ error: 'trip_not_found', message: 'Viagem não encontrada.' }, 404)
     }
+    if ('error' in response && response.error === 'not_member') {
+      return context.json(
+        { error: 'not_member', message: 'Você não faz mais parte desta viagem.' },
+        403,
+      )
+    }
     const validResponse = validatePullResponse(response)
     if (!validResponse.success) {
       return context.json({ error: 'internal_error', message: 'Erro interno do servidor.' }, 500)
