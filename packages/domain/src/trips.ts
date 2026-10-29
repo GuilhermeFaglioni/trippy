@@ -1,3 +1,4 @@
+import type { LocalDetailStatus } from './places.ts'
 import type { Role } from './roles.ts'
 
 /** Verifica data civil no formato exato YYYY-MM-DD. */
@@ -111,5 +112,91 @@ export function validateCreateTripInput(value: unknown): CreateTripValidation {
   return {
     success: true,
     value: { name, destination, startDate, endDate, timezone },
+  }
+}
+
+/** Janela do aviso "Pronto para viajar": até 7 dias antes do início. */
+export const READY_TO_TRAVEL_WINDOW_DAYS = 7
+
+export interface ReadyToTravelPlaceInput {
+  countryCode: string | null
+  localAddressStatus: LocalDetailStatus
+}
+
+export interface ReadyToTravelMemberInput {
+  userId: string
+  openedAt: string | null
+}
+
+export interface ReadyToTravelInput {
+  phase: TripPhase
+  startDate: string
+  timezone: string
+  now: Date
+  destination: string
+  places: readonly ReadyToTravelPlaceInput[]
+  members: readonly ReadyToTravelMemberInput[]
+}
+
+export interface ReadyToTravelSummary {
+  visible: boolean
+  placesWithoutLocalAddress: number
+  recommendRegisterBeforeBoarding: boolean
+  membersOpened: number
+  membersTotal: number
+  membersNotOpened: string[]
+}
+
+function localDateInTimezone(timezone: string, now: Date): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now)
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]))
+  return `${values.year!.padStart(4, '0')}-${values.month}-${values.day}`
+}
+
+function daysBetween(fromIsoDate: string, toIsoDate: string): number {
+  const from = Date.parse(`${fromIsoDate}T00:00:00.000Z`)
+  const to = Date.parse(`${toIsoDate}T00:00:00.000Z`)
+  return Math.round((to - from) / 86_400_000)
+}
+
+/**
+ * Resume o que falta antes do embarque. O aviso só fica visível na fase de planejamento,
+ * até 7 dias antes do início (data civil no fuso da viagem) e quando há alguma pendência.
+ */
+export function readyToTravel(input: ReadyToTravelInput): ReadyToTravelSummary {
+  const placesWithoutLocalAddress = input.places.filter(
+    (place) => place.localAddressStatus !== 'ok',
+  ).length
+  const recommendRegisterBeforeBoarding =
+    input.places.some((place) => place.countryCode === 'CN') ||
+    input.destination.toLowerCase().includes('china')
+  const membersNotOpened = input.members
+    .filter((member) => member.openedAt === null)
+    .map((member) => member.userId)
+  const membersTotal = input.members.length
+  const membersOpened = membersTotal - membersNotOpened.length
+
+  const daysUntilStart = daysBetween(
+    localDateInTimezone(input.timezone, input.now),
+    input.startDate,
+  )
+  const inWindow =
+    input.phase === 'planning' &&
+    daysUntilStart >= 0 &&
+    daysUntilStart <= READY_TO_TRAVEL_WINDOW_DAYS
+  const hasPending = placesWithoutLocalAddress > 0 || membersNotOpened.length > 0
+
+  return {
+    visible: inWindow && hasPending,
+    placesWithoutLocalAddress,
+    recommendRegisterBeforeBoarding,
+    membersOpened,
+    membersTotal,
+    membersNotOpened,
   }
 }

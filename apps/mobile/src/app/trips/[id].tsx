@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, Platform, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -14,6 +14,7 @@ import { ItineraryScreen } from '../../features/itinerary/itinerary-screen'
 import { MembersScreen } from '../../features/members/members-screen'
 import { useSync } from '../../features/sync/sync-provider'
 import { TripPlacesScreen } from '../../features/places/trip-places-screen'
+import { ReadyToTravelCard } from '../../features/trips/ready-to-travel-card'
 import {
   useTripsClient,
   type TripPhase,
@@ -143,6 +144,7 @@ export default function TripRoute() {
   const [sectionChosen, setSectionChosen] = useState(false)
   const [confirmingEnd, setConfirmingEnd] = useState(false)
   const [locallyEnded, setLocallyEnded] = useState(false)
+  const openedTripRef = useRef<string | null>(null)
 
   const checkMembership = useCallback(async () => {
     if (!ready) return
@@ -187,7 +189,22 @@ export default function TripRoute() {
     }
   }, [membership, tripsClient, tripId])
 
+  useEffect(() => {
+    if (membership !== 'active' || client === null || !tripId) return
+    if (openedTripRef.current === tripId) return
+    openedTripRef.current = tripId
+    void (async () => {
+      try {
+        await client.openTrip(tripId)
+      } catch {
+        // Registrar a abertura é melhor esforço; a viagem continua disponível.
+      }
+    })()
+  }, [client, membership, tripId])
+
   const phase: TripPhase | null = locallyEnded ? 'ended' : (trip?.phase ?? null)
+  const canSeeReadyToTravel =
+    trip !== null && (trip.role === 'organizer' || trip.role === 'coorganizer')
   const canEndTrip = role === 'organizer' && phase !== null && phase !== 'ended'
 
   async function endTrip() {
@@ -305,6 +322,13 @@ export default function TripRoute() {
             </View>
           ) : null}
         </View>
+        {canSeeReadyToTravel && trip ? (
+          <View
+            style={{ paddingHorizontal: theme.spacing.space5, paddingTop: theme.spacing.space3 }}
+          >
+            <ReadyToTravelCard tripId={tripId} tripName={displayName} trip={trip} />
+          </View>
+        ) : null}
         <TripTabs
           active={section}
           onChange={(next) => {

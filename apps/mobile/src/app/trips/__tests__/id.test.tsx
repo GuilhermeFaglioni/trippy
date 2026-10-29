@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 
 import type { SyncClient } from '@trippy/sync'
 import { DesignSystemProvider } from '../../../design-system'
@@ -45,6 +45,7 @@ function createClient(removedTrips: string[] = []) {
         { userId: 'user-1', role: 'organizer', joinedAt: '2026-10-20T10:00:00Z' },
       ]),
     removeMember: jest.fn().mockResolvedValue(undefined),
+    openTrip: jest.fn().mockResolvedValue(undefined),
     setMemberRole: jest.fn().mockResolvedValue(undefined),
     listRemovedTrips: jest.fn().mockResolvedValue(removedTrips),
     countNotSent: jest.fn().mockResolvedValue(2),
@@ -106,7 +107,10 @@ describe('rota da viagem', () => {
   })
 
   it('abre roteiro e grupo pelas abas da viagem', async () => {
-    const screen = await renderRoute(createClient())
+    const client = createClient()
+    const screen = await renderRoute(client)
+
+    await waitFor(() => expect(client.openTrip).toHaveBeenCalledWith('trip-1'))
 
     await screen.findByTestId('trip-tab-roteiro')
     await fireEvent.press(screen.getByTestId('trip-tab-roteiro'))
