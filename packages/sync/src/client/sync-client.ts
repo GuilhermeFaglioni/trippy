@@ -110,6 +110,7 @@ interface MemberRow extends Record<string, unknown> {
   user_id: UUID
   role: LiveMember['role']
   joined_at: string
+  opened_at: string | null
 }
 
 interface StatusCounts extends Record<string, unknown> {
@@ -334,7 +335,7 @@ class LocalSyncClient implements SyncClient {
 
   async listMembers(tripId: UUID): Promise<LiveMember[]> {
     const rows = await this.database.all<MemberRow>(
-      `SELECT user_id, role, joined_at FROM members
+      `SELECT user_id, role, joined_at, opened_at FROM members
        WHERE trip_id = ? AND deleted_at IS NULL
          AND NOT EXISTS (
            SELECT 1 FROM sync_state WHERE sync_state.trip_id = members.trip_id
@@ -343,7 +344,12 @@ class LocalSyncClient implements SyncClient {
        ORDER BY joined_at, user_id`,
       [tripId],
     )
-    return rows.map((row) => ({ userId: row.user_id, role: row.role, joinedAt: row.joined_at }))
+    return rows.map((row) => ({
+      userId: row.user_id,
+      role: row.role,
+      joinedAt: row.joined_at,
+      openedAt: row.opened_at,
+    }))
   }
 
   async removeMember(tripId: UUID, userId: UUID): Promise<void> {
@@ -362,6 +368,10 @@ class LocalSyncClient implements SyncClient {
 
   async endTrip(tripId: UUID): Promise<void> {
     await this.writeOperation({ type: 'trip.end', opId: this.idGenerator(), tripId })
+  }
+
+  async openTrip(tripId: UUID): Promise<void> {
+    await this.writeOperation({ type: 'trip.open', opId: this.idGenerator(), tripId })
   }
 
   async listRemovedTrips(): Promise<UUID[]> {
@@ -1071,6 +1081,15 @@ class LocalSyncClient implements SyncClient {
       return
     }
 
+    if (operation.type === 'trip.open') {
+      await transaction.run(
+        `UPDATE members SET opened_at = COALESCE(opened_at, ?)
+         WHERE trip_id = ? AND user_id = ?`,
+        [createdAt, operation.tripId, this.userId],
+      )
+      return
+    }
+
     if (operation.type === 'visit.mark') {
       await transaction.run(
         `INSERT INTO visits (
@@ -1188,12 +1207,21 @@ class LocalSyncClient implements SyncClient {
 
   private async upsertMember(transaction: SqlDatabase, member: SyncMember): Promise<void> {
     await transaction.run(
-      `INSERT INTO members (trip_id, user_id, role, joined_at, seq, deleted_at)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO members (trip_id, user_id, role, joined_at, opened_at, seq, deleted_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (trip_id, user_id) DO UPDATE SET
          role = excluded.role, joined_at = excluded.joined_at,
+         opened_at = COALESCE(excluded.opened_at, members.opened_at),
          seq = excluded.seq, deleted_at = excluded.deleted_at`,
-      [member.tripId, member.userId, member.role, member.joinedAt, member.seq, member.deletedAt],
+      [
+        member.tripId,
+        member.userId,
+        member.role,
+        member.joinedAt,
+        member.openedAt,
+        member.seq,
+        member.deletedAt,
+      ],
     )
   }
 

@@ -321,6 +321,17 @@ export function validateSyncOperation(
     }
   }
 
+  if (value.type === 'trip.open') {
+    return {
+      success: true,
+      value: {
+        type: 'trip.open',
+        opId: value.opId,
+        tripId: value.tripId,
+      },
+    }
+  }
+
   return failure('type', 'Tipo de operação desconhecido.')
 }
 
@@ -472,6 +483,7 @@ function validateMember(value: unknown): value is SyncMember {
     isUuid(value.userId) &&
     isTripRole(value.role) &&
     isDateTime(value.joinedAt) &&
+    (value.openedAt === null || isDateTime(value.openedAt)) &&
     isSyncSequence(value.seq) &&
     (value.deletedAt === null || isDateTime(value.deletedAt))
   )
