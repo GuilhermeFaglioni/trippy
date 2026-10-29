@@ -33,6 +33,16 @@ O **orquestrador** (a sessão do Claude Code com o Guilherme) escolhe as issues 
    - mudanças de comportamento além de um ajuste pontual voltam para o passo 4 (implementador corrige, nova revisão).
 7. **Fim.** O PR entra pelo auto-merge, a issue fecha pelo `Closes`, e o planejador avisa o orquestrador. A worktree pode ser removida.
 
+## Ritmo enxuto (a partir de 29/out/2026)
+
+O ciclo estava lento por excesso de testes e de decisões imediatas. Valem estas regras, que prevalecem sobre o fluxo acima quando houver conflito:
+
+- **Testes em camadas.** Durante a implementação, só typecheck e os testes do arquivo mexido. A suíte completa (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`) roda **uma vez**, antes do PR; o resto fica com a CI. Testes novos cobrem as fronteiras (permissão, convergência offline, validação), não cada componente.
+- **E2E só no fim da sprint.** Fluxos Maestro e cenários com dois Simulators ficam em uma issue própria por sprint. Uma feature não espera E2E para ser mergeada.
+- **Decidir com padrão.** Dúvida pequena (texto, ordem, nome): o implementador escolhe o padrão mais simples, registra no corpo do PR e segue. `needs-info` só para decisão de produto, custo ou arquitetura fora das specs.
+- **Revisão única.** O revisor confere critérios de aceite e riscos (permissão, perda de dados, offline), sem reabrir estilo. Uma reprovação com lista objetiva, no máximo duas.
+- **Ambiente travado não bloqueia.** Se o Simulator ou a infraestrutura de E2E falhar, registre numa issue e mergeie a feature com os testes de integração verdes.
+
 ## Regras
 
 - Ninguém faz merge manual, contorna a CI ou desliga checks. Push direto no `develop` e no `main` é proibido.
