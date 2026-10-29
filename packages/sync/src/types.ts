@@ -54,6 +54,10 @@ export interface SetMemberRoleOperation extends OperationMetadata {
   role: 'coorganizer' | 'member'
 }
 
+export interface EndTripOperation extends OperationMetadata {
+  type: 'trip.end'
+}
+
 export interface LinkGooglePlaceOperation extends OperationMetadata {
   type: 'place.google_link'
   placeId: UUID
@@ -75,6 +79,7 @@ export type SyncOperation =
   | ArrangeItineraryOperation
   | RemoveMemberOperation
   | SetMemberRoleOperation
+  | EndTripOperation
   | LinkGooglePlaceOperation
   | SetLocalDetailsOperation
 

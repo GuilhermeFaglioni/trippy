@@ -449,6 +449,19 @@ async function applyMemberSetRole(
   return { opId: operation.opId, status: 'applied' }
 }
 
+async function applyTripEnd(
+  client: PoolClient,
+  role: SyncMember['role'],
+  operation: Extract<SyncOperation, { type: 'trip.end' }>,
+): Promise<PushOperationResult> {
+  if (role !== 'organizer') return rejectedResult(operation, 'forbidden')
+
+  await client.query('UPDATE trips SET ended_at = now() WHERE id = $1 AND ended_at IS NULL', [
+    operation.tripId,
+  ])
+  return { opId: operation.opId, status: 'applied' }
+}
+
 async function applyGoogleLink(
   client: PoolClient,
   userId: string,
@@ -544,6 +557,8 @@ async function applyNewOperation(
       return applyMemberRemove(client, { userId, role }, operation)
     case 'member.set_role':
       return applyMemberSetRole(client, { userId, role }, operation)
+    case 'trip.end':
+      return applyTripEnd(client, role, operation)
   }
 }
 

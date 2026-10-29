@@ -513,6 +513,10 @@ class FakeSyncTransport {
       return { opId: operation.opId, status: 'applied' }
     }
 
+    if (operation.type === 'trip.end') {
+      return { opId: operation.opId, status: 'applied' }
+    }
+
     if (operation.type === 'place.google_link' || operation.type === 'place.set_local') {
       const place = this.places.get(operation.placeId)
       if (!place || place.tripId !== operation.tripId || place.deletedAt !== null) {
