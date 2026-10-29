@@ -9,6 +9,7 @@ import type { AccessTokenVerifier } from '@trippy/adapters/auth'
 import type { ApiConfig } from '../config.ts'
 import { authenticate, type AuthEnvironment } from '../auth/authenticate.ts'
 import { handleApiError } from '../auth/errors.ts'
+import { renderInvitePage, renderInviteUnavailablePage } from './page.ts'
 
 type Pool = InstanceType<typeof pg.Pool>
 
@@ -29,6 +30,16 @@ async function readBody(request: Request): Promise<unknown> {
   } catch {
     return null
   }
+}
+
+const htmlSecurityHeaders = {
+  'Content-Type': 'text/html; charset=utf-8',
+  'Content-Security-Policy':
+    "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'Cache-Control': 'no-store',
+  'X-Frame-Options': 'DENY',
 }
 
 function summarizeTrip(trip: TripRecord, now: Date): TripSummary {
@@ -97,6 +108,16 @@ export function createInvitesRouter(
       return context.json({ error: 'invite_not_found', message: 'Convite não encontrado.' }, 404)
     }
     return context.json({ trip: summarizeTrip(trip, now()) })
+  })
+
+  router.get('/i/:codigo', async (context) => {
+    const codigo = context.req.param('codigo')
+    const tokenHash = createHash('sha256').update(codigo).digest('hex')
+    const preview = await store.getInvitePreview(tokenHash)
+    if (!preview) {
+      return context.body(renderInviteUnavailablePage(), 404, htmlSecurityHeaders)
+    }
+    return context.body(renderInvitePage(preview, codigo), 200, htmlSecurityHeaders)
   })
 
   router.onError(handleApiError)
