@@ -43,9 +43,18 @@ export interface SyncClientStatus {
   lastError?: string | null
 }
 
+export interface AddPlaceOptions {
+  /** Dia do roteiro em que o lugar é criado já posicionado. */
+  dayIndex?: number
+}
+
 export interface SyncClient {
-  addPlace(tripId: UUID, name: string): Promise<UUID>
-  addPlaceFromCandidate(tripId: UUID, candidate: PlaceSearchCandidate): Promise<UUID>
+  addPlace(tripId: UUID, name: string, options?: AddPlaceOptions): Promise<UUID>
+  addPlaceFromCandidate(
+    tripId: UUID,
+    candidate: PlaceSearchCandidate,
+    options?: AddPlaceOptions,
+  ): Promise<UUID>
   removePlace(tripId: UUID, placeId: UUID): Promise<void>
   linkGooglePlace(tripId: UUID, placeId: UUID, googlePlaceId: string | null): Promise<void>
   setLocalDetails(

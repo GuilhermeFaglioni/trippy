@@ -65,6 +65,23 @@ describe('validação das operações e do push', () => {
     })
   })
 
+  it('aceita dayIndex opcional em place.add e recusa índices fora de 0..365', () => {
+    const base = { type: 'place.add', opId, tripId, placeId, name: 'Museu do Amanhã' }
+    const withDay = validateSyncOperation({ ...base, dayIndex: 365 })
+    expect(withDay).toEqual({ success: true, value: { ...base, dayIndex: 365 } })
+
+    const withoutDay = validateSyncOperation(base)
+    expect(withoutDay).toEqual({ success: true, value: base })
+    expect(withoutDay.success && 'dayIndex' in withoutDay.value).toBe(false)
+
+    for (const dayIndex of [-1, 366, 1.5, '1', null]) {
+      expect(validateSyncOperation({ ...base, dayIndex })).toEqual({
+        success: false,
+        issues: [{ path: 'dayIndex', message: 'Informe um índice de dia entre 0 e 365.' }],
+      })
+    }
+  })
+
   it('aceita candidate assinado dentro de place.add', () => {
     expect(
       validateSyncOperation({

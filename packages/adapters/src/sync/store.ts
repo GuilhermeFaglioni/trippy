@@ -170,6 +170,19 @@ async function storeResult(
   if ((inserted.rowCount ?? 0) === 0) throw new OperationIdRaceError()
 }
 
+async function nextPlaceDayPosition(
+  client: PoolClient,
+  tripId: string,
+  dayIndex: number,
+): Promise<number> {
+  const result = await client.query<{ next_position: number }>(
+    `SELECT COALESCE(MAX(position), -1) + 1 AS next_position FROM places
+     WHERE trip_id = $1 AND deleted_at IS NULL AND day_index = $2`,
+    [tripId, dayIndex],
+  )
+  return result.rows[0]!.next_position
+}
+
 async function applyPlaceAdd(
   client: PoolClient,
   userId: string,
@@ -193,11 +206,16 @@ async function applyPlaceAdd(
   }
 
   const sequence = (BigInt(trip.seq_counter) + 1n).toString()
+  const dayIndex = operation.dayIndex ?? null
+  const position =
+    dayIndex === null
+      ? null
+      : await nextPlaceDayPosition(client, operation.tripId, dayIndex)
   const inserted = await client.query(
     `INSERT INTO places (
        id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,
-       name, local_name, address, local_address, lat, lng, suggested_by, seq
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       name, local_name, address, local_address, lat, lng, suggested_by, seq, day_index, position
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
      ON CONFLICT (id) DO NOTHING
      RETURNING id`,
     [
@@ -217,6 +235,8 @@ async function applyPlaceAdd(
       operation.candidate?.lng ?? null,
       userId,
       sequence,
+      dayIndex,
+      position,
     ],
   )
   if ((inserted.rowCount ?? 0) === 0) {

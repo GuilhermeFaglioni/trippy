@@ -17,6 +17,8 @@ function isoDayOffset(offset: number): string {
   return new Date(today + offset * DAY_MS).toISOString().slice(0, 10)
 }
 
+jest.mock('../../sync/use-network-gate', () => ({ useNetworkOffline: () => false }))
+
 jest
   .spyOn(sessionProvider, 'useSession')
   .mockImplementation(
@@ -107,5 +109,20 @@ describe('tela Hoje', () => {
     expect(await screen.findByTestId('hoje-dia')).toHaveTextContent(/A viagem começa em 2 dias/u)
     expect(screen.queryByTestId('hoje-proximo-lugar')).toBeNull()
     expect(screen.queryByTestId('hoje-lugar-mercado-central')).toBeNull()
+  })
+
+  it('mostra o cartão Estamos aqui só durante a viagem', async () => {
+    const during = await renderToday(createClient([]), start, end)
+    expect(await during.findByTestId('hoje-estamos-aqui')).toBeOnTheScreen()
+    during.unmount()
+
+    const before = await renderToday(createClient([]), isoDayOffset(2), isoDayOffset(4))
+    expect(await before.findByTestId('hoje-dia')).toBeOnTheScreen()
+    expect(before.queryByTestId('hoje-estamos-aqui')).toBeNull()
+    before.unmount()
+
+    const after = await renderToday(createClient([]), isoDayOffset(-4), isoDayOffset(-2))
+    expect(await after.findByTestId('hoje-dia')).toBeOnTheScreen()
+    expect(after.queryByTestId('hoje-estamos-aqui')).toBeNull()
   })
 })

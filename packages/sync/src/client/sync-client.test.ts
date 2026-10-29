@@ -581,9 +581,35 @@ class FakeSyncTransport {
     this.sequence += 1n
     const seq = String(this.sequence)
     if (operation.type === 'place.add') {
+      const place = createPlace(
+        operation.placeId,
+        operation.name,
+        this.userId,
+        seq,
+        operation.candidate,
+      )
+      const dayIndex = operation.dayIndex
       this.places.set(
         operation.placeId,
-        createPlace(operation.placeId, operation.name, this.userId, seq, operation.candidate),
+        dayIndex === undefined
+          ? place
+          : {
+              ...place,
+              dayIndex,
+              position:
+                1 +
+                Math.max(
+                  -1,
+                  ...[...this.places.values()]
+                    .filter(
+                      (candidate) =>
+                        candidate.tripId === operation.tripId &&
+                        candidate.deletedAt === null &&
+                        candidate.dayIndex === dayIndex,
+                    )
+                    .map((candidate) => candidate.position ?? -1),
+                ),
+            },
       )
     } else if (operation.type === 'place.remove') {
       const place = this.places.get(operation.placeId)
@@ -933,6 +959,37 @@ describe('SyncClient', () => {
     expect(await client.listPlaces(tripId)).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: manualPlaceId, countryCode: null })]),
     )
+  })
+
+  it('cria lugar já posicionado em um dia do roteiro e encadeia a posição no mesmo dia', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    const client = await createClient(database, transport)
+
+    const firstPlaceId = await client.addPlace(tripId, 'Primeiro do dia', { dayIndex: 2 })
+    const secondPlaceId = await client.addPlaceFromCandidate(tripId, signedCandidate, {
+      dayIndex: 2,
+    })
+    const outsidePlaceId = await client.addPlace(tripId, 'Fora do roteiro')
+    const placements = async () =>
+      (await client.listPlaces(tripId))
+        .map(({ id, dayIndex, position }) => ({ id, dayIndex, position }))
+        .sort((left, right) => left.id.localeCompare(right.id))
+    const expected = [
+      { id: firstPlaceId, dayIndex: 2, position: 0 },
+      { id: secondPlaceId, dayIndex: 2, position: 1 },
+      { id: outsidePlaceId, dayIndex: null, position: null },
+    ].sort((left, right) => left.id.localeCompare(right.id))
+    expect(await placements()).toEqual(expected)
+
+    await client.syncNow()
+    expect(
+      transport
+        .state()
+        .places.map(({ id, dayIndex, position }) => ({ id, dayIndex, position }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    ).toEqual(expected)
+    expect(await placements()).toEqual(expected)
   })
 
   it('persiste reconciliação após duplicate no primeiro lote e falha no segundo, mesmo após reabrir', async () => {

@@ -84,4 +84,20 @@ describe('cliente HTTP de lugares', () => {
       message: 'Falha controlada',
     })
   })
+
+  it('busca lugares perto da coordenada no endpoint nearby e valida a mesma resposta', async () => {
+    const request = jest.fn().mockResolvedValue(response({ candidates: [candidate] }))
+    const client = createPlacesClient(request)
+
+    await expect(client.nearby('trip-1', -23.55, -46.63)).resolves.toEqual({
+      candidates: [candidate],
+    })
+    expect(request).toHaveBeenCalledWith('/trips/trip-1/places/nearby?lat=-23.55&lng=-46.63')
+
+    request.mockResolvedValueOnce(response({ candidates: [{ name: 'sem contrato' }] }))
+    await expect(client.nearby('trip-1', -23.55, -46.63)).rejects.toMatchObject({
+      status: 502,
+      code: 'unexpected_error',
+    })
+  })
 })

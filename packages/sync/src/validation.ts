@@ -69,6 +69,10 @@ function isNonNegativeSafeInteger(value: unknown): value is number {
   return Number.isSafeInteger(value) && typeof value === 'number' && value >= 0
 }
 
+function isItineraryDayIndex(value: unknown): value is number {
+  return isNonNegativeSafeInteger(value) && value <= maxItineraryDayIndex
+}
+
 function isGooglePlaceId(value: unknown): value is string {
   return (
     typeof value === 'string' &&
@@ -142,6 +146,10 @@ export function validateSyncOperation(
     if (value.candidate !== undefined && (!candidate || candidate.name !== name.value)) {
       return failure('candidate', 'Candidato de lugar inválido.')
     }
+    if (value.dayIndex !== undefined && !isItineraryDayIndex(value.dayIndex)) {
+      return failure('dayIndex', 'Informe um índice de dia entre 0 e 365.')
+    }
+    const dayIndex = value.dayIndex as number | undefined
     return {
       success: true,
       value: {
@@ -151,6 +159,7 @@ export function validateSyncOperation(
         placeId: value.placeId,
         name: name.value,
         ...(candidate ? { candidate } : {}),
+        ...(dayIndex !== undefined ? { dayIndex } : {}),
       },
     }
   }
@@ -238,7 +247,7 @@ export function validateSyncOperation(
     let placeCount = 0
     for (const [index, rawDay] of value.days.entries()) {
       if (!isRecord(rawDay)) return failure(`days[${index}]`, 'O dia precisa ser um objeto.')
-      if (!isNonNegativeSafeInteger(rawDay.dayIndex) || rawDay.dayIndex > maxItineraryDayIndex) {
+      if (!isItineraryDayIndex(rawDay.dayIndex)) {
         return failure(`days[${index}].dayIndex`, 'Informe um índice de dia entre 0 e 365.')
       }
       if (dayIndexes.has(rawDay.dayIndex)) {

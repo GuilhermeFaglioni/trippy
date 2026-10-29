@@ -7,6 +7,12 @@ export interface PlacesSearchInput {
   lang?: string
 }
 
+export interface PlacesNearbyInput {
+  lat: number
+  lng: number
+  lang?: string
+}
+
 export interface GoogleDetailsInput {
   name: string
   lat: number
@@ -26,6 +32,10 @@ export type ProviderCallHandler = (call: ProviderCall) => Promise<void>
 export interface PlacesProvider {
   search(
     input: PlacesSearchInput,
+    onProviderCall?: ProviderCallHandler,
+  ): Promise<PlaceSearchCandidateFields[]>
+  nearby(
+    input: PlacesNearbyInput,
     onProviderCall?: ProviderCallHandler,
   ): Promise<PlaceSearchCandidateFields[]>
 }

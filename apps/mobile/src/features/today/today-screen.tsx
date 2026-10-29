@@ -10,6 +10,7 @@ import {
   useTheme,
 } from '../../design-system'
 import { useSync } from '../sync/sync-provider'
+import { HereCard } from './here-card'
 import {
   computeTodayState,
   isDayDone,
@@ -19,7 +20,7 @@ import {
   staleness,
 } from './today-model'
 
-/** TestIDs Maestro: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-lugar-<slug>, hoje-eu-fui-<slug>, hoje-o-que-mudou. */
+/** TestIDs Maestro: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-estamos-aqui (cartão Estamos aqui, só durante a viagem; painel: hoje-aqui-*), hoje-lugar-<slug>, hoje-eu-fui-<slug>, hoje-o-que-mudou. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
 type TodayScreenProps = {
@@ -179,6 +180,10 @@ export function TodayScreen({
             </TypographyText>
           </View>
         </Card>
+      ) : null}
+
+      {todayState.kind === 'during' ? (
+        <HereCard tripId={tripId} dayIndex={todayState.dayIndex} />
       ) : null}
 
       {todayState.kind === 'during'

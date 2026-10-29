@@ -24,7 +24,17 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "trippy",
-    "plugins": ["expo-router", "expo-secure-store", "expo-sqlite"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-sqlite",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O Trippy usa sua localização só quando você toca em Estamos aqui, para sugerir lugares perto de você."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }

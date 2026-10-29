@@ -71,9 +71,9 @@ export function withWriteSyncTriggers(
   }
 
   return {
-    addPlace: (tripId, name) => afterWrite(() => client.addPlace(tripId, name)),
-    addPlaceFromCandidate: (tripId, candidate) =>
-      afterWrite(() => client.addPlaceFromCandidate(tripId, candidate)),
+    addPlace: (tripId, name, options) => afterWrite(() => client.addPlace(tripId, name, options)),
+    addPlaceFromCandidate: (tripId, candidate, options) =>
+      afterWrite(() => client.addPlaceFromCandidate(tripId, candidate, options)),
     removePlace: (tripId, placeId) => afterWrite(() => client.removePlace(tripId, placeId)),
     linkGooglePlace: (tripId, placeId, googlePlaceId) =>
       afterWrite(() => client.linkGooglePlace(tripId, placeId, googlePlaceId)),
