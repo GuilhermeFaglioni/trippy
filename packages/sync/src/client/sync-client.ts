@@ -10,6 +10,7 @@ import {
   type SyncOperation,
   type SyncPlace,
   type SyncVisit,
+  type SyncWant,
   type UUID,
 } from '../types.ts'
 import {
@@ -239,6 +240,14 @@ class LocalSyncClient implements SyncClient {
     await this.writeOperation({ type: 'visit.unmark', opId: this.idGenerator(), tripId, placeId })
   }
 
+  async wantPlace(tripId: UUID, placeId: UUID): Promise<void> {
+    await this.writeOperation({ type: 'place.want', opId: this.idGenerator(), tripId, placeId })
+  }
+
+  async unwantPlace(tripId: UUID, placeId: UUID): Promise<void> {
+    await this.writeOperation({ type: 'place.unwant', opId: this.idGenerator(), tripId, placeId })
+  }
+
   async arrangeItinerary(tripId: UUID, days: ItineraryDay[]): Promise<void> {
     const opId = this.idGenerator()
     const createdAt = this.now()
@@ -397,14 +406,29 @@ class LocalSyncClient implements SyncClient {
 
   async listPlaces(tripId: UUID, _countryCode?: string | null): Promise<LivePlace[]> {
     void _countryCode
-    const rows = await this.database.all<PlaceRow & { visited_by_me: number }>(
+    const rows = await this.database.all<
+      PlaceRow & { visited_by_me: number; want_count: number; wanted_by_me: number }
+    >(
       `SELECT places.*, EXISTS (
          SELECT 1 FROM visits
          WHERE visits.place_id = places.id
            AND visits.trip_id = places.trip_id
            AND visits.user_id = ?
            AND visits.deleted_at IS NULL
-       ) AS visited_by_me
+       ) AS visited_by_me,
+       (
+         SELECT COUNT(*) FROM wants
+         WHERE wants.place_id = places.id
+           AND wants.trip_id = places.trip_id
+           AND wants.deleted_at IS NULL
+       ) AS want_count,
+       EXISTS (
+         SELECT 1 FROM wants
+         WHERE wants.place_id = places.id
+           AND wants.trip_id = places.trip_id
+           AND wants.user_id = ?
+           AND wants.deleted_at IS NULL
+       ) AS wanted_by_me
        FROM places
        WHERE places.trip_id = ? AND places.deleted_at IS NULL
          AND NOT EXISTS (
@@ -418,7 +442,7 @@ class LocalSyncClient implements SyncClient {
            WHERE sync_state.trip_id = places.trip_id AND sync_state.removed_at IS NOT NULL
          )
        ORDER BY places.position IS NULL, places.position, places.created_at, places.id`,
-      [this.userId, tripId, this.userId],
+      [this.userId, this.userId, tripId, this.userId],
     )
     return rows.map((row) => {
       const place = this.placeFromRow(row)
@@ -426,6 +450,8 @@ class LocalSyncClient implements SyncClient {
         ...place,
         deletedAt: null,
         visitedByMe: row.visited_by_me !== 0,
+        wantCount: Number(row.want_count),
+        wantedByMe: row.wanted_by_me !== 0,
         localNameStatus: classifyLocalDetail({
           userValue: place.userLocalName,
           providerValue: place.localName,
@@ -499,6 +525,7 @@ class LocalSyncClient implements SyncClient {
            SELECT trip_id FROM outbox
            UNION SELECT trip_id FROM places
            UNION SELECT trip_id FROM visits
+           UNION SELECT trip_id FROM wants
            UNION SELECT trip_id FROM members
            UNION SELECT trip_id FROM sync_state
          ) ORDER BY trip_id`,
@@ -835,6 +862,10 @@ class LocalSyncClient implements SyncClient {
       if (visit.tripId !== tripId) throw new Error('Pull incluiu visita de outra viagem.')
       await this.upsertVisit(transaction, visit)
     }
+    for (const want of page.wants) {
+      if (want.tripId !== tripId) throw new Error('Pull incluiu quero ir de outra viagem.')
+      await this.upsertWant(transaction, want)
+    }
     for (const member of page.members) {
       if (member.tripId !== tripId) throw new Error('Pull incluiu membro de outra viagem.')
       await this.upsertMember(transaction, member)
@@ -852,6 +883,7 @@ class LocalSyncClient implements SyncClient {
       await this.ensureSyncState(transaction, tripId)
       await transaction.run('DELETE FROM places WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM visits WHERE trip_id = ?', [tripId])
+      await transaction.run('DELETE FROM wants WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM members WHERE trip_id = ?', [tripId])
       await transaction.run(
         `UPDATE outbox SET status = 'not_sent', last_error = 'not_member'
@@ -871,6 +903,7 @@ class LocalSyncClient implements SyncClient {
       await this.ensureSyncState(transaction, tripId)
       await transaction.run('DELETE FROM places WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM visits WHERE trip_id = ?', [tripId])
+      await transaction.run('DELETE FROM wants WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM members WHERE trip_id = ?', [tripId])
       await transaction.run(
         'UPDATE sync_state SET cursor = NULL, snapshot_seq = NULL WHERE trip_id = ?',
@@ -1025,6 +1058,29 @@ class LocalSyncClient implements SyncClient {
       return
     }
 
+    if (operation.type === 'place.want') {
+      await transaction.run(
+        `INSERT INTO wants (place_id, trip_id, user_id, created_at, seq, deleted_at)
+         VALUES (?, ?, ?, ?, '0', NULL)
+         ON CONFLICT (place_id, user_id) DO UPDATE SET
+           trip_id = excluded.trip_id, created_at = excluded.created_at,
+           seq = '0', deleted_at = NULL`,
+        [operation.placeId, operation.tripId, this.userId, createdAt],
+      )
+      return
+    }
+
+    if (operation.type === 'place.unwant') {
+      await transaction.run(
+        `INSERT INTO wants (place_id, trip_id, user_id, created_at, seq, deleted_at)
+         VALUES (?, ?, ?, ?, '0', ?)
+         ON CONFLICT (place_id, user_id) DO UPDATE SET
+           trip_id = excluded.trip_id, seq = '0', deleted_at = excluded.deleted_at`,
+        [operation.placeId, operation.tripId, this.userId, createdAt, createdAt],
+      )
+      return
+    }
+
     if (operation.type === 'trip.open') {
       await transaction.run(
         `UPDATE members SET opened_at = COALESCE(opened_at, ?)
@@ -1135,6 +1191,17 @@ class LocalSyncClient implements SyncClient {
         visit.seq,
         visit.deletedAt,
       ],
+    )
+  }
+
+  private async upsertWant(transaction: SqlDatabase, want: SyncWant): Promise<void> {
+    await transaction.run(
+      `INSERT INTO wants (place_id, trip_id, user_id, created_at, seq, deleted_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT (place_id, user_id) DO UPDATE SET
+         trip_id = excluded.trip_id, created_at = excluded.created_at,
+         seq = excluded.seq, deleted_at = excluded.deleted_at`,
+      [want.placeId, want.tripId, want.userId, want.createdAt, want.seq, want.deletedAt],
     )
   }
 

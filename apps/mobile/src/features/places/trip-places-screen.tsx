@@ -49,6 +49,13 @@ function createTestIdByPlace(places: LivePlace[]): Map<string, string> {
   )
 }
 
+function comparePlacesByInterest(a: LivePlace, b: LivePlace): number {
+  if (a.wantCount !== b.wantCount) return b.wantCount - a.wantCount
+  const createdDiff = Date.parse(a.createdAt) - Date.parse(b.createdAt)
+  if (createdDiff !== 0) return createdDiff
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+}
+
 function syncTime(lastSyncedAt: string | null): string {
   if (lastSyncedAt === null) return 'Ainda não sincronizado'
   const timestamp = new Date(lastSyncedAt)
@@ -104,6 +111,7 @@ export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripP
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const testIds = useMemo(() => createTestIdByPlace(places), [places])
+  const sortedPlaces = useMemo(() => [...places].sort(comparePlacesByInterest), [places])
 
   const loadPlaces = useCallback(async () => {
     if (client === null || !tripId) {
@@ -147,6 +155,28 @@ export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripP
           writeError instanceof Error
             ? writeError.message
             : 'Não foi possível salvar sua presença neste lugar.',
+        )
+      } finally {
+        setBusyPlaceId(null)
+      }
+    },
+    [client, loadPlaces, tripId],
+  )
+
+  const toggleWant = useCallback(
+    async (place: LivePlace) => {
+      if (client === null) return
+      setBusyPlaceId(place.id)
+      setScreenError(null)
+      try {
+        if (place.wantedByMe) await client.unwantPlace(tripId, place.id)
+        else await client.wantPlace(tripId, place.id)
+        await loadPlaces()
+      } catch (writeError) {
+        setScreenError(
+          writeError instanceof Error
+            ? writeError.message
+            : 'Não foi possível salvar sua reação neste lugar.',
         )
       } finally {
         setBusyPlaceId(null)
@@ -263,7 +293,7 @@ export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripP
           <Notice testID="places-empty" message="Adicione o primeiro lugar ou convide o grupo." />
         ) : (
           <View style={{ gap: theme.spacing.space3 }}>
-            {places.map((place) => {
+            {sortedPlaces.map((place) => {
               const canRemove =
                 session !== null &&
                 canRemovePlace({ role, userId: session.user.id, suggestedBy: place.suggestedBy })
@@ -280,6 +310,7 @@ export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripP
                   testSlug={testSlug}
                   busy={busyPlaceId === place.id}
                   onToggleVisit={() => void toggleVisit(place)}
+                  onToggleWant={() => void toggleWant(place)}
                   onRemove={canRemove ? () => void removePlace(place.id) : undefined}
                   onRefresh={loadPlaces}
                 />

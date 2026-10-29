@@ -105,6 +105,21 @@ const migrations: readonly Migration[] = [
   },
   {
     version: 5,
+    statements: [
+      `CREATE TABLE wants (
+        place_id TEXT NOT NULL,
+        trip_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        seq TEXT NOT NULL,
+        deleted_at TEXT,
+        PRIMARY KEY (place_id, user_id)
+      )`,
+      'CREATE INDEX wants_trip_id_idx ON wants (trip_id)',
+    ],
+  },
+  {
+    version: 6,
     statements: ['ALTER TABLE members ADD COLUMN opened_at TEXT'],
   },
 ]

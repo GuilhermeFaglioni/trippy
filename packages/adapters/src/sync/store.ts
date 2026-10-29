@@ -10,6 +10,7 @@ import type {
   SyncPlace,
   SyncSequence,
   SyncVisit,
+  SyncWant,
 } from '@trippy/sync'
 import pg, { type PoolClient } from 'pg'
 
@@ -65,6 +66,11 @@ interface PullVisitRow extends Omit<SyncVisit, 'visitedAt' | 'deletedAt'> {
   deletedAt: Date | null
 }
 
+interface PullWantRow extends Omit<SyncWant, 'createdAt' | 'deletedAt'> {
+  createdAt: Date
+  deletedAt: Date | null
+}
+
 interface PullMemberRow extends Omit<SyncMember, 'joinedAt' | 'openedAt' | 'deletedAt'> {
   joinedAt: Date
   openedAt: Date | null
@@ -74,6 +80,7 @@ interface PullMemberRow extends Omit<SyncMember, 'joinedAt' | 'openedAt' | 'dele
 type PullRecord =
   | { kind: 'place'; seq: SyncSequence; id: string; value: SyncPlace }
   | { kind: 'visit'; seq: SyncSequence; id: string; value: SyncVisit }
+  | { kind: 'want'; seq: SyncSequence; id: string; value: SyncWant }
   | { kind: 'member'; seq: SyncSequence; id: string; value: SyncMember }
 
 class OperationIdRaceError extends Error {}
@@ -264,6 +271,22 @@ async function applyPlaceRemove(
       [operation.placeId, visit.user_id, visitSequence],
     )
   }
+
+  const liveWants = await client.query<{ user_id: string }>(
+    `SELECT user_id FROM place_wants
+     WHERE trip_id = $1 AND place_id = $2 AND deleted_at IS NULL
+     ORDER BY user_id
+     FOR UPDATE`,
+    [operation.tripId, operation.placeId],
+  )
+  for (const want of liveWants.rows) {
+    const wantSequence = await nextSequence(client, operation.tripId)
+    await client.query(
+      `UPDATE place_wants SET deleted_at = now(), seq = $3
+       WHERE place_id = $1 AND user_id = $2`,
+      [operation.placeId, want.user_id, wantSequence],
+    )
+  }
   return { opId: operation.opId, status: 'applied' }
 }
 
@@ -314,6 +337,57 @@ async function applyVisit(
   const sequence = await nextSequence(client, operation.tripId)
   await client.query(
     'UPDATE visits SET deleted_at = now(), seq = $3 WHERE place_id = $1 AND user_id = $2',
+    [operation.placeId, userId, sequence],
+  )
+  return { opId: operation.opId, status: 'applied' }
+}
+
+async function applyWant(
+  client: PoolClient,
+  userId: string,
+  operation: Extract<SyncOperation, { type: 'place.want' | 'place.unwant' }>,
+): Promise<PushOperationResult> {
+  const placeResult = await client.query<PlaceLookupRow>(
+    'SELECT trip_id, suggested_by, deleted_at FROM places WHERE id = $1',
+    [operation.placeId],
+  )
+  const place = placeResult.rows[0]
+  if (!place || place.trip_id !== operation.tripId) return rejectedResult(operation, 'invalid')
+
+  const selected = await client.query<VisitLookupRow>(
+    `SELECT deleted_at FROM place_wants
+     WHERE place_id = $1 AND user_id = $2
+     FOR UPDATE`,
+    [operation.placeId, userId],
+  )
+  const want = selected.rows[0]
+
+  if (operation.type === 'place.want') {
+    if (place.deleted_at) return rejectedResult(operation, 'invalid')
+    if (want && !want.deleted_at) return duplicateResult(operation)
+
+    const sequence = await nextSequence(client, operation.tripId)
+    if (want) {
+      await client.query(
+        `UPDATE place_wants
+         SET created_at = now(), seq = $3, deleted_at = NULL
+         WHERE place_id = $1 AND user_id = $2`,
+        [operation.placeId, userId, sequence],
+      )
+    } else {
+      await client.query(
+        `INSERT INTO place_wants (place_id, trip_id, user_id, created_at, seq)
+         VALUES ($1, $2, $3, now(), $4)`,
+        [operation.placeId, operation.tripId, userId, sequence],
+      )
+    }
+    return { opId: operation.opId, status: 'applied' }
+  }
+
+  if (!want || want.deleted_at) return duplicateResult(operation)
+  const sequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    'UPDATE place_wants SET deleted_at = now(), seq = $3 WHERE place_id = $1 AND user_id = $2',
     [operation.placeId, userId, sequence],
   )
   return { opId: operation.opId, status: 'applied' }
@@ -576,6 +650,9 @@ async function applyNewOperation(
     case 'visit.mark':
     case 'visit.unmark':
       return applyVisit(client, userId, operation, trip.timezone)
+    case 'place.want':
+    case 'place.unwant':
+      return applyWant(client, userId, operation)
     case 'itinerary.arrange':
       return applyItineraryArrange(client, userId, role, operation, trip)
     case 'member.remove':
@@ -589,9 +666,9 @@ async function applyNewOperation(
   }
 }
 
-async function listPageRows<T extends PullPlaceRow | PullVisitRow | PullMemberRow>(
+async function listPageRows<T extends PullPlaceRow | PullVisitRow | PullWantRow | PullMemberRow>(
   client: Pool | PoolClient,
-  table: 'places' | 'visits' | 'trip_members',
+  table: 'places' | 'visits' | 'place_wants' | 'trip_members',
   columns: string,
   liveColumn: 'deleted_at' | 'left_at',
   tripId: string,
@@ -615,7 +692,7 @@ function comparePullRecords(left: PullRecord, right: PullRecord): number {
   const leftSeq = BigInt(left.seq)
   const rightSeq = BigInt(right.seq)
   if (leftSeq !== rightSeq) return leftSeq < rightSeq ? -1 : 1
-  const kindOrder = { member: 0, place: 1, visit: 2 } as const
+  const kindOrder = { member: 0, place: 1, visit: 2, want: 3 } as const
   const kindDifference = kindOrder[left.kind] - kindOrder[right.kind]
   return kindDifference || left.id.localeCompare(right.id)
 }
@@ -732,7 +809,7 @@ export class PostgresSyncStore implements SyncStore {
 
         const pageLimit = query.limit
         const selectedLimit = pageLimit + 1
-        const [placeRows, visitRows, memberRows] = await Promise.all([
+        const [placeRows, visitRows, wantRows, memberRows] = await Promise.all([
           listPageRows<PullPlaceRow>(
             client,
             'places',
@@ -757,6 +834,18 @@ export class PostgresSyncStore implements SyncStore {
             `place_id AS "placeId", trip_id AS "tripId", user_id AS "userId",
              marked_by AS "markedBy", visited_at AS "visitedAt", visited_tz AS "visitedTz",
              seq::text AS seq, deleted_at AS "deletedAt"`,
+            'deleted_at',
+            query.tripId,
+            cursor,
+            snapshotSeq,
+            selectedLimit,
+            bootstrap,
+          ),
+          listPageRows<PullWantRow>(
+            client,
+            'place_wants',
+            `place_id AS "placeId", trip_id AS "tripId", user_id AS "userId",
+             created_at AS "createdAt", seq::text AS seq, deleted_at AS "deletedAt"`,
             'deleted_at',
             query.tripId,
             cursor,
@@ -799,6 +888,19 @@ export class PostgresSyncStore implements SyncStore {
               value,
             }
           }),
+          ...wantRows.map((row) => {
+            const value: SyncWant = {
+              ...row,
+              createdAt: row.createdAt.toISOString(),
+              deletedAt: row.deletedAt?.toISOString() ?? null,
+            }
+            return {
+              kind: 'want' as const,
+              seq: value.seq,
+              id: `${value.placeId}:${value.userId}`,
+              value,
+            }
+          }),
           ...memberRows.map((row) => {
             const value: SyncMember = {
               ...row,
@@ -816,6 +918,7 @@ export class PostgresSyncStore implements SyncStore {
         const responseData = {
           places: page.flatMap((record) => (record.kind === 'place' ? [record.value] : [])),
           visits: page.flatMap((record) => (record.kind === 'visit' ? [record.value] : [])),
+          wants: page.flatMap((record) => (record.kind === 'want' ? [record.value] : [])),
           members: page.flatMap((record) => (record.kind === 'member' ? [record.value] : [])),
           itinerary: { version: trip.itinerary_version, atSeq: trip.seq_counter },
           nextCursor,
