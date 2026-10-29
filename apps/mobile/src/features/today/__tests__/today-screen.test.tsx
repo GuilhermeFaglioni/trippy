@@ -144,4 +144,15 @@ describe('tela Hoje', () => {
     expect(screen.queryByTestId('hoje-proximo-lugar')).toBeNull()
     expect(screen.queryByTestId('hoje-lugar-mercado-central')).toBeNull()
   })
+
+  it('mostra o cartão Estamos aqui durante a viagem', async () => {
+    const screen = await renderToday(createClient([]), start, end)
+    expect(await screen.findByTestId('hoje-estamos-aqui')).toBeOnTheScreen()
+  })
+
+  it('não mostra o cartão Estamos aqui antes da viagem', async () => {
+    const screen = await renderToday(createClient([]), isoDayOffset(2), isoDayOffset(4))
+    expect(await screen.findByTestId('hoje-dia')).toBeOnTheScreen()
+    expect(screen.queryByTestId('hoje-estamos-aqui')).toBeNull()
+  })
 })

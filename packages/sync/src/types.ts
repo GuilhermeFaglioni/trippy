@@ -15,6 +15,8 @@ export interface AddPlaceOperation extends OperationMetadata {
   placeId: UUID
   name: string
   candidate?: PlaceSearchCandidate
+  /** Dia do roteiro em que o lugar já nasce; ausente = fora do roteiro. */
+  dayIndex?: number
 }
 
 export interface RemovePlaceOperation extends OperationMetadata {

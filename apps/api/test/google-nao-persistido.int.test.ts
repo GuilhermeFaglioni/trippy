@@ -184,6 +184,9 @@ function fakeGeoapifyProvider(): PlacesProvider {
     async search() {
       return [candidate]
     },
+    async nearby() {
+      return [candidate]
+    },
   }
 }
 

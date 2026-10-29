@@ -22,6 +22,7 @@ import {
 } from '../validation.ts'
 import { migrateSyncDatabase } from './schema.ts'
 import type {
+  AddPlaceOptions,
   ItineraryDraft,
   LiveMember,
   LivePlace,
@@ -180,7 +181,7 @@ class LocalSyncClient implements SyncClient {
     await this.refreshStatus()
   }
 
-  async addPlace(tripId: UUID, name: string): Promise<UUID> {
+  async addPlace(tripId: UUID, name: string, options?: AddPlaceOptions): Promise<UUID> {
     const placeId = this.idGenerator()
     const operation: SyncOperation = {
       type: 'place.add',
@@ -188,12 +189,17 @@ class LocalSyncClient implements SyncClient {
       tripId,
       placeId,
       name,
+      ...(options?.dayIndex !== undefined ? { dayIndex: options.dayIndex } : {}),
     }
     await this.writeOperation(operation)
     return placeId
   }
 
-  async addPlaceFromCandidate(tripId: UUID, candidate: PlaceSearchCandidate): Promise<UUID> {
+  async addPlaceFromCandidate(
+    tripId: UUID,
+    candidate: PlaceSearchCandidate,
+    options?: AddPlaceOptions,
+  ): Promise<UUID> {
     const placeId = this.idGenerator()
     await this.writeOperation({
       type: 'place.add',
@@ -202,6 +208,7 @@ class LocalSyncClient implements SyncClient {
       placeId,
       name: candidate.name,
       candidate,
+      ...(options?.dayIndex !== undefined ? { dayIndex: options.dayIndex } : {}),
     })
     return placeId
   }
@@ -378,6 +385,19 @@ class LocalSyncClient implements SyncClient {
       days: this.itineraryDaysFromDraft(row),
       createdAt: row.created_at,
     }))
+  }
+
+  private async nextDayPosition(
+    transaction: SqlDatabase,
+    tripId: UUID,
+    dayIndex: number,
+  ): Promise<number> {
+    const row = await transaction.get<{ max_position: number | null } & Record<string, unknown>>(
+      `SELECT MAX(position) AS max_position FROM places
+       WHERE trip_id = ? AND deleted_at IS NULL AND day_index = ?`,
+      [tripId, dayIndex],
+    )
+    return (row?.max_position ?? -1) + 1
   }
 
   async discardItineraryDraft(opId: UUID): Promise<void> {
@@ -1045,13 +1065,21 @@ class LocalSyncClient implements SyncClient {
   ): Promise<void> {
     if (operation.type === 'place.add') {
       const candidate = operation.candidate
+      const dayIndex = operation.dayIndex ?? null
+      const position =
+        dayIndex === null
+          ? null
+          : await this.nextDayPosition(transaction, operation.tripId, dayIndex)
+      // Sem dia, o conflito preserva a posição existente; com dia, o lugar é reposicionado.
+      const placementUpdate =
+        dayIndex === null ? '' : ', day_index = excluded.day_index, position = excluded.position'
       await transaction.run(
         `INSERT INTO places (
            id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,
            name, local_name, address, local_address, lat, lng, google_place_id, google_match,
            user_local_name, user_local_address, suggested_by, comment, day_index, position,
            seq, deleted_at, created_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'none', NULL, NULL, ?, NULL, NULL, NULL, '0', NULL, ?)
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 'none', NULL, NULL, ?, NULL, ?, ?, '0', NULL, ?)
          ON CONFLICT (id) DO UPDATE SET
            trip_id = excluded.trip_id, provider = excluded.provider,
            provider_ref = excluded.provider_ref, country_code = excluded.country_code,
@@ -1062,7 +1090,7 @@ class LocalSyncClient implements SyncClient {
            google_place_id = excluded.google_place_id, google_match = excluded.google_match,
            user_local_name = excluded.user_local_name,
            user_local_address = excluded.user_local_address, suggested_by = excluded.suggested_by,
-           seq = '0', deleted_at = NULL, created_at = excluded.created_at`,
+           seq = '0', deleted_at = NULL, created_at = excluded.created_at${placementUpdate}`,
         [
           operation.placeId,
           operation.tripId,
@@ -1079,6 +1107,8 @@ class LocalSyncClient implements SyncClient {
           candidate?.lat ?? null,
           candidate?.lng ?? null,
           this.userId,
+          dayIndex,
+          position,
           createdAt,
         ],
       )
