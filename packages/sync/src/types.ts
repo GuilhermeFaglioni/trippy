@@ -187,6 +187,11 @@ export interface CreateInviteResponse {
   token: string
 }
 
+/** Versão vigente do aviso de que participar autoriza compartilhar o vídeo recap. */
+export const RECAP_SHARING_TERMS_VERSION = '2026-11-v1'
+
 export interface AcceptInviteRequest {
   token: string
+  /** Versão do aviso exibido ao convidado; o servidor só aceita a vigente. */
+  termsVersion: string
 }

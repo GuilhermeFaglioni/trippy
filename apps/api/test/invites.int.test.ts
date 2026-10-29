@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto'
 import pg from 'pg'
+import { RECAP_SHARING_TERMS_VERSION } from '@trippy/sync'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresInviteStore } from '@trippy/adapters/invites'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
@@ -152,9 +153,34 @@ it('gera convite com hash, aceita, sincroniza membro, reentra e é idempotente',
   ])
   expect(savedInvite.rows[0]!.token_hash).not.toBe(token)
 
-  const accepted = await post('/invites/accept', { token }, 'member-token')
+  const withoutConsent = await post('/invites/accept', { token }, 'member-token')
+  expect(withoutConsent.status).toBe(400)
+  const outdatedConsent = await post(
+    '/invites/accept',
+    { token, termsVersion: 'antiga' },
+    'member-token',
+  )
+  expect(outdatedConsent.status).toBe(400)
+  const noMembership = await pool.query(
+    'SELECT 1 FROM trip_members WHERE trip_id = $1 AND user_id = $2',
+    [tripId, memberId],
+  )
+  expect(noMembership.rows).toHaveLength(0)
+
+  const accepted = await post(
+    '/invites/accept',
+    { token, termsVersion: RECAP_SHARING_TERMS_VERSION },
+    'member-token',
+  )
   expect(accepted.status).toBe(200)
   expect(await accepted.json()).toMatchObject({ trip: { id: tripId, role: 'member' } })
+  const consent = await pool.query<{ at: Date | null; version: string | null }>(
+    `SELECT accepted_video_terms_at AS at, accepted_video_terms_version AS version
+     FROM trip_members WHERE trip_id = $1 AND user_id = $2`,
+    [tripId, memberId],
+  )
+  expect(consent.rows[0]!.at).toBeInstanceOf(Date)
+  expect(consent.rows[0]!.version).toBe(RECAP_SHARING_TERMS_VERSION)
   const memberTripsResponse = await get('/trips', 'member-token')
   expect(await memberTripsResponse.json()).toMatchObject({
     trips: [expect.objectContaining({ id: tripId })],
@@ -172,7 +198,11 @@ it('gera convite com hash, aceita, sincroniza membro, reentra e é idempotente',
     'SELECT seq_counter FROM trips WHERE id = $1',
     [tripId],
   )
-  const duplicateAccept = await post('/invites/accept', { token }, 'member-token')
+  const duplicateAccept = await post(
+    '/invites/accept',
+    { token, termsVersion: RECAP_SHARING_TERMS_VERSION },
+    'member-token',
+  )
   expect(duplicateAccept.status).toBe(200)
   const counterAfterDuplicate = await pool.query<{ seq_counter: string }>(
     'SELECT seq_counter FROM trips WHERE id = $1',
@@ -190,7 +220,11 @@ it('gera convite com hash, aceita, sincroniza membro, reentra e é idempotente',
     'UPDATE trip_members SET left_at = now(), seq = $3 WHERE trip_id = $1 AND user_id = $2',
     [tripId, memberId, departure.rows[0]!.seq_counter],
   )
-  const reentered = await post('/invites/accept', { token }, 'member-token')
+  const reentered = await post(
+    '/invites/accept',
+    { token, termsVersion: RECAP_SHARING_TERMS_VERSION },
+    'member-token',
+  )
   expect(reentered.status).toBe(200)
   const activeMembership = await pool.query<{ left_at: Date | null; role: string }>(
     'SELECT left_at, role FROM trip_members WHERE trip_id = $1 AND user_id = $2',
@@ -208,8 +242,16 @@ it('esconde convite inexistente ou revogado com o mesmo erro genérico', async (
   const { token } = (await created.json()) as { token: string }
   await pool.query('UPDATE invites SET revoked_at = now() WHERE trip_id = $1', [tripId])
 
-  const revoked = await post('/invites/accept', { token }, 'outsider-token')
-  const missing = await post('/invites/accept', { token: randomUUID() }, 'outsider-token')
+  const revoked = await post(
+    '/invites/accept',
+    { token, termsVersion: RECAP_SHARING_TERMS_VERSION },
+    'outsider-token',
+  )
+  const missing = await post(
+    '/invites/accept',
+    { token: randomUUID(), termsVersion: RECAP_SHARING_TERMS_VERSION },
+    'outsider-token',
+  )
   expect(revoked.status).toBe(404)
   expect(await revoked.json()).toEqual({
     error: 'invite_not_found',

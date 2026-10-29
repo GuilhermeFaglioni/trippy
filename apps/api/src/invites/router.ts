@@ -97,13 +97,20 @@ export function createInvitesRouter(
     const validation = validateAcceptInviteRequest(await readBody(context.req.raw))
     if (!validation.success) {
       return context.json(
-        { error: 'invalid_invite', message: 'Informe um token de convite válido.' },
+        {
+          error: 'invalid_invite',
+          message: 'Informe um token de convite válido e aceite o aviso do recap.',
+        },
         400,
       )
     }
 
     const tokenHash = createHash('sha256').update(validation.value.token).digest('hex')
-    const trip = await store.acceptInvite(context.get('userId'), tokenHash)
+    const trip = await store.acceptInvite(
+      context.get('userId'),
+      tokenHash,
+      validation.value.termsVersion,
+    )
     if (!trip) {
       return context.json({ error: 'invite_not_found', message: 'Convite não encontrado.' }, 404)
     }

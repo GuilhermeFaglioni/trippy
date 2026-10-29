@@ -1,5 +1,6 @@
 import { validatePlaceName } from '@trippy/domain/places'
 import type { PlaceSearchCandidate } from '@trippy/domain'
+import { RECAP_SHARING_TERMS_VERSION } from './types.ts'
 import type {
   AcceptInviteRequest,
   CreateInviteParams,
@@ -549,5 +550,8 @@ export function validateAcceptInviteRequest(value: unknown): ValidationResult<Ac
   if (!isRecord(value) || typeof value.token !== 'string' || value.token.trim().length === 0) {
     return failure('token', 'Informe um token de convite.')
   }
-  return { success: true, value: { token: value.token.trim() } }
+  if (value.termsVersion !== RECAP_SHARING_TERMS_VERSION) {
+    return failure('termsVersion', 'É preciso aceitar o aviso de compartilhamento do recap.')
+  }
+  return { success: true, value: { token: value.token.trim(), termsVersion: value.termsVersion } }
 }

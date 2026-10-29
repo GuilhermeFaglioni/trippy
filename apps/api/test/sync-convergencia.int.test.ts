@@ -3,6 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import pg from 'pg'
+import { RECAP_SHARING_TERMS_VERSION } from '@trippy/sync'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresInviteStore } from '@trippy/adapters/invites'
 import { signPlaceSearchCandidate } from '@trippy/adapters/places'
@@ -306,7 +307,11 @@ it('converge após resposta perdida, fechamento offline, remoção e escritas si
   const inviteResponse = await post(`/trips/${tripId}/invites`, {}, 'convergencia-organizador')
   expect(inviteResponse.status).toBe(201)
   const { token } = (await inviteResponse.json()) as { token: string }
-  const acceptResponse = await post('/invites/accept', { token }, 'convergencia-membro')
+  const acceptResponse = await post(
+    '/invites/accept',
+    { token, termsVersion: RECAP_SHARING_TERMS_VERSION },
+    'convergencia-membro',
+  )
   expect(acceptResponse.status).toBe(200)
 
   const controlsA: ClientControls = {
@@ -454,7 +459,15 @@ it('sincroniza candidato assinado, vínculo Google e detalhes locais entre clien
 
   const inviteResponse = await post(`/trips/${tripId}/invites`, {}, 'convergencia-organizador')
   const { token } = (await inviteResponse.json()) as { token: string }
-  expect((await post('/invites/accept', { token }, 'convergencia-membro')).status).toBe(200)
+  expect(
+    (
+      await post(
+        '/invites/accept',
+        { token, termsVersion: RECAP_SHARING_TERMS_VERSION },
+        'convergencia-membro',
+      )
+    ).status,
+  ).toBe(200)
 
   const controlsA: ClientControls = {
     online: true,

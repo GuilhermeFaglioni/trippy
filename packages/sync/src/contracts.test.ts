@@ -13,6 +13,7 @@ import {
   validatePushResponse,
   validateSyncOperation,
 } from './validation.ts'
+import { RECAP_SHARING_TERMS_VERSION } from './types.ts'
 import type { SyncMember, SyncPlace, SyncVisit } from './types.ts'
 
 const tripId = '58f75ed5-b524-46f8-b387-650d9b43ee36'
@@ -385,11 +386,18 @@ describe('contratos de convite', () => {
       success: true,
       value: { token: 'abc123' },
     })
-    expect(validateAcceptInviteRequest({ token: '  abc123  ' })).toEqual({
+    const termsVersion = RECAP_SHARING_TERMS_VERSION
+    expect(validateAcceptInviteRequest({ token: '  abc123  ', termsVersion })).toEqual({
       success: true,
-      value: { token: 'abc123' },
+      value: { token: 'abc123', termsVersion },
     })
-    expect(validateAcceptInviteRequest({ token: ' ' })).toMatchObject({ success: false })
+    expect(validateAcceptInviteRequest({ token: ' ', termsVersion })).toMatchObject({
+      success: false,
+    })
+    expect(validateAcceptInviteRequest({ token: 'abc123' })).toMatchObject({ success: false })
+    expect(validateAcceptInviteRequest({ token: 'abc123', termsVersion: 'antiga' })).toMatchObject({
+      success: false,
+    })
   })
 })
 

@@ -1,3 +1,5 @@
+import { RECAP_SHARING_TERMS_VERSION } from '@trippy/sync'
+
 import { isTripSummary, type TripSummary } from '../trips/trips-client'
 
 export type InviteRequest = (path: string, init?: RequestInit) => Promise<Response>
@@ -53,7 +55,7 @@ export function createInviteClient(request: InviteRequest): InviteClient {
       const response = await request('/invites/accept', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: normalizedToken }),
+        body: JSON.stringify({ token: normalizedToken, termsVersion: RECAP_SHARING_TERMS_VERSION }),
       })
       const payload = await readJson(response)
       if (!response.ok) throw errorFrom(response, payload)

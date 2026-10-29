@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 
-import type { SyncClient } from '@trippy/sync'
+import { RECAP_SHARING_TERMS_VERSION, type SyncClient } from '@trippy/sync'
 import { DesignSystemProvider } from '../../../design-system'
 import * as sessionProvider from '../../auth/session-provider'
 import * as syncProvider from '../../sync/sync-provider'
@@ -58,13 +58,14 @@ describe('formulário de entrada por convite', () => {
 
     await fireEvent.changeText(screen.getByTestId('accept-invite-code'), ' código-123 ')
     await fireEvent.press(screen.getByTestId('accept-invite-button'))
+    await fireEvent.press(screen.getByTestId('accept-invite-terms-accept'))
 
     await waitFor(() => {
       expect(mockRequest).toHaveBeenCalledWith(
         '/invites/accept',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ token: 'código-123' }),
+          body: JSON.stringify({ token: 'código-123', termsVersion: RECAP_SHARING_TERMS_VERSION }),
         }),
       )
       expect(mockSyncNow).toHaveBeenCalledTimes(1)
@@ -73,5 +74,23 @@ describe('formulário de entrada por convite', () => {
         params: { id: trip.id, tripName: trip.name, role: trip.role },
       })
     })
+  })
+
+  it('ao recusar o aviso, fecha-o e limpa o código sem chamar a API', async () => {
+    const screen = await render(
+      <DesignSystemProvider>
+        <AcceptInviteForm />
+      </DesignSystemProvider>,
+    )
+
+    await fireEvent.changeText(screen.getByTestId('accept-invite-code'), 'código-123')
+    await fireEvent.press(screen.getByTestId('accept-invite-button'))
+    expect(screen.getByTestId('accept-invite-terms')).toBeTruthy()
+
+    await fireEvent.press(screen.getByTestId('accept-invite-terms-decline'))
+
+    expect(screen.queryByTestId('accept-invite-terms')).toBeNull()
+    expect(screen.getByTestId('accept-invite-code').props.value).toBe('')
+    expect(mockRequest).not.toHaveBeenCalled()
   })
 })
