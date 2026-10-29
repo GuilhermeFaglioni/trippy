@@ -14,6 +14,7 @@ import { ItineraryScreen } from '../../features/itinerary/itinerary-screen'
 import { MembersScreen } from '../../features/members/members-screen'
 import { useSync } from '../../features/sync/sync-provider'
 import { TripPlacesScreen } from '../../features/places/trip-places-screen'
+import { TodayScreen } from '../../features/today/today-screen'
 import {
   useTripsClient,
   type TripPhase,
@@ -21,7 +22,7 @@ import {
   type TripSummary,
 } from '../../features/trips/trips-client'
 
-/** TestIDs Maestro: viagem-removida, trip-tab-lugares, trip-tab-roteiro, trip-tab-grupo. */
+/** TestIDs Maestro: viagem-removida, trip-tab-lugares, trip-tab-roteiro, trip-tab-grupo, trip-tab-hoje. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
 const PHASE_LABELS: Record<TripPhase, string> = {
@@ -32,10 +33,10 @@ const PHASE_LABELS: Record<TripPhase, string> = {
 
 /** Aba inicial por fase; Hoje e Recap entram nas telas próprias. */
 function initialSection(phase: TripPhase): TripSection {
-  return phase === 'traveling' ? 'roteiro' : 'lugares'
+  return phase === 'traveling' ? 'hoje' : 'lugares'
 }
 
-type TripSection = 'lugares' | 'roteiro' | 'grupo'
+type TripSection = 'hoje' | 'lugares' | 'roteiro' | 'grupo'
 type MembershipState = 'loading' | 'active' | 'removed' | 'error'
 
 function firstParam(value: string | string[] | undefined): string {
@@ -76,9 +77,11 @@ function RemovedTripNotice({ pending }: { pending: number }) {
 
 function TripTabs({
   active,
+  showToday,
   onChange,
 }: {
   active: TripSection
+  showToday: boolean
   onChange: (section: TripSection) => void
 }) {
   const theme = useTheme()
@@ -94,6 +97,15 @@ function TripTabs({
         padding: theme.spacing.space3,
       }}
     >
+      {showToday ? (
+        <Button
+          label="Hoje"
+          variant="secondary"
+          selected={active === 'hoje'}
+          onPress={() => onChange('hoje')}
+          testID="trip-tab-hoje"
+        />
+      ) : null}
       <Button
         label="Lugares"
         variant="secondary"
@@ -199,8 +211,26 @@ export default function TripRoute() {
 
   const startDate = trip?.startDate ?? routeStartDate
   const endDate = trip?.endDate ?? routeEndDate
+  const timezone = trip?.timezone ?? 'UTC'
   const displayName = trip?.name ?? tripName
   const routeContent = useMemo(() => {
+    const openPhotos = () =>
+      router.push({
+        pathname: '/trips/[id]/photos',
+        params: { id: tripId, tripName: displayName },
+      })
+    if (section === 'hoje') {
+      return (
+        <TodayScreen
+          tripId={tripId}
+          tripName={displayName}
+          timezone={timezone}
+          startDate={startDate}
+          endDate={endDate}
+          onOpenPhotos={openPhotos}
+        />
+      )
+    }
     if (section === 'roteiro') {
       return <ItineraryScreen tripId={tripId} startDate={startDate} endDate={endDate} />
     }
@@ -210,15 +240,10 @@ export default function TripRoute() {
         tripId={tripId}
         tripName={displayName}
         role={role}
-        onOpenPhotos={() =>
-          router.push({
-            pathname: '/trips/[id]/photos',
-            params: { id: tripId, tripName: displayName },
-          })
-        }
+        onOpenPhotos={openPhotos}
       />
     )
-  }, [displayName, endDate, role, router, section, startDate, tripId])
+  }, [displayName, endDate, role, router, section, startDate, timezone, tripId])
 
   if (membership === 'loading') {
     return (
@@ -307,6 +332,7 @@ export default function TripRoute() {
         </View>
         <TripTabs
           active={section}
+          showToday={phase === 'traveling'}
           onChange={(next) => {
             setSectionChosen(true)
             setSection(next)

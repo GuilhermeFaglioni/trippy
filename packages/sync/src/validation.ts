@@ -14,6 +14,7 @@ import type {
   SyncPlace,
   SyncSequence,
   SyncVisit,
+  SyncWant,
   UUID,
 } from './types.ts'
 
@@ -204,7 +205,9 @@ export function validateSyncOperation(
   if (
     value.type === 'place.remove' ||
     value.type === 'visit.mark' ||
-    value.type === 'visit.unmark'
+    value.type === 'visit.unmark' ||
+    value.type === 'place.want' ||
+    value.type === 'place.unwant'
   ) {
     if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
     return {
@@ -451,6 +454,18 @@ function validateVisit(value: unknown): value is SyncVisit {
   )
 }
 
+function validateWant(value: unknown): value is SyncWant {
+  return (
+    isRecord(value) &&
+    isUuid(value.placeId) &&
+    isUuid(value.tripId) &&
+    isUuid(value.userId) &&
+    isDateTime(value.createdAt) &&
+    isSyncSequence(value.seq) &&
+    (value.deletedAt === null || isDateTime(value.deletedAt))
+  )
+}
+
 function validateMember(value: unknown): value is SyncMember {
   return (
     isRecord(value) &&
@@ -474,6 +489,7 @@ function isStringArrayOf<T>(value: unknown, validate: (item: unknown) => item is
 function validatePullPageData(value: Record<string, unknown>): value is Record<string, unknown> & {
   places: SyncPlace[]
   visits: SyncVisit[]
+  wants: SyncWant[]
   members: SyncMember[]
   itinerary: { version: number; atSeq: SyncSequence }
   nextCursor: SyncSequence
@@ -482,6 +498,7 @@ function validatePullPageData(value: Record<string, unknown>): value is Record<s
   return (
     isStringArrayOf(value.places, validatePlace) &&
     isStringArrayOf(value.visits, validateVisit) &&
+    isStringArrayOf(value.wants, validateWant) &&
     isStringArrayOf(value.members, validateMember) &&
     validateItinerary(value.itinerary) &&
     isSyncSequence(value.nextCursor) &&
@@ -508,6 +525,7 @@ export function validatePullResponse(value: unknown): ValidationResult<PullRespo
         snapshotSeq: value.snapshotSeq,
         places: value.places,
         visits: value.visits,
+        wants: value.wants,
         members: value.members,
         itinerary: value.itinerary,
         nextCursor: value.nextCursor,
@@ -522,6 +540,7 @@ export function validatePullResponse(value: unknown): ValidationResult<PullRespo
         mode: 'incremental',
         places: value.places,
         visits: value.visits,
+        wants: value.wants,
         members: value.members,
         itinerary: value.itinerary,
         nextCursor: value.nextCursor,

@@ -1,14 +1,16 @@
-import type { SyncMember, SyncPlace, SyncVisit } from './types.ts'
+import type { SyncMember, SyncPlace, SyncVisit, SyncWant } from './types.ts'
 
 export interface TripState {
   places: readonly SyncPlace[]
   visits: readonly SyncVisit[]
+  wants: readonly SyncWant[]
   members: readonly SyncMember[]
 }
 
 export interface CanonicalTripState {
   places: SyncPlace[]
   visits: SyncVisit[]
+  wants: SyncWant[]
   members: SyncMember[]
 }
 
@@ -24,6 +26,11 @@ export function canonicalTripState(state: TripState): CanonicalTripState {
       .sort((left, right) => compare(left.id, right.id)),
     visits: state.visits
       .filter((visit) => visit.deletedAt === null)
+      .sort(
+        (left, right) => compare(left.placeId, right.placeId) || compare(left.userId, right.userId),
+      ),
+    wants: state.wants
+      .filter((want) => want.deletedAt === null)
       .sort(
         (left, right) => compare(left.placeId, right.placeId) || compare(left.userId, right.userId),
       ),

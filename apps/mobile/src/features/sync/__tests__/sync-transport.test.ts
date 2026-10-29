@@ -35,6 +35,7 @@ describe('transporte HTTP de sync', () => {
       snapshotSeq: '15',
       places: [],
       visits: [],
+      wants: [],
       members: [],
       itinerary: { version: 0, atSeq: '15' },
       nextCursor: '10',

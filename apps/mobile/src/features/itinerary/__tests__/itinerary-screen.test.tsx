@@ -47,6 +47,8 @@ function place(overrides: Partial<LivePlace> = {}): LivePlace {
     deletedAt: null,
     createdAt: '2026-10-21T10:00:00.000Z',
     visitedByMe: false,
+    wantCount: 0,
+    wantedByMe: false,
     ...overrides,
   }
 }
