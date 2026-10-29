@@ -20,6 +20,7 @@ import {
   type SyncPlace,
   type SyncTransport,
   type SyncVisit,
+  type SyncWant,
   type SyncMember,
   type UUID,
 } from '@trippy/sync'
@@ -183,7 +184,13 @@ async function readLocalState(database: SqlDatabase, currentTripId: UUID) {
      FROM members WHERE trip_id = ?`,
     [currentTripId],
   )
-  return canonicalTripState({ places, visits, members })
+  const wants = await database.all<SyncWant & Record<string, unknown>>(
+    `SELECT place_id AS placeId, trip_id AS tripId, user_id AS userId, created_at AS createdAt,
+            seq, deleted_at AS deletedAt
+     FROM wants WHERE trip_id = ?`,
+    [currentTripId],
+  )
+  return canonicalTripState({ places, visits, wants, members })
 }
 
 async function readServerState(currentTripId: UUID) {
@@ -206,6 +213,12 @@ async function readServerState(currentTripId: UUID) {
      FROM visits WHERE trip_id = $1`,
     [currentTripId],
   )
+  const wantRows = await pool.query<SyncWant>(
+    `SELECT place_id AS "placeId", trip_id AS "tripId", user_id AS "userId",
+            created_at AS "createdAt", seq::text AS seq, deleted_at AS "deletedAt"
+     FROM place_wants WHERE trip_id = $1`,
+    [currentTripId],
+  )
   const memberRows = await pool.query<SyncMember>(
     `SELECT trip_id AS "tripId", user_id AS "userId", role, joined_at AS "joinedAt",
             seq::text AS seq, left_at AS "deletedAt"
@@ -222,6 +235,11 @@ async function readServerState(currentTripId: UUID) {
       ...visit,
       visitedAt: new Date(visit.visitedAt).toISOString(),
       deletedAt: visit.deletedAt === null ? null : new Date(visit.deletedAt).toISOString(),
+    })),
+    wants: wantRows.rows.map((want) => ({
+      ...want,
+      createdAt: new Date(want.createdAt).toISOString(),
+      deletedAt: want.deletedAt === null ? null : new Date(want.deletedAt).toISOString(),
     })),
     members: memberRows.rows.map((member) => ({
       ...member,

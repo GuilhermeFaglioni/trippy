@@ -13,7 +13,7 @@ import {
   validatePushResponse,
   validateSyncOperation,
 } from './validation.ts'
-import type { SyncMember, SyncPlace, SyncVisit } from './types.ts'
+import type { SyncMember, SyncPlace, SyncVisit, SyncWant } from './types.ts'
 
 const tripId = '58f75ed5-b524-46f8-b387-650d9b43ee36'
 const userId = '3c42531a-085f-4ebc-89ca-d32dd33bc527'
@@ -143,6 +143,20 @@ describe('validação das operações e do push', () => {
     expect(validateSyncOperation({ type: 'place.set_local', opId, tripId, placeId })).toMatchObject(
       { success: false, issues: [{ path: 'localName' }] },
     )
+  })
+
+  it('valida place.want e place.unwant pelo identificador do lugar', () => {
+    expect(validateSyncOperation({ type: 'place.want', opId, tripId, placeId })).toEqual({
+      success: true,
+      value: { type: 'place.want', opId, tripId, placeId },
+    })
+    expect(validateSyncOperation({ type: 'place.unwant', opId, tripId, placeId })).toEqual({
+      success: true,
+      value: { type: 'place.unwant', opId, tripId, placeId },
+    })
+    expect(
+      validateSyncOperation({ type: 'place.want', opId, tripId, placeId: 'nao-uuid' }),
+    ).toMatchObject({ success: false, issues: [{ path: 'placeId' }] })
   })
 
   it('recusa identificadores inválidos e nome vazio', () => {
@@ -349,6 +363,7 @@ describe('validação do pull', () => {
       snapshotSeq: '42',
       places: [place],
       visits: [],
+      wants: [],
       members: [],
       itinerary: { version: 2, atSeq: '42' },
       nextCursor: '42',
@@ -435,6 +450,14 @@ describe('canonicalTripState', () => {
     seq: '2',
     deletedAt,
   })
+  const want = (placeKey: string, userKey: string, deletedAt: string | null = null): SyncWant => ({
+    placeId: placeKey,
+    tripId,
+    userId: userKey,
+    createdAt: '2026-10-20T12:00:00.000Z',
+    seq: '4',
+    deletedAt,
+  })
   const member = (id: string, deletedAt: string | null = null): SyncMember => ({
     tripId,
     userId: id,
@@ -448,6 +471,7 @@ describe('canonicalTripState', () => {
     const state = canonicalTripState({
       places: [place(placeId), place('1a000000-0000-4000-8000-000000000000')],
       visits: [visit(placeId, otherUserId), visit(placeId, userId)],
+      wants: [want(placeId, otherUserId), want(placeId, userId, '2026-10-20T13:00:00.000Z')],
       members: [member(otherUserId), member(userId, '2026-10-20T13:00:00.000Z')],
     })
     expect(state.places.map(({ id }) => id)).toEqual([
@@ -455,6 +479,7 @@ describe('canonicalTripState', () => {
       placeId,
     ])
     expect(state.visits.map(({ userId: id }) => id)).toEqual([userId, otherUserId])
+    expect(state.wants.map(({ userId: id }) => id)).toEqual([otherUserId])
     expect(state.members.map(({ userId: id }) => id)).toEqual([otherUserId])
   })
 })

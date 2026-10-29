@@ -32,6 +32,16 @@ export interface UnmarkVisitOperation extends OperationMetadata {
   placeId: UUID
 }
 
+export interface WantPlaceOperation extends OperationMetadata {
+  type: 'place.want'
+  placeId: UUID
+}
+
+export interface UnwantPlaceOperation extends OperationMetadata {
+  type: 'place.unwant'
+  placeId: UUID
+}
+
 export interface ItineraryDay {
   dayIndex: number
   placeIds: UUID[]
@@ -76,6 +86,8 @@ export type SyncOperation =
   | RemovePlaceOperation
   | MarkVisitOperation
   | UnmarkVisitOperation
+  | WantPlaceOperation
+  | UnwantPlaceOperation
   | ArrangeItineraryOperation
   | RemoveMemberOperation
   | SetMemberRoleOperation
@@ -143,6 +155,16 @@ export interface SyncVisit {
   deletedAt: string | null
 }
 
+/** Reação "quero ir" de uma pessoa em um lugar; `deletedAt` marca a remoção da reação. */
+export interface SyncWant {
+  placeId: UUID
+  tripId: UUID
+  userId: UUID
+  createdAt: string
+  seq: SyncSequence
+  deletedAt: string | null
+}
+
 /** `deletedAt` representa `trip_members.left_at` na fronteira HTTP. */
 export interface SyncMember {
   tripId: UUID
@@ -167,6 +189,7 @@ export type PullQuery =
 export interface PullPageData {
   places: SyncPlace[]
   visits: SyncVisit[]
+  wants: SyncWant[]
   members: SyncMember[]
   itinerary: { version: number; atSeq: SyncSequence }
   nextCursor: SyncSequence

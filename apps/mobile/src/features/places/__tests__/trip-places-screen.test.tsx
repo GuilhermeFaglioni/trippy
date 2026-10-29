@@ -56,6 +56,8 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     deletedAt: null,
     createdAt: '2026-10-20T12:00:00.000Z',
     visitedByMe: false,
+    wantCount: 0,
+    wantedByMe: false,
     localNameStatus: 'missing',
     localAddressStatus: 'missing',
     ...overrides,
@@ -92,6 +94,8 @@ function createClient(initialPlaces: LivePlace[] = [createPlace()]) {
       )
       notify()
     }),
+    wantPlace: jest.fn().mockResolvedValue(undefined),
+    unwantPlace: jest.fn().mockResolvedValue(undefined),
     arrangeItinerary: jest.fn().mockResolvedValue(undefined),
     listItineraryDrafts: jest.fn().mockResolvedValue([]),
     discardItineraryDraft: jest.fn().mockResolvedValue(undefined),
@@ -166,6 +170,49 @@ describe('tela da viagem e lugares locais', () => {
     await waitFor(() => expect(fake.client.unmarkVisit).toHaveBeenCalledWith('trip-1', 'place-1'))
     await waitFor(() =>
       expect(screen.getByTestId('place-visit-cafe-do-porto')).toHaveTextContent('Eu fui'),
+    )
+  })
+
+  it('ordena por quero ir (mais antigo em empate) e alterna a reação', async () => {
+    const fake = createClient([
+      createPlace({
+        id: 'place-praca',
+        name: 'Praça da Sé',
+        wantCount: 1,
+        wantedByMe: true,
+        createdAt: '2026-10-20T12:00:00.000Z',
+      }),
+      createPlace({
+        id: 'place-cafe',
+        name: 'Café do Porto',
+        wantCount: 3,
+        createdAt: '2026-10-21T12:00:00.000Z',
+      }),
+      createPlace({
+        id: 'place-museu',
+        name: 'Museu Antigo',
+        wantCount: 1,
+        createdAt: '2026-10-19T12:00:00.000Z',
+      }),
+    ])
+    const screen = await renderScreen(fake.client)
+
+    await screen.findByTestId('place-cafe-do-porto')
+    const wantButtonIds = screen
+      .getAllByTestId(/^place-want-/)
+      .map((node) => String(node.props.testID))
+      .filter((id) => !id.endsWith('-focus-ring'))
+    expect(wantButtonIds).toEqual([
+      'place-want-cafe-do-porto',
+      'place-want-museu-antigo',
+      'place-want-praca-da-se',
+    ])
+
+    await fireEvent.press(screen.getByTestId('place-want-cafe-do-porto'))
+    await waitFor(() => expect(fake.client.wantPlace).toHaveBeenCalledWith('trip-1', 'place-cafe'))
+    await fireEvent.press(screen.getByTestId('place-want-praca-da-se'))
+    await waitFor(() =>
+      expect(fake.client.unwantPlace).toHaveBeenCalledWith('trip-1', 'place-praca'),
     )
   })
 
