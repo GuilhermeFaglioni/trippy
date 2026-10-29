@@ -1,0 +1,20 @@
+appId: app.trippy.mobile
+---
+- launchApp:
+    stopApp: false
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: tela-hoje
+- assertVisible:
+    id: hoje-banner-desatualizacao
+- tapOn:
+    id: trip-tab-roteiro
+- assertVisible:
+    id: tela-roteiro
+- tapOn:
+    id: trip-tab-hoje
+- assertVisible:
+    id: tela-hoje

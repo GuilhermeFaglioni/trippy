@@ -14,6 +14,7 @@ const mockParams = {
   endDate: '2027-03-15',
 }
 const mockRequest = jest.fn<Promise<Response>, [string, RequestInit?]>()
+const TRAVELING_TRIP_ID = '6f1c2b3a-4d5e-4f60-8a7b-9c0d1e2f3a4b'
 
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => mockParams,
@@ -67,6 +68,10 @@ async function renderRoute(client: SyncClient) {
 }
 
 describe('rota da viagem', () => {
+  afterEach(() => {
+    mockParams.id = 'trip-1'
+  })
+
   beforeEach(() => {
     jest.clearAllMocks()
     mockRequest.mockResolvedValue(
@@ -116,5 +121,34 @@ describe('rota da viagem', () => {
     await fireEvent.press(screen.getByTestId('trip-tab-grupo'))
     expect(await screen.findByTestId('tela-grupo')).toBeOnTheScreen()
     expect(await screen.findByTestId('grupo-membro-user-1-papel')).toHaveTextContent('Organizador')
+  })
+
+  it('viagem em andamento abre direto na aba Hoje', async () => {
+    // O cliente de viagens exige UUID no id; o caso usa um id válido só aqui.
+    mockParams.id = TRAVELING_TRIP_ID
+    mockRequest.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          trips: [
+            {
+              id: TRAVELING_TRIP_ID,
+              name: 'Fim de semana',
+              destination: 'Paraty',
+              startDate: '2027-03-14',
+              endDate: '2027-03-15',
+              timezone: 'America/Sao_Paulo',
+              role: 'organizer',
+              phase: 'traveling',
+              createdAt: '2026-10-20T10:00:00Z',
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    )
+    const screen = await renderRoute(createClient())
+
+    expect(await screen.findByTestId('tela-hoje')).toBeOnTheScreen()
+    expect(screen.queryByTestId('tela-roteiro')).toBeNull()
   })
 })
