@@ -236,6 +236,11 @@ export default function TripRoute() {
         pathname: '/trips/[id]/photos',
         params: { id: tripId, tripName: displayName },
       })
+    const openAddressCard = (placeId: string) =>
+      router.push({
+        pathname: '/trips/[id]/address-card',
+        params: { id: tripId, placeId },
+      })
     if (section === 'hoje') {
       return (
         <TodayScreen
@@ -245,6 +250,7 @@ export default function TripRoute() {
           startDate={startDate}
           endDate={endDate}
           onOpenPhotos={openPhotos}
+          onShowAddress={openAddressCard}
         />
       )
     }
@@ -258,6 +264,7 @@ export default function TripRoute() {
         tripName={displayName}
         role={role}
         onOpenPhotos={openPhotos}
+        onShowAddress={openAddressCard}
       />
     )
   }, [displayName, endDate, role, router, section, startDate, timezone, tripId])
