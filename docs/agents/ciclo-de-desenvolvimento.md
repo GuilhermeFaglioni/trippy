@@ -4,11 +4,12 @@ Definido pelo Guilherme em 19/out/2026. Vale para toda issue com o label `ready-
 
 ## Papéis
 
-| Papel | Tarefas do Claude | Tarefas do Codex |
-|---|---|---|
-| **Planejador** | `--agent claude --model claude-opus-5-5 --effort medium` | `--agent codex --model gpt-6.1-sol --effort low` |
-| **Implementadores** (swarm) | `--agent codex --model gpt-6-luna --effort xhigh`, seguindo a skill `/implement` | igual |
-| **Revisor** | `--agent codex --model gpt-6.1-sol --effort low` | igual |
+| Papel | Modelo |
+|---|---|
+| **Orquestrador / planejador / revisor** (uma sessão por issue) | `claude-sonnet-5-5` |
+| **Implementadores** (swarm, seguindo a skill `/implement`) | `claude-haiku-5-5`, como subagentes da sessão da issue (`Agent` com `model: haiku`) |
+
+Definido pelo Guilherme em 29/out/2026 para as ondas de implementação, no lugar dos modelos GPT-6 e Opus. O Sonnet planeja, divide em subtarefas, delega ao Haiku, integra e revisa; o Haiku implementa subtarefas pequenas e bem delimitadas (arquivos e critérios explícitos). Subtarefa que o Haiku não fecha em duas tentativas volta para o Sonnet fazer.
 
 O **orquestrador** (a sessão do Claude Code com o Guilherme) escolhe as issues da fronteira (sem bloqueio aberto), cria uma worktree por issue e inicia o planejador nela.
 
@@ -32,6 +33,16 @@ O **orquestrador** (a sessão do Claude Code com o Guilherme) escolhe as issues 
    - **conflito com o `develop`:** faz `git rebase origin/develop` (ou merge, se o rebase ficar arriscado), resolve, roda a suíte e faz push com `--force-with-lease`;
    - mudanças de comportamento além de um ajuste pontual voltam para o passo 4 (implementador corrige, nova revisão).
 7. **Fim.** O PR entra pelo auto-merge, a issue fecha pelo `Closes`, e o planejador avisa o orquestrador. A worktree pode ser removida.
+
+## Ritmo enxuto (a partir de 29/out/2026)
+
+O ciclo estava lento por excesso de testes e de decisões imediatas. Valem estas regras, que prevalecem sobre o fluxo acima quando houver conflito:
+
+- **Testes em camadas.** Durante a implementação, só typecheck e os testes do arquivo mexido. A suíte completa (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`) roda **uma vez**, antes do PR; o resto fica com a CI. Testes novos cobrem as fronteiras (permissão, convergência offline, validação), não cada componente.
+- **E2E só no fim da sprint.** Fluxos Maestro e cenários com dois Simulators ficam em uma issue própria por sprint. Uma feature não espera E2E para ser mergeada.
+- **Decidir com padrão.** Dúvida pequena (texto, ordem, nome): o implementador escolhe o padrão mais simples, registra no corpo do PR e segue. `needs-info` só para decisão de produto, custo ou arquitetura fora das specs.
+- **Revisão única.** O revisor confere critérios de aceite e riscos (permissão, perda de dados, offline), sem reabrir estilo. Uma reprovação com lista objetiva, no máximo duas.
+- **Ambiente travado não bloqueia.** Se o Simulator ou a infraestrutura de E2E falhar, registre numa issue e mergeie a feature com os testes de integração verdes.
 
 ## Regras
 
