@@ -17,6 +17,7 @@ function createClient(): jest.Mocked<SyncClient> {
     listMembers: jest.fn().mockResolvedValue([]),
     removeMember: jest.fn().mockResolvedValue(undefined),
     setMemberRole: jest.fn().mockResolvedValue(undefined),
+    endTrip: jest.fn().mockResolvedValue(undefined),
     listRemovedTrips: jest.fn().mockResolvedValue([]),
     countNotSent: jest.fn().mockResolvedValue(0),
     syncNow: jest.fn().mockResolvedValue(undefined),

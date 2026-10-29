@@ -307,6 +307,17 @@ export function validateSyncOperation(
     }
   }
 
+  if (value.type === 'trip.end') {
+    return {
+      success: true,
+      value: {
+        type: 'trip.end',
+        opId: value.opId,
+        tripId: value.tripId,
+      },
+    }
+  }
+
   return failure('type', 'Tipo de operação desconhecido.')
 }
 

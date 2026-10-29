@@ -272,6 +272,20 @@ describe('validação das operações e do push', () => {
   })
 })
 
+describe('validação de encerramento de viagem', () => {
+  it('valida trip.end sem campos extras', () => {
+    const opId = '11111111-1111-4111-8111-111111111111'
+    const tripId = '22222222-2222-4222-8222-222222222222'
+    expect(validateSyncOperation({ type: 'trip.end', opId, tripId })).toEqual({
+      success: true,
+      value: { type: 'trip.end', opId, tripId },
+    })
+    expect(validateSyncOperation({ type: 'trip.end', opId, tripId: 'nao-uuid' })).toMatchObject({
+      success: false,
+    })
+  })
+})
+
 describe('validação do pull', () => {
   it('distingue início de bootstrap, continuação e pull incremental', () => {
     expect(validatePullQuery({ trip: tripId, limit: '25' })).toEqual({

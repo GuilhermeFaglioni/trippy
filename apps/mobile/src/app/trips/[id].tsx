@@ -14,10 +14,26 @@ import { ItineraryScreen } from '../../features/itinerary/itinerary-screen'
 import { MembersScreen } from '../../features/members/members-screen'
 import { useSync } from '../../features/sync/sync-provider'
 import { TripPlacesScreen } from '../../features/places/trip-places-screen'
-import { useTripsClient, type TripRole, type TripSummary } from '../../features/trips/trips-client'
+import {
+  useTripsClient,
+  type TripPhase,
+  type TripRole,
+  type TripSummary,
+} from '../../features/trips/trips-client'
 
 /** TestIDs Maestro: viagem-removida, trip-tab-lugares, trip-tab-roteiro, trip-tab-grupo. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
+
+const PHASE_LABELS: Record<TripPhase, string> = {
+  planning: 'Planejando',
+  traveling: 'Em viagem',
+  ended: 'Encerrada',
+}
+
+/** Aba inicial por fase; Hoje e Recap entram nas telas próprias. */
+function initialSection(phase: TripPhase): TripSection {
+  return phase === 'traveling' ? 'roteiro' : 'lugares'
+}
 
 type TripSection = 'lugares' | 'roteiro' | 'grupo'
 type MembershipState = 'loading' | 'active' | 'removed' | 'error'
@@ -124,6 +140,9 @@ export default function TripRoute() {
   const [notSentCount, setNotSentCount] = useState(0)
   const [section, setSection] = useState<TripSection>('lugares')
   const [trip, setTrip] = useState<TripSummary | null>(null)
+  const [sectionChosen, setSectionChosen] = useState(false)
+  const [confirmingEnd, setConfirmingEnd] = useState(false)
+  const [locallyEnded, setLocallyEnded] = useState(false)
 
   const checkMembership = useCallback(async () => {
     if (!ready) return
@@ -157,13 +176,27 @@ export default function TripRoute() {
     void tripsClient
       .listTrips()
       .then((trips) => {
-        if (active) setTrip(trips.find((candidate) => candidate.id === tripId) ?? null)
+        if (!active) return
+        const found = trips.find((candidate) => candidate.id === tripId) ?? null
+        setTrip(found)
+        if (found && !sectionChosen) setSection(initialSection(found.phase))
       })
       .catch(() => undefined)
     return () => {
       active = false
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membership, tripsClient, tripId])
+
+  const phase: TripPhase | null = locallyEnded ? 'ended' : (trip?.phase ?? null)
+  const canEndTrip = role === 'organizer' && phase !== null && phase !== 'ended'
+
+  async function endTrip() {
+    if (client === null) return
+    setConfirmingEnd(false)
+    await client.endTrip(tripId)
+    setLocallyEnded(true)
+  }
 
   const startDate = trip?.startDate ?? routeStartDate
   const endDate = trip?.endDate ?? routeEndDate
@@ -238,8 +271,48 @@ export default function TripRoute() {
           <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
             {displayName || 'Viagem'}
           </TypographyText>
+          {phase ? (
+            <TypographyText
+              family="sans"
+              testID="trip-header-phase"
+              style={{ color: theme.colors.inkMuted }}
+            >
+              {PHASE_LABELS[phase]}
+            </TypographyText>
+          ) : null}
+          {canEndTrip && !confirmingEnd ? (
+            <Button
+              label="Encerrar viagem"
+              variant="secondary"
+              onPress={() => setConfirmingEnd(true)}
+              testID="trip-end-button"
+            />
+          ) : null}
+          {confirmingEnd ? (
+            <View style={{ gap: theme.spacing.space2 }}>
+              <TypographyText family="sans" style={{ color: theme.colors.ink }}>
+                Encerrar a viagem agora? Nada é apagado.
+              </TypographyText>
+              <Button
+                label="Confirmar encerramento"
+                onPress={() => void endTrip()}
+                testID="trip-end-confirm"
+              />
+              <Button
+                label="Cancelar"
+                variant="secondary"
+                onPress={() => setConfirmingEnd(false)}
+              />
+            </View>
+          ) : null}
         </View>
-        <TripTabs active={section} onChange={setSection} />
+        <TripTabs
+          active={section}
+          onChange={(next) => {
+            setSectionChosen(true)
+            setSection(next)
+          }}
+        />
       </SafeAreaView>
       <View style={{ flex: 1 }}>
         {syncError ? (

@@ -65,6 +65,7 @@ export interface SyncClient {
   removeMember(tripId: UUID, userId: UUID): Promise<void>
   /** Enfileira a troca do papel para coorganizador ou membro. */
   setMemberRole(tripId: UUID, userId: UUID, role: 'coorganizer' | 'member'): Promise<void>
+  endTrip(tripId: UUID): Promise<void>
   /** Lista viagens removidas que deixaram de sincronizar no aparelho. */
   listRemovedTrips(): Promise<UUID[]>
   /** Conta as operações da viagem marcadas como não enviadas. */

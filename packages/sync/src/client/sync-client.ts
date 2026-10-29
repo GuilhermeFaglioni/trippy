@@ -351,6 +351,10 @@ class LocalSyncClient implements SyncClient {
     })
   }
 
+  async endTrip(tripId: UUID): Promise<void> {
+    await this.writeOperation({ type: 'trip.end', opId: this.idGenerator(), tripId })
+  }
+
   async listRemovedTrips(): Promise<UUID[]> {
     const rows = await this.database.all<{ trip_id: UUID } & Record<string, unknown>>(
       'SELECT trip_id FROM sync_state WHERE removed_at IS NOT NULL ORDER BY removed_at, trip_id',
@@ -1004,6 +1008,10 @@ class LocalSyncClient implements SyncClient {
          WHERE trip_id = ? AND user_id = ? AND deleted_at IS NULL`,
         [operation.role, operation.tripId, operation.userId],
       )
+      return
+    }
+
+    if (operation.type === 'trip.end') {
       return
     }
 
