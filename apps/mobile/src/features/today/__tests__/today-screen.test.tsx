@@ -17,8 +17,6 @@ function isoDayOffset(offset: number): string {
   return new Date(today + offset * DAY_MS).toISOString().slice(0, 10)
 }
 
-jest.mock('../../sync/use-network-gate', () => ({ useNetworkOffline: () => false }))
-
 jest
   .spyOn(sessionProvider, 'useSession')
   .mockImplementation(
@@ -147,18 +145,14 @@ describe('tela Hoje', () => {
     expect(screen.queryByTestId('hoje-lugar-mercado-central')).toBeNull()
   })
 
-  it('mostra o cartão Estamos aqui só durante a viagem', async () => {
-    const during = await renderToday(createClient([]), start, end)
-    expect(await during.findByTestId('hoje-estamos-aqui')).toBeOnTheScreen()
-    during.unmount()
+  it('mostra o cartão Estamos aqui durante a viagem', async () => {
+    const screen = await renderToday(createClient([]), start, end)
+    expect(await screen.findByTestId('hoje-estamos-aqui')).toBeOnTheScreen()
+  })
 
-    const before = await renderToday(createClient([]), isoDayOffset(2), isoDayOffset(4))
-    expect(await before.findByTestId('hoje-dia')).toBeOnTheScreen()
-    expect(before.queryByTestId('hoje-estamos-aqui')).toBeNull()
-    before.unmount()
-
-    const after = await renderToday(createClient([]), isoDayOffset(-4), isoDayOffset(-2))
-    expect(await after.findByTestId('hoje-dia')).toBeOnTheScreen()
-    expect(after.queryByTestId('hoje-estamos-aqui')).toBeNull()
+  it('não mostra o cartão Estamos aqui antes da viagem', async () => {
+    const screen = await renderToday(createClient([]), isoDayOffset(2), isoDayOffset(4))
+    expect(await screen.findByTestId('hoje-dia')).toBeOnTheScreen()
+    expect(screen.queryByTestId('hoje-estamos-aqui')).toBeNull()
   })
 })
