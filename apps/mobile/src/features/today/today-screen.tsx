@@ -29,6 +29,7 @@ type TodayScreenProps = {
   startDate: string
   endDate: string
   onOpenPhotos?: () => void
+  onShowAddress?: (placeId: string) => void
 }
 
 function testSlug(value: string): string {
@@ -52,6 +53,7 @@ export function TodayScreen({
   startDate,
   endDate,
   onOpenPhotos,
+  onShowAddress,
 }: TodayScreenProps) {
   const theme = useTheme()
   const { client, status } = useSync()
@@ -215,6 +217,14 @@ export function TodayScreen({
                       onPress={() => onOpenPhotos?.()}
                       testID={`hoje-foto-${slug}`}
                     />
+                    {onShowAddress ? (
+                      <Button
+                        label="Mostrar endereço"
+                        variant="secondary"
+                        onPress={() => onShowAddress(place.id)}
+                        testID={`hoje-mostrar-endereco-${slug}`}
+                      />
+                    ) : null}
                   </View>
                 </View>
               </Card>
