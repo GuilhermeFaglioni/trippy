@@ -63,6 +63,7 @@ describe('SyncProvider', () => {
       removeMember: jest.fn().mockResolvedValue(undefined),
       setMemberRole: jest.fn().mockResolvedValue(undefined),
       endTrip: jest.fn().mockResolvedValue(undefined),
+      openTrip: jest.fn().mockResolvedValue(undefined),
       listRemovedTrips: jest.fn().mockResolvedValue(['trip-removed']),
       countNotSent: jest.fn().mockResolvedValue(1),
       syncNow: jest.fn().mockResolvedValue(undefined),

@@ -58,6 +58,10 @@ export interface EndTripOperation extends OperationMetadata {
   type: 'trip.end'
 }
 
+export interface OpenTripOperation extends OperationMetadata {
+  type: 'trip.open'
+}
+
 export interface LinkGooglePlaceOperation extends OperationMetadata {
   type: 'place.google_link'
   placeId: UUID
@@ -80,6 +84,7 @@ export type SyncOperation =
   | RemoveMemberOperation
   | SetMemberRoleOperation
   | EndTripOperation
+  | OpenTripOperation
   | LinkGooglePlaceOperation
   | SetLocalDetailsOperation
 
@@ -149,6 +154,8 @@ export interface SyncMember {
   userId: UUID
   role: Role
   joinedAt: string
+  /** Primeira abertura da viagem por este membro; null enquanto não abriu. */
+  openedAt: string | null
   seq: SyncSequence
   deletedAt: string | null
 }

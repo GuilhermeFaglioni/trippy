@@ -179,6 +179,7 @@ function createMember(userId: UUID, seq: string): SyncMember {
     userId,
     role: 'member',
     joinedAt: fixedTime,
+    openedAt: null,
     seq,
     deletedAt: null,
   }
@@ -513,7 +514,7 @@ class FakeSyncTransport {
       return { opId: operation.opId, status: 'applied' }
     }
 
-    if (operation.type === 'trip.end') {
+    if (operation.type === 'trip.end' || operation.type === 'trip.open') {
       return { opId: operation.opId, status: 'applied' }
     }
 
@@ -787,6 +788,7 @@ describe('SyncClient', () => {
       userId: userB,
       role: 'coorganizer',
       joinedAt: fixedTime,
+      openedAt: null,
     })
 
     transport.rejectReason = 'invalid'
@@ -795,15 +797,16 @@ describe('SyncClient', () => {
       userId: userB,
       role: 'coorganizer',
       joinedAt: fixedTime,
+      openedAt: null,
     })
 
     await client.removeMember(tripId, userB)
     expect(await client.listMembers(tripId)).toEqual([
-      { userId: userA, role: 'organizer', joinedAt: fixedTime },
+      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null },
     ])
     await client.syncNow()
     expect(await client.listMembers(tripId)).toEqual([
-      { userId: userA, role: 'organizer', joinedAt: fixedTime },
+      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null },
     ])
     expect(client.getStatus()).toMatchObject({ pending: 2, notSent: 0 })
   })
@@ -1421,6 +1424,7 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
         user_id: UUID
         role: SyncMember['role']
         joined_at: string
+        opened_at: string | null
         seq: string
         deleted_at: string | null
       }
@@ -1469,6 +1473,7 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
       userId: row.user_id,
       role: row.role,
       joinedAt: row.joined_at,
+      openedAt: row.opened_at,
       seq: String(row.seq),
       deletedAt: row.deleted_at,
     })),

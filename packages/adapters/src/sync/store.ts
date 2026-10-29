@@ -65,8 +65,9 @@ interface PullVisitRow extends Omit<SyncVisit, 'visitedAt' | 'deletedAt'> {
   deletedAt: Date | null
 }
 
-interface PullMemberRow extends Omit<SyncMember, 'joinedAt' | 'deletedAt'> {
+interface PullMemberRow extends Omit<SyncMember, 'joinedAt' | 'openedAt' | 'deletedAt'> {
   joinedAt: Date
+  openedAt: Date | null
   deletedAt: Date | null
 }
 
@@ -462,6 +463,30 @@ async function applyTripEnd(
   return { opId: operation.opId, status: 'applied' }
 }
 
+async function applyTripOpen(
+  client: PoolClient,
+  userId: string,
+  operation: Extract<SyncOperation, { type: 'trip.open' }>,
+): Promise<PushOperationResult> {
+  const memberResult = await client.query<{ first_opened_at: Date | null }>(
+    `SELECT first_opened_at FROM trip_members
+     WHERE trip_id = $1 AND user_id = $2 AND left_at IS NULL
+     FOR UPDATE`,
+    [operation.tripId, userId],
+  )
+  const member = memberResult.rows[0]
+  if (!member) return rejectedResult(operation, 'not_member')
+  if (member.first_opened_at) return { opId: operation.opId, status: 'applied' }
+
+  const sequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    `UPDATE trip_members SET first_opened_at = now(), seq = $3
+     WHERE trip_id = $1 AND user_id = $2 AND left_at IS NULL AND first_opened_at IS NULL`,
+    [operation.tripId, userId, sequence],
+  )
+  return { opId: operation.opId, status: 'applied' }
+}
+
 async function applyGoogleLink(
   client: PoolClient,
   userId: string,
@@ -559,6 +584,8 @@ async function applyNewOperation(
       return applyMemberSetRole(client, { userId, role }, operation)
     case 'trip.end':
       return applyTripEnd(client, role, operation)
+    case 'trip.open':
+      return applyTripOpen(client, userId, operation)
   }
 }
 
@@ -741,7 +768,7 @@ export class PostgresSyncStore implements SyncStore {
             client,
             'trip_members',
             `trip_id AS "tripId", user_id AS "userId", role, joined_at AS "joinedAt",
-             seq::text AS seq, left_at AS "deletedAt"`,
+             first_opened_at AS "openedAt", seq::text AS seq, left_at AS "deletedAt"`,
             'left_at',
             query.tripId,
             cursor,
@@ -776,6 +803,7 @@ export class PostgresSyncStore implements SyncStore {
             const value: SyncMember = {
               ...row,
               joinedAt: row.joinedAt.toISOString(),
+              openedAt: row.openedAt?.toISOString() ?? null,
               deletedAt: row.deletedAt?.toISOString() ?? null,
             }
             return { kind: 'member' as const, seq: value.seq, id: value.userId, value }

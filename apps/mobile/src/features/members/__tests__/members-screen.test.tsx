@@ -18,9 +18,14 @@ jest
   )
 
 const allMembers: LiveMember[] = [
-  { userId: currentUserId, role: 'organizer', joinedAt: '2026-10-20T10:00:00Z' },
-  { userId: 'coorganizer-1', role: 'coorganizer', joinedAt: '2026-10-20T10:01:00Z' },
-  { userId: 'member-1', role: 'member', joinedAt: '2026-10-20T10:02:00Z' },
+  { userId: currentUserId, role: 'organizer', joinedAt: '2026-10-20T10:00:00Z', openedAt: null },
+  {
+    userId: 'coorganizer-1',
+    role: 'coorganizer',
+    joinedAt: '2026-10-20T10:01:00Z',
+    openedAt: null,
+  },
+  { userId: 'member-1', role: 'member', joinedAt: '2026-10-20T10:02:00Z', openedAt: null },
 ]
 
 function createClient(members: LiveMember[] = allMembers) {
@@ -95,9 +100,19 @@ describe('tela Grupo', () => {
   it('coorganizador remove membro comum, sem trocar papel nem remover outro coorganizador', async () => {
     currentUserId = 'coorganizer-1'
     const client = createClient([
-      { userId: 'coorganizer-1', role: 'coorganizer', joinedAt: '2026-10-20T10:00:00Z' },
-      { userId: 'coorganizer-2', role: 'coorganizer', joinedAt: '2026-10-20T10:01:00Z' },
-      { userId: 'member-1', role: 'member', joinedAt: '2026-10-20T10:02:00Z' },
+      {
+        userId: 'coorganizer-1',
+        role: 'coorganizer',
+        joinedAt: '2026-10-20T10:00:00Z',
+        openedAt: null,
+      },
+      {
+        userId: 'coorganizer-2',
+        role: 'coorganizer',
+        joinedAt: '2026-10-20T10:01:00Z',
+        openedAt: null,
+      },
+      { userId: 'member-1', role: 'member', joinedAt: '2026-10-20T10:02:00Z', openedAt: null },
     ])
     const screen = await renderScreen(client)
 
@@ -111,8 +126,8 @@ describe('tela Grupo', () => {
 
   it('membro comum só consulta nomes e papéis', async () => {
     const client = createClient([
-      { userId: currentUserId, role: 'member', joinedAt: '2026-10-20T10:00:00Z' },
-      { userId: 'member-2', role: 'member', joinedAt: '2026-10-20T10:01:00Z' },
+      { userId: currentUserId, role: 'member', joinedAt: '2026-10-20T10:00:00Z', openedAt: null },
+      { userId: 'member-2', role: 'member', joinedAt: '2026-10-20T10:01:00Z', openedAt: null },
     ])
     const screen = await renderScreen(client)
 

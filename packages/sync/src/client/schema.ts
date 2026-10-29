@@ -103,6 +103,10 @@ const migrations: readonly Migration[] = [
       'CREATE INDEX itinerary_drafts_trip_id_idx ON itinerary_drafts (trip_id, created_at)',
     ],
   },
+  {
+    version: 5,
+    statements: ['ALTER TABLE members ADD COLUMN opened_at TEXT'],
+  },
 ]
 
 export async function migrateSyncDatabase(

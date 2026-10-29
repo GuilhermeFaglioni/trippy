@@ -29,6 +29,7 @@ export interface LiveMember {
   userId: UUID
   role: Role
   joinedAt: string
+  openedAt: string | null
 }
 
 export interface SyncClientStatus {
@@ -66,6 +67,8 @@ export interface SyncClient {
   /** Enfileira a troca do papel para coorganizador ou membro. */
   setMemberRole(tripId: UUID, userId: UUID, role: 'coorganizer' | 'member'): Promise<void>
   endTrip(tripId: UUID): Promise<void>
+  /** Registra a primeira abertura da viagem pelo usuário atual (idempotente). */
+  openTrip(tripId: UUID): Promise<void>
   /** Lista viagens removidas que deixaram de sincronizar no aparelho. */
   listRemovedTrips(): Promise<UUID[]>
   /** Conta as operações da viagem marcadas como não enviadas. */
