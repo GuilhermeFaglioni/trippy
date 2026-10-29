@@ -31,7 +31,7 @@ export interface InvitePreview {
 
 export interface InviteStore {
   createInvite(input: CreateInviteRecord): Promise<'created' | 'not_found' | 'forbidden'>
-  acceptInvite(userId: string, tokenHash: string): Promise<TripRecord | null>
+  acceptInvite(userId: string, tokenHash: string, termsVersion: string): Promise<TripRecord | null>
   getInvitePreview(tokenHash: string): Promise<InvitePreview | null>
 }
 
@@ -160,7 +160,11 @@ export class PostgresInviteStore implements InviteStore {
     }
   }
 
-  async acceptInvite(userId: string, tokenHash: string): Promise<TripRecord | null> {
+  async acceptInvite(
+    userId: string,
+    tokenHash: string,
+    termsVersion: string,
+  ): Promise<TripRecord | null> {
     const inviteResult = await this.pool.query<{ trip_id: string }>(
       'SELECT trip_id FROM invites WHERE token_hash = $1 AND revoked_at IS NULL',
       [tokenHash],
@@ -201,15 +205,17 @@ export class PostgresInviteStore implements InviteStore {
         if (priorMember.rows[0]) {
           await client.query(
             `UPDATE trip_members
-             SET role = 'member', joined_at = now(), left_at = NULL, seq = $3
+             SET role = 'member', joined_at = now(), left_at = NULL, seq = $3,
+                 accepted_video_terms_at = now(), accepted_video_terms_version = $4
              WHERE trip_id = $1 AND user_id = $2`,
-            [invite.trip_id, userId, sequence],
+            [invite.trip_id, userId, sequence, termsVersion],
           )
         } else {
           await client.query(
-            `INSERT INTO trip_members (trip_id, user_id, role, seq)
-             VALUES ($1, $2, 'member', $3)`,
-            [invite.trip_id, userId, sequence],
+            `INSERT INTO trip_members
+               (trip_id, user_id, role, seq, accepted_video_terms_at, accepted_video_terms_version)
+             VALUES ($1, $2, 'member', $3, now(), $4)`,
+            [invite.trip_id, userId, sequence, termsVersion],
           )
         }
         return getTripSummary(client, invite.trip_id, userId)

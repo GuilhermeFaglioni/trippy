@@ -1,3 +1,5 @@
+import { RECAP_SHARING_TERMS_VERSION } from '@trippy/sync'
+
 import { createInviteClient } from '../invite-client'
 
 const trip = {
@@ -23,7 +25,7 @@ describe('cliente de convites', () => {
     expect(request).toHaveBeenCalledWith('/invites/accept', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: 'convite-abc' }),
+      body: JSON.stringify({ token: 'convite-abc', termsVersion: RECAP_SHARING_TERMS_VERSION }),
     })
   })
 

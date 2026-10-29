@@ -3,6 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import pg from 'pg'
+import { RECAP_SHARING_TERMS_VERSION } from '@trippy/sync'
 import { afterAll, beforeAll, expect, it } from 'vitest'
 import { PostgresInviteStore } from '@trippy/adapters/invites'
 import { PostgresSyncStore } from '@trippy/adapters/sync'
@@ -263,7 +264,11 @@ async function createInviteAndAccept(token: string, acceptingToken: string): Pro
   const invite = await post(`/trips/${tripId}/invites`, {}, token)
   expect(invite.status).toBe(201)
   const { token: inviteToken } = (await invite.json()) as { token: string }
-  const accepted = await post('/invites/accept', { token: inviteToken }, acceptingToken)
+  const accepted = await post(
+    '/invites/accept',
+    { token: inviteToken, termsVersion: RECAP_SHARING_TERMS_VERSION },
+    acceptingToken,
+  )
   expect(accepted.status).toBe(200)
 }
 
