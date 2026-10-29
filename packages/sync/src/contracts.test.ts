@@ -301,6 +301,20 @@ describe('validação de encerramento de viagem', () => {
   })
 })
 
+describe('validação de abertura da viagem', () => {
+  it('valida trip.open sem campos extras', () => {
+    const opId = '33333333-3333-4333-8333-333333333333'
+    const tripId = '22222222-2222-4222-8222-222222222222'
+    expect(validateSyncOperation({ type: 'trip.open', opId, tripId })).toEqual({
+      success: true,
+      value: { type: 'trip.open', opId, tripId },
+    })
+    expect(validateSyncOperation({ type: 'trip.open', opId, tripId: 'nao-uuid' })).toMatchObject({
+      success: false,
+    })
+  })
+})
+
 describe('validação do pull', () => {
   it('distingue início de bootstrap, continuação e pull incremental', () => {
     expect(validatePullQuery({ trip: tripId, limit: '25' })).toEqual({
@@ -471,6 +485,7 @@ describe('canonicalTripState', () => {
     userId: id,
     role: 'member',
     joinedAt: '2026-10-20T12:00:00.000Z',
+    openedAt: null,
     seq: '3',
     deletedAt,
   })
