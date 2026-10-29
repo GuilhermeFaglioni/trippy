@@ -10,9 +10,29 @@ export interface CreateInviteRecord {
   tokenHash: string
 }
 
+export interface InvitePreviewPlace {
+  name: string
+}
+
+export interface InvitePreviewDay {
+  dayIndex: number
+  places: InvitePreviewPlace[]
+}
+
+/** Dados públicos de um convite: nunca contém e-mails nem ids de membros. */
+export interface InvitePreview {
+  tripName: string
+  destination: string
+  startDate: string
+  endDate: string
+  memberCount: number
+  days: InvitePreviewDay[]
+}
+
 export interface InviteStore {
   createInvite(input: CreateInviteRecord): Promise<'created' | 'not_found' | 'forbidden'>
   acceptInvite(userId: string, tokenHash: string): Promise<TripRecord | null>
+  getInvitePreview(tokenHash: string): Promise<InvitePreview | null>
 }
 
 interface TripIdRow {
@@ -25,6 +45,20 @@ interface RoleRow {
 
 interface MembershipRow {
   left_at: Date | null
+}
+
+interface InvitePreviewRow {
+  trip_id: string
+  trip_name: string
+  destination: string
+  start_date: string
+  end_date: string
+  member_count: number
+}
+
+interface InvitePreviewPlaceRow {
+  day_index: number
+  name: string
 }
 
 interface TripSummaryRow {
@@ -182,6 +216,50 @@ export class PostgresInviteStore implements InviteStore {
       })
     } finally {
       client.release()
+    }
+  }
+
+  async getInvitePreview(tokenHash: string): Promise<InvitePreview | null> {
+    const inviteResult = await this.pool.query<InvitePreviewRow>(
+      `SELECT trips.id AS trip_id, trips.name AS trip_name, trips.destination,
+              to_char(trips.start_date, 'YYYY-MM-DD') AS start_date,
+              to_char(trips.end_date, 'YYYY-MM-DD') AS end_date,
+              (SELECT count(*)::int FROM trip_members
+               WHERE trip_members.trip_id = trips.id AND trip_members.left_at IS NULL) AS member_count
+       FROM invites
+       JOIN trips ON trips.id = invites.trip_id
+       WHERE invites.token_hash = $1
+         AND invites.revoked_at IS NULL
+         AND trips.deleted_at IS NULL`,
+      [tokenHash],
+    )
+    const invite = inviteResult.rows[0]
+    if (!invite) return null
+
+    const placesResult = await this.pool.query<InvitePreviewPlaceRow>(
+      `SELECT day_index, name FROM places
+       WHERE trip_id = $1 AND deleted_at IS NULL AND day_index IS NOT NULL
+       ORDER BY day_index, position, seq`,
+      [invite.trip_id],
+    )
+
+    const days: InvitePreviewDay[] = []
+    for (const row of placesResult.rows) {
+      let day = days[days.length - 1]
+      if (!day || day.dayIndex !== row.day_index) {
+        day = { dayIndex: row.day_index, places: [] }
+        days.push(day)
+      }
+      day.places.push({ name: row.name })
+    }
+
+    return {
+      tripName: invite.trip_name,
+      destination: invite.destination,
+      startDate: invite.start_date,
+      endDate: invite.end_date,
+      memberCount: invite.member_count,
+      days,
     }
   }
 }
