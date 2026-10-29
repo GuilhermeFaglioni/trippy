@@ -67,6 +67,8 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     deletedAt: null,
     createdAt: '2026-10-20T12:00:00.000Z',
     visitedByMe: false,
+    wantCount: 0,
+    wantedByMe: false,
     localNameStatus: 'missing',
     localAddressStatus: 'missing',
     countryCode: 'BR',
@@ -111,6 +113,7 @@ async function renderCard(
         syncClient={syncClient}
         busy={false}
         onToggleVisit={jest.fn()}
+        onToggleWant={jest.fn()}
         onRefresh={async () => undefined}
         testSlug="museu-da-cidade"
       />
@@ -158,6 +161,16 @@ describe('ficha do lugar', () => {
         'Sem correspondência no Google',
       )
     }
+  })
+
+  it('mostra o rótulo Quero ir com contagem e marca selecionado só quando já quer ir', async () => {
+    const pending = await renderCard(createPlace({ wantCount: 2, wantedByMe: false }))
+    expect(pending.getByTestId('place-want-museu-da-cidade')).toHaveTextContent(/^Quero ir · 2$/)
+    expect(pending.getByTestId('place-want-museu-da-cidade')).not.toBeSelected()
+
+    const wanted = await renderCard(createPlace({ wantCount: 2, wantedByMe: true }))
+    expect(wanted.getByTestId('place-want-museu-da-cidade')).toHaveTextContent(/^Quero ir ✓ · 2$/)
+    expect(wanted.getByTestId('place-want-museu-da-cidade')).toBeSelected()
   })
 
   it('mostra nome e endereço locais junto à ficha com tipografia local', async () => {
@@ -303,6 +316,7 @@ describe('ficha do lugar', () => {
           syncClient={syncClient}
           busy={false}
           onToggleVisit={jest.fn()}
+          onToggleWant={jest.fn()}
           onRefresh={async () => undefined}
           testSlug="museu-da-cidade"
         />

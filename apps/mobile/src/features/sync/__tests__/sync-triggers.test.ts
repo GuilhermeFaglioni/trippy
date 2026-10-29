@@ -10,6 +10,8 @@ function createClient(): jest.Mocked<SyncClient> {
     setLocalDetails: jest.fn().mockResolvedValue(undefined),
     markVisit: jest.fn().mockResolvedValue(undefined),
     unmarkVisit: jest.fn().mockResolvedValue(undefined),
+    wantPlace: jest.fn().mockResolvedValue(undefined),
+    unwantPlace: jest.fn().mockResolvedValue(undefined),
     arrangeItinerary: jest.fn().mockResolvedValue(undefined),
     listItineraryDrafts: jest.fn().mockResolvedValue([]),
     discardItineraryDraft: jest.fn().mockResolvedValue(undefined),

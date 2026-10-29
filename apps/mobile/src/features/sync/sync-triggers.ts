@@ -81,6 +81,8 @@ export function withWriteSyncTriggers(
       afterWrite(() => client.setLocalDetails(tripId, placeId, details)),
     markVisit: (tripId, placeId) => afterWrite(() => client.markVisit(tripId, placeId)),
     unmarkVisit: (tripId, placeId) => afterWrite(() => client.unmarkVisit(tripId, placeId)),
+    wantPlace: (tripId, placeId) => afterWrite(() => client.wantPlace(tripId, placeId)),
+    unwantPlace: (tripId, placeId) => afterWrite(() => client.unwantPlace(tripId, placeId)),
     arrangeItinerary: (tripId, days) => afterWrite(() => client.arrangeItinerary(tripId, days)),
     listItineraryDrafts: (tripId) => client.listItineraryDrafts(tripId),
     discardItineraryDraft: (opId) => client.discardItineraryDraft(opId),

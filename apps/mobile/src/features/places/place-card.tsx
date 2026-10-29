@@ -24,6 +24,7 @@ export function PlaceCard({
   syncClient,
   busy,
   onToggleVisit,
+  onToggleWant,
   onRemove,
   onRefresh,
   testSlug,
@@ -35,6 +36,7 @@ export function PlaceCard({
   syncClient: SyncClient
   busy: boolean
   onToggleVisit: () => void
+  onToggleWant: () => void
   onRemove?: () => void
   onRefresh: () => Promise<void>
   testSlug: string
@@ -102,6 +104,14 @@ export function PlaceCard({
             selected={place.visitedByMe}
             disabled={busy}
             testID={`place-visit-${testSlug}`}
+          />
+          <Button
+            label={`${place.wantedByMe ? 'Quero ir ✓' : 'Quero ir'} · ${place.wantCount}`}
+            onPress={onToggleWant}
+            variant="secondary"
+            selected={place.wantedByMe}
+            disabled={busy}
+            testID={`place-want-${testSlug}`}
           />
           {onRemove ? (
             <Button

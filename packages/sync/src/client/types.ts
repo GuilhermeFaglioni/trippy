@@ -14,6 +14,9 @@ import type { PlaceSearchCandidate } from '@trippy/domain'
 export type LivePlace = Omit<SyncPlace, 'deletedAt'> & {
   deletedAt: null
   visitedByMe: boolean
+  /** Quantidade de pessoas que querem ir, sem contar reações removidas. */
+  wantCount: number
+  wantedByMe: boolean
 } & LivePlaceLocalStatuses
 
 export interface ItineraryDraft {
@@ -51,6 +54,10 @@ export interface SyncClient {
   ): Promise<void>
   markVisit(tripId: UUID, placeId: UUID): Promise<void>
   unmarkVisit(tripId: UUID, placeId: UUID): Promise<void>
+  /** Registra a reação "quero ir" da pessoa local no lugar. */
+  wantPlace(tripId: UUID, placeId: UUID): Promise<void>
+  /** Remove a reação "quero ir" da pessoa local no lugar. */
+  unwantPlace(tripId: UUID, placeId: UUID): Promise<void>
   /** Enfileira uma única alteração com a ordem completa dos dias informados. */
   arrangeItinerary(tripId: UUID, days: ItineraryDay[]): Promise<void>
   /** Lista rascunhos de roteiro preservados após conflitos. */
