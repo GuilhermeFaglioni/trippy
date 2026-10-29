@@ -9,7 +9,11 @@ import { TodayScreen } from '../today-screen'
 const DAY_MS = 86_400_000
 
 function isoDayOffset(offset: number): string {
-  const today = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())
+  const today = Date.UTC(
+    new Date().getUTCFullYear(),
+    new Date().getUTCMonth(),
+    new Date().getUTCDate(),
+  )
   return new Date(today + offset * DAY_MS).toISOString().slice(0, 10)
 }
 
@@ -85,9 +89,7 @@ describe('tela Hoje', () => {
     expect(screen.getByTestId('hoje-proximo-lugar')).toHaveTextContent('Mercado Central')
 
     await fireEvent.press(screen.getByTestId('hoje-eu-fui-mercado-central'))
-    await waitFor(() =>
-      expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1'),
-    )
+    await waitFor(() => expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1'))
   })
 
   it('mostra alterações não enviadas no banner de desatualização', async () => {
@@ -102,9 +104,7 @@ describe('tela Hoje', () => {
     const client = createClient([place({ dayIndex: 0 })])
     const screen = await renderToday(client, isoDayOffset(2), isoDayOffset(4))
 
-    expect(await screen.findByTestId('hoje-dia')).toHaveTextContent(
-      /A viagem começa em 2 dias/u,
-    )
+    expect(await screen.findByTestId('hoje-dia')).toHaveTextContent(/A viagem começa em 2 dias/u)
     expect(screen.queryByTestId('hoje-proximo-lugar')).toBeNull()
     expect(screen.queryByTestId('hoje-lugar-mercado-central')).toBeNull()
   })

@@ -1,11 +1,5 @@
 import type { LivePlace } from '@trippy/sync'
-import {
-  computeTodayState,
-  isDayDone,
-  nextPlace,
-  placesOfDay,
-  staleness,
-} from '../today-model'
+import { computeTodayState, isDayDone, nextPlace, placesOfDay, staleness } from '../today-model'
 
 function livePlace(overrides: Partial<LivePlace>): LivePlace {
   return {

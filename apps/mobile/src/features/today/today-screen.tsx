@@ -191,7 +191,9 @@ export function TodayScreen({
                   <TypographyText family="sans" style={{ color: theme.colors.ink }}>
                     {displayName(place)}
                   </TypographyText>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.space2 }}>
+                  <View
+                    style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.space2 }}
+                  >
                     <Button
                       label={place.visitedByMe ? 'Eu fui ✓' : 'Eu fui'}
                       variant="secondary"
