@@ -91,7 +91,7 @@ describe('SyncProvider', () => {
     await fireEvent.press(screen.getByTestId('provider-add-place'))
 
     await waitFor(() => {
-      expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque')
+      expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque', undefined)
       expect(client.syncNow).toHaveBeenCalledTimes(2)
     })
   })

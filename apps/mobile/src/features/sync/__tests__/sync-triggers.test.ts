@@ -82,7 +82,7 @@ describe('gatilhos de sincronização', () => {
     client.syncNow.mockRejectedValueOnce(new Error('Network request failed'))
 
     await expect(wrapped.addPlace('trip-1', 'Parque')).resolves.toBe('place-1')
-    expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque')
+    expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque', undefined)
     expect(client.syncNow).toHaveBeenCalledTimes(1)
   })
 
