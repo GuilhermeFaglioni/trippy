@@ -57,7 +57,12 @@ function createClient(places: LivePlace[], notSent = 0) {
   return client as unknown as SyncClient & typeof client
 }
 
-async function renderToday(client: SyncClient, startDate: string, endDate: string) {
+async function renderToday(
+  client: SyncClient,
+  startDate: string,
+  endDate: string,
+  onShowAddress?: (placeId: string) => void,
+) {
   return await render(
     <DesignSystemProvider>
       <SyncProvider client={client}>
@@ -68,6 +73,7 @@ async function renderToday(client: SyncClient, startDate: string, endDate: strin
           startDate={startDate}
           endDate={endDate}
           onOpenPhotos={jest.fn()}
+          onShowAddress={onShowAddress}
         />
       </SyncProvider>
     </DesignSystemProvider>,
@@ -111,6 +117,15 @@ describe('tela Hoje', () => {
 
     await fireEvent.press(screen.getByTestId('hoje-favorito-feira-livre'))
     await waitFor(() => expect(client.setFavorite).toHaveBeenCalledWith('trip-1', 'place-2', false))
+  })
+
+  it('mostra o botão Mostrar endereço em cada lugar do dia', async () => {
+    const onShowAddress = jest.fn()
+    const client = createClient([place({ id: 'place-1', name: 'Mercado Central' })])
+    const screen = await renderToday(client, start, end, onShowAddress)
+
+    await fireEvent.press(await screen.findByTestId('hoje-mostrar-endereco-mercado-central'))
+    expect(onShowAddress).toHaveBeenCalledWith('place-1')
   })
 
   it('mostra alterações não enviadas no banner de desatualização', async () => {
