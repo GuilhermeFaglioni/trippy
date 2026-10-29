@@ -49,6 +49,7 @@ function createClient(places: LivePlace[], notSent = 0) {
     listPlaces: jest.fn().mockResolvedValue(places),
     markVisit: jest.fn().mockResolvedValue(undefined),
     unmarkVisit: jest.fn().mockResolvedValue(undefined),
+    setFavorite: jest.fn().mockResolvedValue(undefined),
     listRemovedTrips: jest.fn().mockResolvedValue([]),
     countNotSent: jest.fn().mockResolvedValue(0),
     syncNow: jest.fn().mockResolvedValue(undefined),
@@ -97,7 +98,27 @@ describe('tela Hoje', () => {
     expect(screen.getByTestId('hoje-proximo-lugar')).toHaveTextContent('Mercado Central')
 
     await fireEvent.press(screen.getByTestId('hoje-eu-fui-mercado-central'))
-    await waitFor(() => expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1'))
+    // Pessoa local: o wrapper de escrita repassa o userId ausente como undefined.
+    await waitFor(() =>
+      expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1', undefined),
+    )
+  })
+
+  it('marca e desmarca favorito pelo botão do lugar', async () => {
+    const client = createClient([
+      place({ id: 'place-1', name: 'Mercado Central', favoriteByMe: false }),
+      place({ id: 'place-2', name: 'Feira Livre', position: 1, favoriteByMe: true }),
+    ])
+    const screen = await renderToday(client, start, end)
+
+    expect(await screen.findByTestId('hoje-favorito-mercado-central')).toHaveTextContent('Favorito')
+    expect(screen.getByTestId('hoje-favorito-feira-livre')).toHaveTextContent('Favorito ✓')
+
+    await fireEvent.press(screen.getByTestId('hoje-favorito-mercado-central'))
+    await waitFor(() => expect(client.setFavorite).toHaveBeenCalledWith('trip-1', 'place-1', true))
+
+    await fireEvent.press(screen.getByTestId('hoje-favorito-feira-livre'))
+    await waitFor(() => expect(client.setFavorite).toHaveBeenCalledWith('trip-1', 'place-2', false))
   })
 
   it('mostra o botão Mostrar endereço em cada lugar do dia', async () => {

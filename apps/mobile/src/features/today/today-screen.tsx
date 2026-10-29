@@ -107,6 +107,25 @@ export function TodayScreen({
     [client, loadPlaces, tripId],
   )
 
+  const toggleFavorite = useCallback(
+    async (place: LivePlace) => {
+      if (client === null) return
+      setBusyPlaceId(place.id)
+      setError(null)
+      try {
+        await client.setFavorite(tripId, place.id, !place.favoriteByMe)
+        await loadPlaces()
+      } catch (writeError) {
+        setError(
+          writeError instanceof Error ? writeError.message : 'Não foi possível salvar o favorito.',
+        )
+      } finally {
+        setBusyPlaceId(null)
+      }
+    },
+    [client, loadPlaces, tripId],
+  )
+
   const now = new Date()
   const todayState = computeTodayState(startDate, endDate, timezone, now)
   const dayPlaces = todayState.kind === 'during' ? placesOfDay(places, todayState.dayIndex) : []
@@ -210,10 +229,11 @@ export function TodayScreen({
                       testID={`hoje-eu-fui-${slug}`}
                     />
                     <Button
-                      label="Favorito"
+                      label={place.favoriteByMe ? 'Favorito ✓' : 'Favorito'}
                       variant="secondary"
-                      disabled
-                      onPress={() => undefined}
+                      selected={place.favoriteByMe}
+                      loading={busy}
+                      onPress={() => void toggleFavorite(place)}
                       testID={`hoje-favorito-${slug}`}
                     />
                     <Button

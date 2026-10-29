@@ -26,6 +26,7 @@ export function PlaceCard({
   onToggleVisit,
   onToggleWant,
   onRemove,
+  onOpen,
   onRefresh,
   onShowAddress,
   testSlug,
@@ -39,6 +40,7 @@ export function PlaceCard({
   onToggleVisit: () => void
   onToggleWant: () => void
   onRemove?: () => void
+  onOpen: () => void
   onRefresh: () => Promise<void>
   onShowAddress?: (placeId: string) => void
   testSlug: string
@@ -114,6 +116,13 @@ export function PlaceCard({
             selected={place.wantedByMe}
             disabled={busy}
             testID={`place-want-${testSlug}`}
+          />
+          <Button
+            label="Abrir lugar"
+            onPress={onOpen}
+            variant="secondary"
+            disabled={busy}
+            testID={`abrir-lugar-${place.id}`}
           />
           {onShowAddress ? (
             <Button

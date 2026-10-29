@@ -58,6 +58,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     '0008',
     '0009',
     '0010',
+    '0011',
   ])
 
   const client = new pg.Client({ connectionString: testUrl.toString() })
@@ -71,7 +72,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
            'users', 'identities', 'trips', 'trip_members', 'schema_migrations',
            'recaps', 'render_jobs', 'render_outbox', 'email_login_codes', 'refresh_tokens',
            'invites', 'places', 'places_provider_usage', 'places_provider_calls',
-           'place_wants', 'visits', 'applied_ops', 'photos', 'photo_outbox'
+           'place_reviews', 'place_wants', 'visits', 'applied_ops', 'photos', 'photo_outbox'
          )`,
     )
     expect(tables.rows.map(({ table_name }) => table_name).sort()).toEqual([
@@ -81,6 +82,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       'invites',
       'photo_outbox',
       'photos',
+      'place_reviews',
       'place_wants',
       'places',
       'places_provider_calls',
@@ -118,6 +120,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       '0008',
       '0009',
       '0010',
+      '0011',
     ])
 
     await migrate({ databaseUrl: testUrl.toString() })
@@ -263,6 +266,8 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
   const openedMigration = await readFile(openedMigrationPath, 'utf8')
   const termsMigrationPath = new URL('../migrations/0010_aceite_recap_convite.sql', import.meta.url)
   const termsMigration = await readFile(termsMigrationPath, 'utf8')
+  const placeReviewsMigrationPath = new URL('../migrations/0011_place_reviews.sql', import.meta.url)
+  const placeReviewsMigration = await readFile(placeReviewsMigrationPath, 'utf8')
   const modifiedMigrations = await mkdtemp(join(tmpdir(), 'trippy-db-migrations-'))
   try {
     await writeFile(
@@ -284,6 +289,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
     await writeFile(join(modifiedMigrations, '0008_place_wants.sql'), placeWantsMigration)
     await writeFile(join(modifiedMigrations, '0009_membro_abriu_viagem.sql'), openedMigration)
     await writeFile(join(modifiedMigrations, '0010_aceite_recap_convite.sql'), termsMigration)
+    await writeFile(join(modifiedMigrations, '0011_place_reviews.sql'), placeReviewsMigration)
     await expect(
       migrate({
         databaseUrl: testUrl.toString(),
@@ -312,8 +318,9 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
       placesProviderMigration,
     )
     await writeFile(join(failedMigrations, '0008_place_wants.sql'), placeWantsMigration)
+    await writeFile(join(failedMigrations, '0011_place_reviews.sql'), placeReviewsMigration)
     await writeFile(
-      join(failedMigrations, '0011_teste_transacao.sql'),
+      join(failedMigrations, '0012_teste_transacao.sql'),
       'CREATE TABLE migration_rollback_probe (id integer);\nINVALID SQL;\n',
     )
     await expect(
@@ -344,6 +351,7 @@ it('aplica esquema idempotente, valida restrições e detecta migration editada'
         '0008',
         '0009',
         '0010',
+        '0011',
       ])
     } finally {
       await client.end()

@@ -8,6 +8,7 @@ import type {
   SyncMember,
   SyncOperation,
   SyncPlace,
+  SyncReview,
   SyncSequence,
   SyncVisit,
   SyncWant,
@@ -71,6 +72,17 @@ interface PullWantRow extends Omit<SyncWant, 'createdAt' | 'deletedAt'> {
   deletedAt: Date | null
 }
 
+interface PullReviewRow extends Omit<SyncReview, 'updatedAt' | 'deletedAt'> {
+  updatedAt: Date
+  deletedAt: Date | null
+}
+
+interface ReviewState {
+  favorite: boolean
+  rating: number | null
+  note: string | null
+}
+
 interface PullMemberRow extends Omit<SyncMember, 'joinedAt' | 'openedAt' | 'deletedAt'> {
   joinedAt: Date
   openedAt: Date | null
@@ -81,6 +93,7 @@ type PullRecord =
   | { kind: 'place'; seq: SyncSequence; id: string; value: SyncPlace }
   | { kind: 'visit'; seq: SyncSequence; id: string; value: SyncVisit }
   | { kind: 'want'; seq: SyncSequence; id: string; value: SyncWant }
+  | { kind: 'review'; seq: SyncSequence; id: string; value: SyncReview }
   | { kind: 'member'; seq: SyncSequence; id: string; value: SyncMember }
 
 class OperationIdRaceError extends Error {}
@@ -305,12 +318,29 @@ async function applyPlaceRemove(
       [operation.placeId, want.user_id, wantSequence],
     )
   }
+
+  const liveReviews = await client.query<{ user_id: string }>(
+    `SELECT user_id FROM place_reviews
+     WHERE trip_id = $1 AND place_id = $2 AND deleted_at IS NULL
+     ORDER BY user_id
+     FOR UPDATE`,
+    [operation.tripId, operation.placeId],
+  )
+  for (const review of liveReviews.rows) {
+    const reviewSequence = await nextSequence(client, operation.tripId)
+    await client.query(
+      `UPDATE place_reviews SET deleted_at = now(), seq = $3
+       WHERE place_id = $1 AND user_id = $2`,
+      [operation.placeId, review.user_id, reviewSequence],
+    )
+  }
   return { opId: operation.opId, status: 'applied' }
 }
 
 async function applyVisit(
   client: PoolClient,
   userId: string,
+  role: SyncMember['role'],
   operation: Extract<SyncOperation, { type: 'visit.mark' | 'visit.unmark' }>,
   timezone: string,
 ): Promise<PushOperationResult> {
@@ -321,11 +351,24 @@ async function applyVisit(
   const place = placeResult.rows[0]
   if (!place || place.trip_id !== operation.tripId) return rejectedResult(operation, 'invalid')
 
+  // Marcar ou desmarcar outra pessoa exige organizador/coorganizador e alvo membro ativo.
+  const targetId = operation.userId ?? userId
+  if (targetId !== userId) {
+    if (role !== 'organizer' && role !== 'coorganizer')
+      return rejectedResult(operation, 'forbidden')
+    const target = await client.query<{ user_id: string }>(
+      `SELECT user_id FROM trip_members
+       WHERE trip_id = $1 AND user_id = $2 AND left_at IS NULL`,
+      [operation.tripId, targetId],
+    )
+    if ((target.rowCount ?? 0) === 0) return rejectedResult(operation, 'invalid')
+  }
+
   const selected = await client.query<VisitLookupRow>(
     `SELECT deleted_at FROM visits
      WHERE place_id = $1 AND user_id = $2
      FOR UPDATE`,
-    [operation.placeId, userId],
+    [operation.placeId, targetId],
   )
   const visit = selected.rows[0]
 
@@ -339,13 +382,13 @@ async function applyVisit(
         `UPDATE visits
          SET marked_by = $3, visited_at = now(), visited_tz = $4, seq = $5, deleted_at = NULL
          WHERE place_id = $1 AND user_id = $2`,
-        [operation.placeId, userId, userId, timezone, sequence],
+        [operation.placeId, targetId, userId, timezone, sequence],
       )
     } else {
       await client.query(
         `INSERT INTO visits (place_id, trip_id, user_id, marked_by, visited_at, visited_tz, seq)
-         VALUES ($1, $2, $3, $3, now(), $4, $5)`,
-        [operation.placeId, operation.tripId, userId, timezone, sequence],
+         VALUES ($1, $2, $3, $4, now(), $5, $6)`,
+        [operation.placeId, operation.tripId, targetId, userId, timezone, sequence],
       )
     }
     return { opId: operation.opId, status: 'applied' }
@@ -355,7 +398,7 @@ async function applyVisit(
   const sequence = await nextSequence(client, operation.tripId)
   await client.query(
     'UPDATE visits SET deleted_at = now(), seq = $3 WHERE place_id = $1 AND user_id = $2',
-    [operation.placeId, userId, sequence],
+    [operation.placeId, targetId, sequence],
   )
   return { opId: operation.opId, status: 'applied' }
 }
@@ -408,6 +451,68 @@ async function applyWant(
     'UPDATE place_wants SET deleted_at = now(), seq = $3 WHERE place_id = $1 AND user_id = $2',
     [operation.placeId, userId, sequence],
   )
+  return { opId: operation.opId, status: 'applied' }
+}
+
+async function applyReview(
+  client: PoolClient,
+  userId: string,
+  operation: Extract<SyncOperation, { type: 'place.favorite' | 'place.rate' | 'place.note' }>,
+): Promise<PushOperationResult> {
+  const placeResult = await client.query<PlaceLookupRow>(
+    'SELECT trip_id, suggested_by, deleted_at FROM places WHERE id = $1',
+    [operation.placeId],
+  )
+  const place = placeResult.rows[0]
+  if (!place || place.trip_id !== operation.tripId || place.deleted_at) {
+    return rejectedResult(operation, 'invalid')
+  }
+
+  const selected = await client.query<ReviewState>(
+    `SELECT favorite, rating, note FROM place_reviews
+     WHERE place_id = $1 AND user_id = $2
+     FOR UPDATE`,
+    [operation.placeId, userId],
+  )
+  const existing = selected.rows[0]
+  const current: ReviewState = existing ?? { favorite: false, rating: null, note: null }
+  const next: ReviewState = {
+    favorite: operation.type === 'place.favorite' ? operation.favorite : current.favorite,
+    rating: operation.type === 'place.rate' ? operation.rating : current.rating,
+    note: operation.type === 'place.note' ? operation.note : current.note,
+  }
+  if (
+    next.favorite === current.favorite &&
+    next.rating === current.rating &&
+    next.note === current.note
+  ) {
+    return duplicateResult(operation)
+  }
+
+  const sequence = await nextSequence(client, operation.tripId)
+  if (existing) {
+    await client.query(
+      `UPDATE place_reviews
+       SET favorite = $3, rating = $4, note = $5, updated_at = now(), seq = $6
+       WHERE place_id = $1 AND user_id = $2`,
+      [operation.placeId, userId, next.favorite, next.rating, next.note, sequence],
+    )
+  } else {
+    await client.query(
+      `INSERT INTO place_reviews (
+         place_id, trip_id, user_id, favorite, rating, note, updated_at, seq
+       ) VALUES ($1, $2, $3, $4, $5, $6, now(), $7)`,
+      [
+        operation.placeId,
+        operation.tripId,
+        userId,
+        next.favorite,
+        next.rating,
+        next.note,
+        sequence,
+      ],
+    )
+  }
   return { opId: operation.opId, status: 'applied' }
 }
 
@@ -667,10 +772,14 @@ async function applyNewOperation(
       return applyLocalDetails(client, operation)
     case 'visit.mark':
     case 'visit.unmark':
-      return applyVisit(client, userId, operation, trip.timezone)
+      return applyVisit(client, userId, role, operation, trip.timezone)
     case 'place.want':
     case 'place.unwant':
       return applyWant(client, userId, operation)
+    case 'place.favorite':
+    case 'place.rate':
+    case 'place.note':
+      return applyReview(client, userId, operation)
     case 'itinerary.arrange':
       return applyItineraryArrange(client, userId, role, operation, trip)
     case 'member.remove':
@@ -684,9 +793,11 @@ async function applyNewOperation(
   }
 }
 
-async function listPageRows<T extends PullPlaceRow | PullVisitRow | PullWantRow | PullMemberRow>(
+async function listPageRows<
+  T extends PullPlaceRow | PullVisitRow | PullWantRow | PullReviewRow | PullMemberRow,
+>(
   client: Pool | PoolClient,
-  table: 'places' | 'visits' | 'place_wants' | 'trip_members',
+  table: 'places' | 'visits' | 'place_wants' | 'place_reviews' | 'trip_members',
   columns: string,
   liveColumn: 'deleted_at' | 'left_at',
   tripId: string,
@@ -710,7 +821,7 @@ function comparePullRecords(left: PullRecord, right: PullRecord): number {
   const leftSeq = BigInt(left.seq)
   const rightSeq = BigInt(right.seq)
   if (leftSeq !== rightSeq) return leftSeq < rightSeq ? -1 : 1
-  const kindOrder = { member: 0, place: 1, visit: 2, want: 3 } as const
+  const kindOrder = { member: 0, place: 1, visit: 2, want: 3, review: 4 } as const
   const kindDifference = kindOrder[left.kind] - kindOrder[right.kind]
   return kindDifference || left.id.localeCompare(right.id)
 }
@@ -827,7 +938,7 @@ export class PostgresSyncStore implements SyncStore {
 
         const pageLimit = query.limit
         const selectedLimit = pageLimit + 1
-        const [placeRows, visitRows, wantRows, memberRows] = await Promise.all([
+        const [placeRows, visitRows, wantRows, reviewRows, memberRows] = await Promise.all([
           listPageRows<PullPlaceRow>(
             client,
             'places',
@@ -864,6 +975,19 @@ export class PostgresSyncStore implements SyncStore {
             'place_wants',
             `place_id AS "placeId", trip_id AS "tripId", user_id AS "userId",
              created_at AS "createdAt", seq::text AS seq, deleted_at AS "deletedAt"`,
+            'deleted_at',
+            query.tripId,
+            cursor,
+            snapshotSeq,
+            selectedLimit,
+            bootstrap,
+          ),
+          listPageRows<PullReviewRow>(
+            client,
+            'place_reviews',
+            `place_id AS "placeId", trip_id AS "tripId", user_id AS "userId",
+             favorite, rating, note, updated_at AS "updatedAt",
+             seq::text AS seq, deleted_at AS "deletedAt"`,
             'deleted_at',
             query.tripId,
             cursor,
@@ -919,6 +1043,19 @@ export class PostgresSyncStore implements SyncStore {
               value,
             }
           }),
+          ...reviewRows.map((row) => {
+            const value: SyncReview = {
+              ...row,
+              updatedAt: row.updatedAt.toISOString(),
+              deletedAt: row.deletedAt?.toISOString() ?? null,
+            }
+            return {
+              kind: 'review' as const,
+              seq: value.seq,
+              id: `${value.placeId}:${value.userId}`,
+              value,
+            }
+          }),
           ...memberRows.map((row) => {
             const value: SyncMember = {
               ...row,
@@ -937,6 +1074,7 @@ export class PostgresSyncStore implements SyncStore {
           places: page.flatMap((record) => (record.kind === 'place' ? [record.value] : [])),
           visits: page.flatMap((record) => (record.kind === 'visit' ? [record.value] : [])),
           wants: page.flatMap((record) => (record.kind === 'want' ? [record.value] : [])),
+          reviews: page.flatMap((record) => (record.kind === 'review' ? [record.value] : [])),
           members: page.flatMap((record) => (record.kind === 'member' ? [record.value] : [])),
           itinerary: { version: trip.itinerary_version, atSeq: trip.seq_counter },
           nextCursor,

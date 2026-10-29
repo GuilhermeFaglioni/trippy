@@ -69,6 +69,7 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     visitedByMe: false,
     wantCount: 0,
     wantedByMe: false,
+    favoriteByMe: false,
     localNameStatus: 'missing',
     localAddressStatus: 'missing',
     countryCode: 'BR',
@@ -112,6 +113,7 @@ async function renderCard(
         role={options.role ?? 'member'}
         syncClient={syncClient}
         busy={false}
+        onOpen={jest.fn()}
         onToggleVisit={jest.fn()}
         onToggleWant={jest.fn()}
         onRefresh={async () => undefined}
@@ -315,6 +317,7 @@ describe('ficha do lugar', () => {
           role="member"
           syncClient={syncClient}
           busy={false}
+          onOpen={jest.fn()}
           onToggleVisit={jest.fn()}
           onToggleWant={jest.fn()}
           onRefresh={async () => undefined}

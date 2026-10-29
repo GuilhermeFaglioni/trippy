@@ -12,6 +12,7 @@ import type {
   RejectedOperationReason,
   SyncMember,
   SyncPlace,
+  SyncReview,
   SyncSequence,
   SyncVisit,
   SyncWant,
@@ -31,6 +32,7 @@ const sequencePattern = /^(0|[1-9]\d*)$/u
 const maxSyncSequence = '9223372036854775807'
 const maxItineraryDayIndex = 365
 const maxItineraryPlaces = 500
+const maxReviewNoteLength = 2000
 
 export function isUuid(value: unknown): value is UUID {
   return typeof value === 'string' && uuidPattern.test(value)
@@ -43,6 +45,10 @@ export function isSyncSequence(value: unknown): value is SyncSequence {
     (value.length < maxSyncSequence.length ||
       (value.length === maxSyncSequence.length && value <= maxSyncSequence))
   )
+}
+
+function isRating(value: unknown): value is number {
+  return Number.isSafeInteger(value) && typeof value === 'number' && value >= 1 && value <= 5
 }
 
 export function isTripRole(value: unknown): value is SyncMember['role'] {
@@ -211,10 +217,78 @@ export function validateSyncOperation(
     }
   }
 
+  if (value.type === 'visit.mark' || value.type === 'visit.unmark') {
+    if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
+    if (value.userId !== undefined && !isUuid(value.userId)) {
+      return failure('userId', 'Informe um UUID válido.')
+    }
+    return {
+      success: true,
+      value: {
+        type: value.type,
+        opId: value.opId,
+        tripId: value.tripId,
+        placeId: value.placeId,
+        ...(value.userId === undefined ? {} : { userId: value.userId }),
+      },
+    }
+  }
+
+  if (value.type === 'place.favorite') {
+    if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
+    if (typeof value.favorite !== 'boolean') {
+      return failure('favorite', 'Informe true ou false.')
+    }
+    return {
+      success: true,
+      value: {
+        type: 'place.favorite',
+        opId: value.opId,
+        tripId: value.tripId,
+        placeId: value.placeId,
+        favorite: value.favorite,
+      },
+    }
+  }
+
+  if (value.type === 'place.rate') {
+    if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
+    if (value.rating !== null && !isRating(value.rating)) {
+      return failure('rating', 'Informe uma nota inteira de 1 a 5 ou null.')
+    }
+    return {
+      success: true,
+      value: {
+        type: 'place.rate',
+        opId: value.opId,
+        tripId: value.tripId,
+        placeId: value.placeId,
+        rating: value.rating as number | null,
+      },
+    }
+  }
+
+  if (value.type === 'place.note') {
+    if (!isUuid(value.placeId)) return failure('placeId', 'Informe um UUID válido.')
+    if (!isNullableString(value.note)) return failure('note', 'Informe um texto ou null.')
+    const note = normalizeNullableText(value.note)
+    if (note !== null && Array.from(note).length > maxReviewNoteLength) {
+      return failure('note', 'A observação aceita até 2000 caracteres.')
+    }
+    return {
+      success: true,
+      value: {
+        type: 'place.note',
+        opId: value.opId,
+        tripId: value.tripId,
+        placeId: value.placeId,
+        note,
+      },
+    }
+  }
+
   if (
     value.type === 'place.remove' ||
-    value.type === 'visit.mark' ||
-    value.type === 'visit.unmark' ||
     value.type === 'place.want' ||
     value.type === 'place.unwant'
   ) {
@@ -486,6 +560,21 @@ function validateWant(value: unknown): value is SyncWant {
   )
 }
 
+function validateReview(value: unknown): value is SyncReview {
+  return (
+    isRecord(value) &&
+    isUuid(value.placeId) &&
+    isUuid(value.tripId) &&
+    isUuid(value.userId) &&
+    typeof value.favorite === 'boolean' &&
+    (value.rating === null || isRating(value.rating)) &&
+    (value.note === null || typeof value.note === 'string') &&
+    isDateTime(value.updatedAt) &&
+    isSyncSequence(value.seq) &&
+    (value.deletedAt === null || isDateTime(value.deletedAt))
+  )
+}
+
 function validateMember(value: unknown): value is SyncMember {
   return (
     isRecord(value) &&
@@ -511,6 +600,7 @@ function validatePullPageData(value: Record<string, unknown>): value is Record<s
   places: SyncPlace[]
   visits: SyncVisit[]
   wants: SyncWant[]
+  reviews: SyncReview[]
   members: SyncMember[]
   itinerary: { version: number; atSeq: SyncSequence }
   nextCursor: SyncSequence
@@ -520,6 +610,7 @@ function validatePullPageData(value: Record<string, unknown>): value is Record<s
     isStringArrayOf(value.places, validatePlace) &&
     isStringArrayOf(value.visits, validateVisit) &&
     isStringArrayOf(value.wants, validateWant) &&
+    isStringArrayOf(value.reviews, validateReview) &&
     isStringArrayOf(value.members, validateMember) &&
     validateItinerary(value.itinerary) &&
     isSyncSequence(value.nextCursor) &&
@@ -547,6 +638,7 @@ export function validatePullResponse(value: unknown): ValidationResult<PullRespo
         places: value.places,
         visits: value.visits,
         wants: value.wants,
+        reviews: value.reviews,
         members: value.members,
         itinerary: value.itinerary,
         nextCursor: value.nextCursor,
@@ -562,6 +654,7 @@ export function validatePullResponse(value: unknown): ValidationResult<PullRespo
         places: value.places,
         visits: value.visits,
         wants: value.wants,
+        reviews: value.reviews,
         members: value.members,
         itinerary: value.itinerary,
         nextCursor: value.nextCursor,

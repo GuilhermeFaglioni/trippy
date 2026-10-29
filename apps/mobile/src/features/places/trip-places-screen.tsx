@@ -319,6 +319,12 @@ export function TripPlacesScreen({
                   onToggleVisit={() => void toggleVisit(place)}
                   onToggleWant={() => void toggleWant(place)}
                   onRemove={canRemove ? () => void removePlace(place.id) : undefined}
+                  onOpen={() =>
+                    router.push({
+                      pathname: '/trips/[id]/places/[placeId]',
+                      params: { id: tripId, placeId: place.id },
+                    })
+                  }
                   onRefresh={loadPlaces}
                   onShowAddress={onShowAddress}
                 />

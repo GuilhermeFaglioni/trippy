@@ -14,7 +14,7 @@ import {
   validateSyncOperation,
 } from './validation.ts'
 import { RECAP_SHARING_TERMS_VERSION } from './types.ts'
-import type { SyncMember, SyncPlace, SyncVisit, SyncWant } from './types.ts'
+import type { SyncMember, SyncPlace, SyncReview, SyncVisit, SyncWant } from './types.ts'
 
 const tripId = '58f75ed5-b524-46f8-b387-650d9b43ee36'
 const userId = '3c42531a-085f-4ebc-89ca-d32dd33bc527'
@@ -175,6 +175,59 @@ describe('validação das operações e do push', () => {
     expect(
       validateSyncOperation({ type: 'place.want', opId, tripId, placeId: 'nao-uuid' }),
     ).toMatchObject({ success: false, issues: [{ path: 'placeId' }] })
+  })
+
+  it('valida favorito, nota e observação e normaliza texto vazio para null', () => {
+    expect(
+      validateSyncOperation({ type: 'place.favorite', opId, tripId, placeId, favorite: true }),
+    ).toEqual({
+      success: true,
+      value: { type: 'place.favorite', opId, tripId, placeId, favorite: true },
+    })
+    expect(
+      validateSyncOperation({ type: 'place.favorite', opId, tripId, placeId, favorite: 1 }),
+    ).toMatchObject({ success: false, issues: [{ path: 'favorite' }] })
+
+    for (const rating of [1, 5, null]) {
+      expect(validateSyncOperation({ type: 'place.rate', opId, tripId, placeId, rating })).toEqual({
+        success: true,
+        value: { type: 'place.rate', opId, tripId, placeId, rating },
+      })
+    }
+    for (const rating of [0, 6, 2.5, '3', undefined]) {
+      expect(
+        validateSyncOperation({ type: 'place.rate', opId, tripId, placeId, rating }),
+      ).toMatchObject({ success: false, issues: [{ path: 'rating' }] })
+    }
+
+    expect(
+      validateSyncOperation({ type: 'place.note', opId, tripId, placeId, note: '  Mirante  ' }),
+    ).toMatchObject({ success: true, value: { note: 'Mirante' } })
+    expect(
+      validateSyncOperation({ type: 'place.note', opId, tripId, placeId, note: '   ' }),
+    ).toMatchObject({ success: true, value: { note: null } })
+    expect(
+      validateSyncOperation({ type: 'place.note', opId, tripId, placeId, note: 'x'.repeat(2001) }),
+    ).toMatchObject({ success: false, issues: [{ path: 'note' }] })
+    expect(
+      validateSyncOperation({ type: 'place.note', opId, tripId, placeId, note: 'x'.repeat(2000) }),
+    ).toMatchObject({ success: true })
+  })
+
+  it('valida o alvo opcional de visita e recusa userId inválido', () => {
+    expect(
+      validateSyncOperation({ type: 'visit.mark', opId, tripId, placeId, userId: otherUserId }),
+    ).toEqual({
+      success: true,
+      value: { type: 'visit.mark', opId, tripId, placeId, userId: otherUserId },
+    })
+    expect(validateSyncOperation({ type: 'visit.unmark', opId, tripId, placeId })).toEqual({
+      success: true,
+      value: { type: 'visit.unmark', opId, tripId, placeId },
+    })
+    expect(
+      validateSyncOperation({ type: 'visit.unmark', opId, tripId, placeId, userId: 'nao-uuid' }),
+    ).toMatchObject({ success: false, issues: [{ path: 'userId' }] })
   })
 
   it('recusa identificadores inválidos e nome vazio', () => {
@@ -396,6 +449,7 @@ describe('validação do pull', () => {
       places: [place],
       visits: [],
       wants: [],
+      reviews: [],
       members: [],
       itinerary: { version: 2, atSeq: '42' },
       nextCursor: '42',
@@ -497,6 +551,21 @@ describe('canonicalTripState', () => {
     seq: '4',
     deletedAt,
   })
+  const review = (
+    placeKey: string,
+    userKey: string,
+    deletedAt: string | null = null,
+  ): SyncReview => ({
+    placeId: placeKey,
+    tripId,
+    userId: userKey,
+    favorite: true,
+    rating: 4,
+    note: 'Vale a pena',
+    updatedAt: '2026-10-20T12:00:00.000Z',
+    seq: '5',
+    deletedAt,
+  })
   const member = (id: string, deletedAt: string | null = null): SyncMember => ({
     tripId,
     userId: id,
@@ -512,8 +581,10 @@ describe('canonicalTripState', () => {
       places: [place(placeId), place('1a000000-0000-4000-8000-000000000000')],
       visits: [visit(placeId, otherUserId), visit(placeId, userId)],
       wants: [want(placeId, otherUserId), want(placeId, userId, '2026-10-20T13:00:00.000Z')],
+      reviews: [review(placeId, otherUserId), review(placeId, userId, '2026-10-20T13:00:00.000Z')],
       members: [member(otherUserId), member(userId, '2026-10-20T13:00:00.000Z')],
     })
+    expect(state.reviews.map(({ userId: id }) => id)).toEqual([otherUserId])
     expect(state.places.map(({ id }) => id)).toEqual([
       '1a000000-0000-4000-8000-000000000000',
       placeId,

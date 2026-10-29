@@ -9,6 +9,7 @@ import {
   type SyncMember,
   type SyncOperation,
   type SyncPlace,
+  type SyncReview,
   type SyncVisit,
   type SyncWant,
   type UUID,
@@ -25,6 +26,7 @@ import type {
   ItineraryDraft,
   LiveMember,
   LivePlace,
+  PlaceDetail,
   SyncClient,
   SyncClientStatus,
   SyncTransport,
@@ -239,12 +241,100 @@ class LocalSyncClient implements SyncClient {
     })
   }
 
-  async markVisit(tripId: UUID, placeId: UUID): Promise<void> {
-    await this.writeOperation({ type: 'visit.mark', opId: this.idGenerator(), tripId, placeId })
+  async markVisit(tripId: UUID, placeId: UUID, userId?: UUID): Promise<void> {
+    await this.writeOperation({
+      type: 'visit.mark',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      ...(userId === undefined ? {} : { userId }),
+    })
   }
 
-  async unmarkVisit(tripId: UUID, placeId: UUID): Promise<void> {
-    await this.writeOperation({ type: 'visit.unmark', opId: this.idGenerator(), tripId, placeId })
+  async unmarkVisit(tripId: UUID, placeId: UUID, userId?: UUID): Promise<void> {
+    await this.writeOperation({
+      type: 'visit.unmark',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      ...(userId === undefined ? {} : { userId }),
+    })
+  }
+
+  async setFavorite(tripId: UUID, placeId: UUID, favorite: boolean): Promise<void> {
+    await this.writeOperation({
+      type: 'place.favorite',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      favorite,
+    })
+  }
+
+  async ratePlace(tripId: UUID, placeId: UUID, rating: number | null): Promise<void> {
+    await this.writeOperation({
+      type: 'place.rate',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      rating,
+    })
+  }
+
+  async setPlaceNote(tripId: UUID, placeId: UUID, note: string | null): Promise<void> {
+    await this.writeOperation({
+      type: 'place.note',
+      opId: this.idGenerator(),
+      tripId,
+      placeId,
+      note,
+    })
+  }
+
+  async getPlaceDetail(tripId: UUID, placeId: UUID): Promise<PlaceDetail | null> {
+    const place = (await this.listPlaces(tripId)).find((item) => item.id === placeId)
+    if (!place) return null
+
+    const reviews = await this.database.all<
+      { user_id: UUID; favorite: number; rating: number | null; note: string | null } & Record<
+        string,
+        unknown
+      >
+    >(
+      `SELECT user_id, favorite, rating, note FROM reviews
+       WHERE place_id = ? AND trip_id = ? AND deleted_at IS NULL
+       ORDER BY updated_at, user_id`,
+      [placeId, tripId],
+    )
+    const visits = await this.database.all<
+      { user_id: UUID; marked_by: UUID } & Record<string, unknown>
+    >(
+      `SELECT user_id, marked_by FROM visits
+       WHERE place_id = ? AND trip_id = ? AND deleted_at IS NULL
+       ORDER BY user_id`,
+      [placeId, tripId],
+    )
+
+    const mine = reviews.find((review) => review.user_id === this.userId)
+    const ratings = reviews.flatMap((review) => (review.rating === null ? [] : [review.rating]))
+    const ratingAverage =
+      ratings.length >= 2 ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : null
+
+    return {
+      place,
+      favoriteByMe: place.favoriteByMe,
+      myRating: mine?.rating ?? null,
+      myNote: mine?.note ?? null,
+      favoriteCount: reviews.filter((review) => review.favorite !== 0).length,
+      ratingCount: ratings.length,
+      ratingAverage,
+      notes: reviews.flatMap((review) =>
+        review.user_id !== this.userId && review.note !== null && review.note.trim() !== ''
+          ? [{ userId: review.user_id, note: review.note }]
+          : [],
+      ),
+      visitors: visits.map((visit) => ({ userId: visit.user_id, markedBy: visit.marked_by })),
+    }
   }
 
   async wantPlace(tripId: UUID, placeId: UUID): Promise<void> {
@@ -427,7 +517,12 @@ class LocalSyncClient implements SyncClient {
   async listPlaces(tripId: UUID, _countryCode?: string | null): Promise<LivePlace[]> {
     void _countryCode
     const rows = await this.database.all<
-      PlaceRow & { visited_by_me: number; want_count: number; wanted_by_me: number }
+      PlaceRow & {
+        visited_by_me: number
+        want_count: number
+        wanted_by_me: number
+        favorite_by_me: number
+      }
     >(
       `SELECT places.*, EXISTS (
          SELECT 1 FROM visits
@@ -448,7 +543,15 @@ class LocalSyncClient implements SyncClient {
            AND wants.trip_id = places.trip_id
            AND wants.user_id = ?
            AND wants.deleted_at IS NULL
-       ) AS wanted_by_me
+       ) AS wanted_by_me,
+       EXISTS (
+         SELECT 1 FROM reviews
+         WHERE reviews.place_id = places.id
+           AND reviews.trip_id = places.trip_id
+           AND reviews.user_id = ?
+           AND reviews.favorite = 1
+           AND reviews.deleted_at IS NULL
+       ) AS favorite_by_me
        FROM places
        WHERE places.trip_id = ? AND places.deleted_at IS NULL
          AND NOT EXISTS (
@@ -462,7 +565,7 @@ class LocalSyncClient implements SyncClient {
            WHERE sync_state.trip_id = places.trip_id AND sync_state.removed_at IS NOT NULL
          )
        ORDER BY places.position IS NULL, places.position, places.created_at, places.id`,
-      [this.userId, this.userId, tripId, this.userId],
+      [this.userId, this.userId, this.userId, tripId, this.userId],
     )
     return rows.map((row) => {
       const place = this.placeFromRow(row)
@@ -472,6 +575,7 @@ class LocalSyncClient implements SyncClient {
         visitedByMe: row.visited_by_me !== 0,
         wantCount: Number(row.want_count),
         wantedByMe: row.wanted_by_me !== 0,
+        favoriteByMe: row.favorite_by_me !== 0,
         localNameStatus: classifyLocalDetail({
           userValue: place.userLocalName,
           providerValue: place.localName,
@@ -546,6 +650,7 @@ class LocalSyncClient implements SyncClient {
            UNION SELECT trip_id FROM places
            UNION SELECT trip_id FROM visits
            UNION SELECT trip_id FROM wants
+           UNION SELECT trip_id FROM reviews
            UNION SELECT trip_id FROM members
            UNION SELECT trip_id FROM sync_state
          ) ORDER BY trip_id`,
@@ -886,6 +991,10 @@ class LocalSyncClient implements SyncClient {
       if (want.tripId !== tripId) throw new Error('Pull incluiu quero ir de outra viagem.')
       await this.upsertWant(transaction, want)
     }
+    for (const review of page.reviews) {
+      if (review.tripId !== tripId) throw new Error('Pull incluiu avaliação de outra viagem.')
+      await this.upsertReview(transaction, review)
+    }
     for (const member of page.members) {
       if (member.tripId !== tripId) throw new Error('Pull incluiu membro de outra viagem.')
       await this.upsertMember(transaction, member)
@@ -904,6 +1013,7 @@ class LocalSyncClient implements SyncClient {
       await transaction.run('DELETE FROM places WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM visits WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM wants WHERE trip_id = ?', [tripId])
+      await transaction.run('DELETE FROM reviews WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM members WHERE trip_id = ?', [tripId])
       await transaction.run(
         `UPDATE outbox SET status = 'not_sent', last_error = 'not_member'
@@ -924,6 +1034,7 @@ class LocalSyncClient implements SyncClient {
       await transaction.run('DELETE FROM places WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM visits WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM wants WHERE trip_id = ?', [tripId])
+      await transaction.run('DELETE FROM reviews WHERE trip_id = ?', [tripId])
       await transaction.run('DELETE FROM members WHERE trip_id = ?', [tripId])
       await transaction.run(
         'UPDATE sync_state SET cursor = NULL, snapshot_seq = NULL WHERE trip_id = ?',
@@ -1120,6 +1231,47 @@ class LocalSyncClient implements SyncClient {
       return
     }
 
+    if (operation.type === 'place.favorite') {
+      await transaction.run(
+        `INSERT INTO reviews (
+           place_id, trip_id, user_id, favorite, rating, note, updated_at, seq, deleted_at
+         ) VALUES (?, ?, ?, ?, NULL, NULL, ?, '0', NULL)
+         ON CONFLICT (place_id, user_id) DO UPDATE SET
+           trip_id = excluded.trip_id, favorite = excluded.favorite,
+           updated_at = excluded.updated_at, seq = '0'`,
+        [operation.placeId, operation.tripId, this.userId, operation.favorite ? 1 : 0, createdAt],
+      )
+      return
+    }
+
+    if (operation.type === 'place.rate') {
+      await transaction.run(
+        `INSERT INTO reviews (
+           place_id, trip_id, user_id, favorite, rating, note, updated_at, seq, deleted_at
+         ) VALUES (?, ?, ?, 0, ?, NULL, ?, '0', NULL)
+         ON CONFLICT (place_id, user_id) DO UPDATE SET
+           trip_id = excluded.trip_id, rating = excluded.rating,
+           updated_at = excluded.updated_at, seq = '0'`,
+        [operation.placeId, operation.tripId, this.userId, operation.rating, createdAt],
+      )
+      return
+    }
+
+    if (operation.type === 'place.note') {
+      await transaction.run(
+        `INSERT INTO reviews (
+           place_id, trip_id, user_id, favorite, rating, note, updated_at, seq, deleted_at
+         ) VALUES (?, ?, ?, 0, NULL, ?, ?, '0', NULL)
+         ON CONFLICT (place_id, user_id) DO UPDATE SET
+           trip_id = excluded.trip_id, note = excluded.note,
+           updated_at = excluded.updated_at, seq = '0'`,
+        [operation.placeId, operation.tripId, this.userId, operation.note, createdAt],
+      )
+      return
+    }
+
+    // Quem marca ou desmarca é o remetente; a visita pertence ao alvo (padrão: o próprio remetente).
+    const targetId = operation.userId ?? this.userId
     if (operation.type === 'visit.mark') {
       await transaction.run(
         `INSERT INTO visits (
@@ -1129,7 +1281,7 @@ class LocalSyncClient implements SyncClient {
            trip_id = excluded.trip_id, marked_by = excluded.marked_by,
            visited_at = excluded.visited_at, visited_tz = excluded.visited_tz,
            seq = '0', deleted_at = NULL`,
-        [operation.placeId, operation.tripId, this.userId, this.userId, createdAt, this.timeZone],
+        [operation.placeId, operation.tripId, targetId, this.userId, createdAt, this.timeZone],
       )
       return
     }
@@ -1143,7 +1295,7 @@ class LocalSyncClient implements SyncClient {
       [
         operation.placeId,
         operation.tripId,
-        this.userId,
+        targetId,
         this.userId,
         createdAt,
         this.timeZone,
@@ -1232,6 +1384,29 @@ class LocalSyncClient implements SyncClient {
          trip_id = excluded.trip_id, created_at = excluded.created_at,
          seq = excluded.seq, deleted_at = excluded.deleted_at`,
       [want.placeId, want.tripId, want.userId, want.createdAt, want.seq, want.deletedAt],
+    )
+  }
+
+  private async upsertReview(transaction: SqlDatabase, review: SyncReview): Promise<void> {
+    await transaction.run(
+      `INSERT INTO reviews (
+         place_id, trip_id, user_id, favorite, rating, note, updated_at, seq, deleted_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (place_id, user_id) DO UPDATE SET
+         trip_id = excluded.trip_id, favorite = excluded.favorite, rating = excluded.rating,
+         note = excluded.note, updated_at = excluded.updated_at, seq = excluded.seq,
+         deleted_at = excluded.deleted_at`,
+      [
+        review.placeId,
+        review.tripId,
+        review.userId,
+        review.favorite ? 1 : 0,
+        review.rating,
+        review.note,
+        review.updatedAt,
+        review.seq,
+        review.deletedAt,
+      ],
     )
   }
 
