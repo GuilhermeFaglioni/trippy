@@ -4,11 +4,12 @@ Definido pelo Guilherme em 19/out/2026. Vale para toda issue com o label `ready-
 
 ## Papéis
 
-| Papel | Tarefas do Claude | Tarefas do Codex |
-|---|---|---|
-| **Planejador** | `--agent claude --model claude-opus-5-5 --effort medium` | `--agent codex --model gpt-6.1-sol --effort low` |
-| **Implementadores** (swarm) | `--agent codex --model gpt-6-luna --effort xhigh`, seguindo a skill `/implement` | igual |
-| **Revisor** | `--agent codex --model gpt-6.1-sol --effort low` | igual |
+| Papel | Modelo |
+|---|---|
+| **Orquestrador / planejador / revisor** (uma sessão por issue) | `claude-sonnet-5-5` |
+| **Implementadores** (swarm, seguindo a skill `/implement`) | `claude-haiku-5-5`, como subagentes da sessão da issue (`Agent` com `model: haiku`) |
+
+Definido pelo Guilherme em 29/out/2026 para as ondas de implementação, no lugar dos modelos GPT-6 e Opus. O Sonnet planeja, divide em subtarefas, delega ao Haiku, integra e revisa; o Haiku implementa subtarefas pequenas e bem delimitadas (arquivos e critérios explícitos). Subtarefa que o Haiku não fecha em duas tentativas volta para o Sonnet fazer.
 
 O **orquestrador** (a sessão do Claude Code com o Guilherme) escolhe as issues da fronteira (sem bloqueio aberto), cria uma worktree por issue e inicia o planejador nela.
 
