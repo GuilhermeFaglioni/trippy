@@ -123,7 +123,10 @@ function invalidResponse(): PlacesApiError {
   )
 }
 
-async function requestCandidates(request: PlacesRequest, path: string): Promise<PlaceSearchResponse> {
+async function requestCandidates(
+  request: PlacesRequest,
+  path: string,
+): Promise<PlaceSearchResponse> {
   const response = await request(path)
   const payload = await readJson(response)
 

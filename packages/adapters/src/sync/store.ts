@@ -208,9 +208,7 @@ async function applyPlaceAdd(
   const sequence = (BigInt(trip.seq_counter) + 1n).toString()
   const dayIndex = operation.dayIndex ?? null
   const position =
-    dayIndex === null
-      ? null
-      : await nextPlaceDayPosition(client, operation.tripId, dayIndex)
+    dayIndex === null ? null : await nextPlaceDayPosition(client, operation.tripId, dayIndex)
   const inserted = await client.query(
     `INSERT INTO places (
        id, trip_id, provider, provider_ref, country_code, provider_datasource, attribution, license,

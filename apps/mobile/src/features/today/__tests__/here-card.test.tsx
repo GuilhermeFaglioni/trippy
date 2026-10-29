@@ -202,9 +202,7 @@ describe('cartão Estamos aqui', () => {
         dayIndex: 1,
       }),
     )
-    await waitFor(() =>
-      expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'candidate-place'),
-    )
+    await waitFor(() => expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'candidate-place'))
     await waitFor(() => expect(onRegistered).toHaveBeenCalledTimes(1))
     expect(screen.getByTestId('hoje-estamos-aqui')).toBeOnTheScreen()
   })
@@ -227,7 +225,9 @@ describe('cartão Estamos aqui', () => {
 
   it('se marcar presença falha depois de salvar, não duplica o lugar ao tentar de novo', async () => {
     const client = createSyncClient()
-    client.markVisit.mockRejectedValueOnce(new Error('Sem conexão.')).mockResolvedValueOnce(undefined)
+    client.markVisit
+      .mockRejectedValueOnce(new Error('Sem conexão.'))
+      .mockResolvedValueOnce(undefined)
     const { screen, onRegistered } = await setup({ client })
 
     await openPanel(screen)

@@ -1,9 +1,7 @@
 import { Accuracy, getCurrentPositionAsync, requestForegroundPermissionsAsync } from 'expo-location'
 
 export type HereLocationResult =
-  | { status: 'granted'; lat: number; lng: number }
-  | { status: 'denied' }
-  | { status: 'unavailable' }
+  { status: 'granted'; lat: number; lng: number } | { status: 'denied' } | { status: 'unavailable' }
 
 const LOCATION_TIMEOUT_MS = 8_000
 

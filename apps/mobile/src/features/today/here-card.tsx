@@ -27,13 +27,7 @@ type HereCardProps = {
 }
 
 type LocationPhase =
-  | 'idle'
-  | 'locating'
-  | 'denied'
-  | 'unavailable'
-  | 'searching'
-  | 'searched'
-  | 'search-failed'
+  'idle' | 'locating' | 'denied' | 'unavailable' | 'searching' | 'searched' | 'search-failed'
 
 /** Registra "Estamos aqui": lugar fora do roteiro, por GPS ou nome digitado. */
 export function HereCard({
@@ -210,7 +204,9 @@ export function HereCard({
 
         {phase === 'locating' || phase === 'searching' ? (
           <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-            {phase === 'locating' ? 'Lendo sua localização...' : 'Buscando lugares perto de você...'}
+            {phase === 'locating'
+              ? 'Lendo sua localização...'
+              : 'Buscando lugares perto de você...'}
           </TypographyText>
         ) : null}
 
