@@ -11,6 +11,7 @@ import type {
   SyncMember,
   SyncOperation,
   SyncPlace,
+  SyncReview,
   SyncVisit,
   SyncWant,
   UUID,
@@ -203,11 +204,32 @@ function createWant(placeId: UUID, userId: UUID, seq: string): SyncWant {
   return { placeId, tripId, userId, createdAt: fixedTime, seq, deletedAt: null }
 }
 
+function createReview(
+  placeId: UUID,
+  userId: UUID,
+  seq: string,
+  overrides: Partial<Pick<SyncReview, 'favorite' | 'rating' | 'note'>> = {},
+): SyncReview {
+  return {
+    placeId,
+    tripId,
+    userId,
+    favorite: false,
+    rating: null,
+    note: null,
+    updatedAt: fixedTime,
+    seq,
+    deletedAt: null,
+    ...overrides,
+  }
+}
+
 interface FakeServerState {
   applied: Map<UUID, PushResponse['results'][number]>
   places: Map<UUID, SyncPlace>
   visits: Map<string, SyncVisit>
   wants: Map<string, SyncWant>
+  reviews: Map<string, SyncReview>
   members: Map<string, SyncMember>
   sequence: bigint
   itineraryVersion: number
@@ -220,6 +242,7 @@ function newFakeServerState(): FakeServerState {
     places: new Map(),
     visits: new Map(),
     wants: new Map(),
+    reviews: new Map(),
     members: new Map(),
     sequence: 0n,
     itineraryVersion: 0,
@@ -254,6 +277,9 @@ class FakeSyncTransport {
   get wants(): FakeServerState['wants'] {
     return this.sharedState.wants
   }
+  get reviews(): FakeServerState['reviews'] {
+    return this.sharedState.reviews
+  }
   get members(): FakeServerState['members'] {
     return this.sharedState.members
   }
@@ -284,6 +310,11 @@ class FakeSyncTransport {
   seedWant(want: SyncWant): void {
     this.wants.set(`${want.placeId}:${want.userId}`, want)
     this.sequence = this.sequence > BigInt(want.seq) ? this.sequence : BigInt(want.seq)
+  }
+
+  seedReview(review: SyncReview): void {
+    this.reviews.set(`${review.placeId}:${review.userId}`, review)
+    this.sequence = this.sequence > BigInt(review.seq) ? this.sequence : BigInt(review.seq)
   }
 
   seedMember(member: SyncMember): void {
@@ -391,8 +422,8 @@ class FakeSyncTransport {
 
     const events: Array<{
       seq: bigint
-      kind: 'place' | 'visit' | 'want' | 'member'
-      value: SyncPlace | SyncVisit | SyncWant | SyncMember
+      kind: 'place' | 'visit' | 'want' | 'review' | 'member'
+      value: SyncPlace | SyncVisit | SyncWant | SyncReview | SyncMember
     }> = []
     for (const value of this.places.values()) {
       const seq = BigInt(value.seq)
@@ -424,6 +455,16 @@ class FakeSyncTransport {
         events.push({ seq, kind: 'want', value })
       }
     }
+    for (const value of this.reviews.values()) {
+      const seq = BigInt(value.seq)
+      if (
+        seq > cursor &&
+        (snapshotSeq === undefined || seq <= snapshotSeq) &&
+        (query.mode !== 'bootstrap' || value.deletedAt === null)
+      ) {
+        events.push({ seq, kind: 'review', value })
+      }
+    }
     for (const value of this.members.values()) {
       const seq = BigInt(value.seq)
       if (
@@ -448,6 +489,9 @@ class FakeSyncTransport {
         .filter((event) => event.kind === 'visit')
         .map((event) => event.value as SyncVisit),
       wants: page.filter((event) => event.kind === 'want').map((event) => event.value as SyncWant),
+      reviews: page
+        .filter((event) => event.kind === 'review')
+        .map((event) => event.value as SyncReview),
       members: page
         .filter((event) => event.kind === 'member')
         .map((event) => event.value as SyncMember),
@@ -475,14 +519,20 @@ class FakeSyncTransport {
     places: SyncPlace[]
     visits: SyncVisit[]
     wants: SyncWant[]
+    reviews: SyncReview[]
     members: SyncMember[]
   } {
     return {
       places: [...this.places.values()],
       visits: [...this.visits.values()],
       wants: [...this.wants.values()],
+      reviews: [...this.reviews.values()],
       members: [...this.members.values()],
     }
+  }
+
+  private visitTarget(operation: SyncOperation): UUID {
+    return 'userId' in operation && operation.userId !== undefined ? operation.userId : this.userId
   }
 
   private apply(operation: SyncOperation): PushResponse['results'][number] {
@@ -506,7 +556,7 @@ class FakeSyncTransport {
     }
 
     if (operation.type === 'visit.mark' || operation.type === 'visit.unmark') {
-      const visit = this.visits.get(`${operation.placeId}:${this.userId}`)
+      const visit = this.visits.get(`${operation.placeId}:${this.visitTarget(operation)}`)
       if (operation.type === 'visit.mark' && visit?.deletedAt === null) {
         return { opId: operation.opId, status: 'duplicate' }
       }
@@ -533,6 +583,35 @@ class FakeSyncTransport {
         seq: String(this.sequence),
         deletedAt: operation.type === 'place.want' ? null : fixedTime,
       })
+      return { opId: operation.opId, status: 'applied' }
+    }
+
+    if (
+      operation.type === 'place.favorite' ||
+      operation.type === 'place.rate' ||
+      operation.type === 'place.note'
+    ) {
+      const place = this.places.get(operation.placeId)
+      if (!place || place.tripId !== operation.tripId || place.deletedAt !== null) {
+        return { opId: operation.opId, status: 'rejected', reason: 'invalid' }
+      }
+      const key = `${operation.placeId}:${this.userId}`
+      const previous = this.reviews.get(key) ?? createReview(operation.placeId, this.userId, '0')
+      const next = {
+        ...previous,
+        favorite: operation.type === 'place.favorite' ? operation.favorite : previous.favorite,
+        rating: operation.type === 'place.rate' ? operation.rating : previous.rating,
+        note: operation.type === 'place.note' ? operation.note : previous.note,
+      }
+      if (
+        next.favorite === previous.favorite &&
+        next.rating === previous.rating &&
+        next.note === previous.note
+      ) {
+        return { opId: operation.opId, status: 'duplicate' }
+      }
+      this.sequence += 1n
+      this.reviews.set(key, { ...next, updatedAt: fixedTime, seq: String(this.sequence) })
       return { opId: operation.opId, status: 'applied' }
     }
 
@@ -588,6 +667,11 @@ class FakeSyncTransport {
     } else if (operation.type === 'place.remove') {
       const place = this.places.get(operation.placeId)
       if (place) this.places.set(place.id, { ...place, seq, deletedAt: fixedTime })
+      for (const [key, review] of this.reviews) {
+        if (review.placeId === operation.placeId && review.deletedAt === null) {
+          this.reviews.set(key, { ...review, seq, deletedAt: fixedTime })
+        }
+      }
     } else if (operation.type === 'place.google_link') {
       const place = this.places.get(operation.placeId)!
       this.places.set(operation.placeId, {
@@ -609,12 +693,12 @@ class FakeSyncTransport {
         seq,
       })
     } else {
-      const key = `${operation.placeId}:${this.userId}`
+      const key = `${operation.placeId}:${this.visitTarget(operation)}`
       const previous = this.visits.get(key)
       this.visits.set(key, {
         placeId: operation.placeId,
         tripId: operation.tripId,
-        userId: this.userId,
+        userId: this.visitTarget(operation),
         markedBy: this.userId,
         visitedAt: previous?.visitedAt ?? fixedTime,
         visitedTz: previous?.visitedTz ?? 'UTC',
@@ -1277,6 +1361,133 @@ describe('SyncClient', () => {
     expect(await client.listPlaces(tripId)).toMatchObject([{ wantCount: 1, wantedByMe: false }])
   })
 
+  it('projeta favorito, nota e observação offline e calcula a média só com duas avaliações', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedMember(createMember(userB, '2'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '3'))
+    transport.seedReview(
+      createReview(placeA, userB, '4', { favorite: true, rating: 5, note: 'Lindo' }),
+    )
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    expect(await client.getPlaceDetail(tripId, placeA)).toEqual({
+      place: expect.objectContaining({ id: placeA, favoriteByMe: false }),
+      favoriteByMe: false,
+      myRating: null,
+      myNote: null,
+      favoriteCount: 1,
+      ratingCount: 1,
+      ratingAverage: null,
+      notes: [{ userId: userB, note: 'Lindo' }],
+      visitors: [],
+    })
+
+    await client.setFavorite(tripId, placeA, true)
+    await client.ratePlace(tripId, placeA, 4)
+    await client.setPlaceNote(tripId, placeA, '  Mirante  ')
+    expect(await client.getPlaceDetail(tripId, placeA)).toMatchObject({
+      favoriteByMe: true,
+      myRating: 4,
+      myNote: 'Mirante',
+      favoriteCount: 2,
+      ratingCount: 2,
+      ratingAverage: 4.5,
+      notes: [{ userId: userB, note: 'Lindo' }],
+    })
+    expect(await client.listPlaces(tripId)).toMatchObject([{ id: placeA, favoriteByMe: true }])
+
+    await client.ratePlace(tripId, placeA, null)
+    await client.setPlaceNote(tripId, placeA, '   ')
+    expect(await client.getPlaceDetail(tripId, placeA)).toMatchObject({
+      myRating: null,
+      myNote: null,
+      ratingCount: 1,
+      ratingAverage: null,
+    })
+
+    await client.setFavorite(tripId, placeA, false)
+    await client.ratePlace(tripId, placeA, 3)
+    await client.syncNow()
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+    expect(await client.getPlaceDetail(tripId, placeA)).toMatchObject({
+      favoriteByMe: false,
+      myRating: 3,
+      ratingAverage: 4,
+    })
+    expect(await client.getPlaceDetail(tripId, placeB)).toBeNull()
+  })
+
+  it('marca visita de outra pessoa guardando quem marcou e converge após desmarcar', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.seedMember(createMember(userA, '1'))
+    transport.seedMember(createMember(userB, '2'))
+    transport.seedPlace(createPlace(placeA, 'Jardim', userA, '3'))
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    await client.markVisit(tripId, placeA, userB)
+    expect(await client.listPlaces(tripId)).toMatchObject([{ visitedByMe: false }])
+    expect(await client.getPlaceDetail(tripId, placeA)).toMatchObject({
+      visitors: [{ userId: userB, markedBy: userA }],
+    })
+    await client.syncNow()
+    expect(transport.visits.get(`${placeA}:${userB}`)).toMatchObject({
+      userId: userB,
+      markedBy: userA,
+      deletedAt: null,
+    })
+
+    await client.unmarkVisit(tripId, placeA, userB)
+    await client.syncNow()
+    expect(transport.visits.get(`${placeA}:${userB}`)?.deletedAt).not.toBeNull()
+    expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
+      canonicalTripState(transport.state()),
+    )
+  })
+
+  it('converge notas, favoritos e avaliações de dois clientes contra o mesmo servidor', async () => {
+    const databaseA = createDatabase()
+    const databaseB = createDatabase()
+    const server = new FakeSyncTransport()
+    server.seedMember(createMember(userA, '1'))
+    server.seedMember(createMember(userB, '2'))
+    server.seedPlace(createPlace(placeA, 'Jardim', userA, '3'))
+    // Op ids aleatórios: o servidor compartilhado não pode ver ids repetidos entre clientes.
+    const randomIds = { idGenerator: () => globalThis.crypto.randomUUID() }
+    const clientA = await createClient(databaseA, server, userA, () => [tripId], randomIds)
+    const transportB = new FakeSyncTransport(userB, 100, server.sharedState)
+    const clientB = await createClient(databaseB, transportB, userB, () => [tripId], randomIds)
+    await clientA.syncNow()
+    await clientB.syncNow()
+
+    await clientA.setFavorite(tripId, placeA, true)
+    await clientA.ratePlace(tripId, placeA, 5)
+    await clientB.ratePlace(tripId, placeA, 3)
+    await clientB.setPlaceNote(tripId, placeA, 'Chegue cedo')
+    await clientA.syncNow()
+    await clientB.syncNow()
+    await clientA.syncNow()
+
+    expect(canonicalTripState(await readLocalState(databaseA, tripId))).toEqual(
+      canonicalTripState(server.state()),
+    )
+    expect(canonicalTripState(await readLocalState(databaseB, tripId))).toEqual(
+      canonicalTripState(server.state()),
+    )
+    expect(await clientA.getPlaceDetail(tripId, placeA)).toMatchObject({
+      favoriteCount: 1,
+      ratingCount: 2,
+      ratingAverage: 4,
+      notes: [{ userId: userB, note: 'Chegue cedo' }],
+    })
+  })
+
   it('faz bootstrap paginado e recebe remoções pelo pull incremental', async () => {
     const database = createDatabase()
     const transport = new FakeSyncTransport(userA, 2)
@@ -1457,7 +1668,7 @@ describe('SyncClient', () => {
 })
 
 async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) {
-  const [places, visits, wants, members] = await Promise.all([
+  const [places, visits, wants, reviews, members] = await Promise.all([
     database.all<
       Record<string, unknown> & {
         id: UUID
@@ -1509,6 +1720,19 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
         deleted_at: string | null
       }
     >('SELECT * FROM wants WHERE trip_id = ?', [requestedTripId]),
+    database.all<
+      Record<string, unknown> & {
+        place_id: UUID
+        trip_id: UUID
+        user_id: UUID
+        favorite: number
+        rating: number | null
+        note: string | null
+        updated_at: string
+        seq: string
+        deleted_at: string | null
+      }
+    >('SELECT * FROM reviews WHERE trip_id = ?', [requestedTripId]),
     database.all<
       Record<string, unknown> & {
         trip_id: UUID
@@ -1564,6 +1788,17 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
       tripId: row.trip_id,
       userId: row.user_id,
       createdAt: row.created_at,
+      seq: String(row.seq),
+      deletedAt: row.deleted_at,
+    })),
+    reviews: reviews.map((row) => ({
+      placeId: row.place_id,
+      tripId: row.trip_id,
+      userId: row.user_id,
+      favorite: row.favorite === 1,
+      rating: row.rating,
+      note: row.note,
+      updatedAt: row.updated_at,
       seq: String(row.seq),
       deletedAt: row.deleted_at,
     })),

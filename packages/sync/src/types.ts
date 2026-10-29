@@ -25,11 +25,15 @@ export interface RemovePlaceOperation extends OperationMetadata {
 export interface MarkVisitOperation extends OperationMetadata {
   type: 'visit.mark'
   placeId: UUID
+  /** Pessoa marcada como tendo ido; ausente significa quem enviou a operação. */
+  userId?: UUID
 }
 
 export interface UnmarkVisitOperation extends OperationMetadata {
   type: 'visit.unmark'
   placeId: UUID
+  /** Pessoa desmarcada; ausente significa quem enviou a operação. */
+  userId?: UUID
 }
 
 export interface WantPlaceOperation extends OperationMetadata {
@@ -40,6 +44,24 @@ export interface WantPlaceOperation extends OperationMetadata {
 export interface UnwantPlaceOperation extends OperationMetadata {
   type: 'place.unwant'
   placeId: UUID
+}
+
+export interface FavoritePlaceOperation extends OperationMetadata {
+  type: 'place.favorite'
+  placeId: UUID
+  favorite: boolean
+}
+
+export interface RatePlaceOperation extends OperationMetadata {
+  type: 'place.rate'
+  placeId: UUID
+  rating: number | null
+}
+
+export interface NotePlaceOperation extends OperationMetadata {
+  type: 'place.note'
+  placeId: UUID
+  note: string | null
 }
 
 export interface ItineraryDay {
@@ -92,6 +114,9 @@ export type SyncOperation =
   | UnmarkVisitOperation
   | WantPlaceOperation
   | UnwantPlaceOperation
+  | FavoritePlaceOperation
+  | RatePlaceOperation
+  | NotePlaceOperation
   | ArrangeItineraryOperation
   | RemoveMemberOperation
   | SetMemberRoleOperation
@@ -170,6 +195,19 @@ export interface SyncWant {
   deletedAt: string | null
 }
 
+/** Avaliação de uma pessoa em um lugar: favorito, nota de 1 a 5 e observação privada da viagem. */
+export interface SyncReview {
+  placeId: UUID
+  tripId: UUID
+  userId: UUID
+  favorite: boolean
+  rating: number | null
+  note: string | null
+  updatedAt: string
+  seq: SyncSequence
+  deletedAt: string | null
+}
+
 /** `deletedAt` representa `trip_members.left_at` na fronteira HTTP. */
 export interface SyncMember {
   tripId: UUID
@@ -197,6 +235,7 @@ export interface PullPageData {
   places: SyncPlace[]
   visits: SyncVisit[]
   wants: SyncWant[]
+  reviews: SyncReview[]
   members: SyncMember[]
   itinerary: { version: number; atSeq: SyncSequence }
   nextCursor: SyncSequence

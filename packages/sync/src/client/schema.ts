@@ -122,6 +122,24 @@ const migrations: readonly Migration[] = [
     version: 6,
     statements: ['ALTER TABLE members ADD COLUMN opened_at TEXT'],
   },
+  {
+    version: 7,
+    statements: [
+      `CREATE TABLE reviews (
+        place_id TEXT NOT NULL,
+        trip_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        favorite INTEGER NOT NULL DEFAULT 0,
+        rating INTEGER,
+        note TEXT,
+        updated_at TEXT NOT NULL,
+        seq TEXT NOT NULL,
+        deleted_at TEXT,
+        PRIMARY KEY (place_id, user_id)
+      )`,
+      'CREATE INDEX reviews_trip_id_idx ON reviews (trip_id)',
+    ],
+  },
 ]
 
 export async function migrateSyncDatabase(

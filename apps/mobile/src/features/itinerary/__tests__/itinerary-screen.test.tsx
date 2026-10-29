@@ -49,6 +49,7 @@ function place(overrides: Partial<LivePlace> = {}): LivePlace {
     visitedByMe: false,
     wantCount: 0,
     wantedByMe: false,
+    favoriteByMe: false,
     ...overrides,
   }
 }

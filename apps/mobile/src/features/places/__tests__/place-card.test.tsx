@@ -69,6 +69,7 @@ function createPlace(overrides: Partial<LivePlace> = {}): LivePlace {
     visitedByMe: false,
     wantCount: 0,
     wantedByMe: false,
+    favoriteByMe: false,
     localNameStatus: 'missing',
     localAddressStatus: 'missing',
     countryCode: 'BR',
