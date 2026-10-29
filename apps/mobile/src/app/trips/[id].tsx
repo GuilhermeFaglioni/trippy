@@ -185,7 +185,6 @@ export default function TripRoute() {
     return () => {
       active = false
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membership, tripsClient, tripId])
 
   const phase: TripPhase | null = locallyEnded ? 'ended' : (trip?.phase ?? null)
