@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 
 import type { LivePlace, SyncClient, SyncClientStatus } from '@trippy/sync'
 import { DesignSystemProvider } from '../../../design-system'
@@ -177,6 +177,26 @@ describe('tela da viagem e lugares locais', () => {
     await waitFor(() =>
       expect(screen.getByTestId('place-visit-cafe-do-porto')).toHaveTextContent('Eu fui'),
     )
+  })
+
+  it('sync em segundo plano atualiza a lista no lugar, sem voltar a carregamento', async () => {
+    const fake = createClient()
+    const screen = await renderScreen(fake.client)
+    expect(await screen.findByTestId('place-cafe-do-porto')).toBeOnTheScreen()
+
+    let release: (places: LivePlace[]) => void = () => undefined
+    jest
+      .mocked(fake.client.listPlaces)
+      .mockImplementationOnce(() => new Promise<LivePlace[]>((resolve) => (release = resolve)))
+    const subscribed = jest.mocked(fake.client.subscribe).mock.calls.at(-1)?.[0]
+    await act(async () => subscribed?.())
+
+    expect(screen.queryByTestId('trip-places-loading')).not.toBeOnTheScreen()
+    expect(screen.getByTestId('place-cafe-do-porto')).toBeOnTheScreen()
+
+    await act(async () => release([createPlace(), createPlace({ id: 'place-9', name: 'Museu' })]))
+    expect(await screen.findByTestId('place-museu')).toBeOnTheScreen()
+    expect(screen.queryByTestId('trip-places-loading')).not.toBeOnTheScreen()
   })
 
   it('ordena por quero ir (mais antigo em empate) e alterna a reação', async () => {
