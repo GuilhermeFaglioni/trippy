@@ -120,30 +120,34 @@ export function TripPlacesScreen({
   const testIds = useMemo(() => createTestIdByPlace(places), [places])
   const sortedPlaces = useMemo(() => [...places].sort(comparePlacesByInterest), [places])
 
-  const loadPlaces = useCallback(async () => {
-    if (client === null || !tripId) {
-      setIsLoading(false)
-      setPlaces([])
-      return
-    }
+  const loadPlaces = useCallback(
+    async (showLoading = false) => {
+      if (client === null || !tripId) {
+        setIsLoading(false)
+        setPlaces([])
+        return
+      }
 
-    setIsLoading(true)
-    setScreenError(null)
-    try {
-      setPlaces(await client.listPlaces(tripId))
-    } catch (loadError) {
-      setScreenError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Não foi possível carregar os lugares salvos neste aparelho.',
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }, [client, tripId])
+      // Só a primeira carga mostra spinner; sync em segundo plano atualiza no lugar.
+      if (showLoading) setIsLoading(true)
+      setScreenError(null)
+      try {
+        setPlaces(await client.listPlaces(tripId))
+      } catch (loadError) {
+        setScreenError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Não foi possível carregar os lugares salvos neste aparelho.',
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [client, tripId],
+  )
 
   useEffect(() => {
-    void loadPlaces()
+    void loadPlaces(true)
     if (client === null) return
     return client.subscribe(() => void loadPlaces())
   }, [client, loadPlaces])
@@ -325,7 +329,7 @@ export function TripPlacesScreen({
                       params: { id: tripId, placeId: place.id },
                     })
                   }
-                  onRefresh={loadPlaces}
+                  onRefresh={() => loadPlaces()}
                   onShowAddress={onShowAddress}
                 />
               )
