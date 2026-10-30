@@ -12,7 +12,7 @@ const mockSyncNow = jest.fn<Promise<void>, []>()
 const mockRememberTripId = jest.fn()
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace }),
+  useRouter: () => ({ replace: mockReplace, back: jest.fn() }),
 }))
 
 jest
@@ -55,9 +55,8 @@ async function renderScreen() {
 async function fillValidTrip(screen: Awaited<ReturnType<typeof renderScreen>>) {
   await fireEvent.changeText(screen.getByTestId('new-trip-name'), 'Férias em Recife')
   await fireEvent.changeText(screen.getByTestId('new-trip-destination'), 'Recife')
-  await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '10/02/2027')
-  await fireEvent.changeText(screen.getByTestId('new-trip-end-date'), '14/02/2027')
-  await fireEvent.changeText(screen.getByTestId('new-trip-timezone'), 'America/Recife')
+  await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '10 fev 2027')
+  await fireEvent.changeText(screen.getByTestId('new-trip-end-date'), '14 fev 2027')
 }
 
 describe('tela Nova viagem', () => {
@@ -65,15 +64,7 @@ describe('tela Nova viagem', () => {
     jest.clearAllMocks()
   })
 
-  it('pré-preenche o fuso do aparelho', async () => {
-    const screen = await renderScreen()
-
-    expect(screen.getByTestId('new-trip-timezone').props.value).toBe(
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-    )
-  })
-
-  it('valida campos obrigatórios e datas no formato DD/MM/AAAA', async () => {
+  it('valida campos obrigatórios e datas inexistentes', async () => {
     mockRequest.mockResolvedValue(new Response(JSON.stringify({ trip }), { status: 201 }))
     const screen = await renderScreen()
     await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '31/02/2027')
@@ -81,30 +72,35 @@ describe('tela Nova viagem', () => {
 
     expect(await screen.findByText('Informe o nome da viagem.')).toBeOnTheScreen()
     expect(screen.getByText('Informe o destino.')).toBeOnTheScreen()
-    expect(screen.getAllByText('Informe uma data válida no formato DD/MM/AAAA.')).toHaveLength(2)
+    expect(screen.getAllByText('Informe uma data válida, como 12 out 2026.')).toHaveLength(2)
     expect(mockRequest).not.toHaveBeenCalled()
   })
 
-  it('valida ordem das datas e fuso IANA', async () => {
+  it('valida a ordem das datas', async () => {
     const screen = await renderScreen()
     await fillValidTrip(screen)
-    await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '15/02/2027')
-    await fireEvent.changeText(screen.getByTestId('new-trip-timezone'), 'Mars/Olympus')
+    await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '15 fev 2027')
     await fireEvent.press(screen.getByTestId('new-trip-submit'))
 
     expect(
-      await screen.findByText('A data de volta deve ser igual ou posterior à data de ida.'),
+      await screen.findByText('A volta deve ser no mesmo dia da ida ou depois.'),
     ).toBeOnTheScreen()
-    expect(screen.getByText('Informe um fuso horário IANA válido.')).toBeOnTheScreen()
     expect(mockRequest).not.toHaveBeenCalled()
+  })
+
+  it('avisa que a capa ainda não é enviada', async () => {
+    const screen = await renderScreen()
+
+    await fireEvent.press(screen.getByTestId('new-trip-cover'))
+    expect(screen.getByTestId('new-trip-cover-hint')).toBeOnTheScreen()
   })
 
   it('converte datas para ISO e volta à home após criar', async () => {
     mockRequest.mockResolvedValue(new Response(JSON.stringify({ trip }), { status: 201 }))
     const screen = await renderScreen()
     await fillValidTrip(screen)
-    await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '27/02/2028')
-    await fireEvent.changeText(screen.getByTestId('new-trip-end-date'), '29/02/2028')
+    await fireEvent.changeText(screen.getByTestId('new-trip-start-date'), '27 fev 2028')
+    await fireEvent.changeText(screen.getByTestId('new-trip-end-date'), '29 fev 2028')
     await fireEvent.press(screen.getByTestId('new-trip-submit'))
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/'))
@@ -118,7 +114,7 @@ describe('tela Nova viagem', () => {
         destination: 'Recife',
         startDate: '2028-02-27',
         endDate: '2028-02-29',
-        timezone: 'America/Recife',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }),
     })
   })
@@ -126,11 +122,7 @@ describe('tela Nova viagem', () => {
   it('mostra mensagem de erro retornada pela API', async () => {
     mockRequest.mockResolvedValue(
       new Response(
-        JSON.stringify({
-          error: 'invalid_trip',
-          message: 'O fuso horário informado não é válido.',
-          fields: { timezone: 'Fuso inválido.' },
-        }),
+        JSON.stringify({ error: 'invalid_trip', message: 'Não foi possível salvar agora.' }),
         { status: 400 },
       ),
     )
@@ -138,7 +130,9 @@ describe('tela Nova viagem', () => {
     await fillValidTrip(screen)
     await fireEvent.press(screen.getByTestId('new-trip-submit'))
 
-    expect(await screen.findByText('O fuso horário informado não é válido.')).toBeOnTheScreen()
+    expect(await screen.findByTestId('new-trip-api-error')).toHaveAccessibleName(
+      /Não foi possível salvar agora\./,
+    )
     expect(mockReplace).not.toHaveBeenCalled()
   })
 })

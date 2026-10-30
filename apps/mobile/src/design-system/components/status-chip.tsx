@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native'
 import { useTheme } from '../theme-provider'
 import { Text } from './text'
 
-export type StatusChipTone = 'day' | 'suggested' | 'none'
+export type StatusChipTone = 'day' | 'suggested' | 'none' | 'live'
 
 export type StatusChipProps = {
   tone: StatusChipTone
@@ -19,6 +19,7 @@ export function StatusChip({ tone, label, onPress, testID }: StatusChipProps) {
   const palette = {
     day: { background: colors.forestTint, foreground: colors.forestInk },
     suggested: { background: colors.terracottaTint, foreground: colors.terracottaInk },
+    live: { background: colors.terracotta, foreground: colors.onTerracotta },
     none: { background: colors.sand, foreground: colors.inkMuted },
   }[tone]
 

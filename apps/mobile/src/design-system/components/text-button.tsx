@@ -6,14 +6,26 @@ import { Text } from './text'
 export type TextButtonProps = {
   label: string
   onPress: () => void
+  /** `onForest`: texto claro sobre fundo forest. */
+  tone?: 'ink' | 'onForest'
+  disabled?: boolean
   accessibilityHint?: string
   locale?: string
   testID?: string
 }
 
-/** Ação de texto sem caixa (ex.: Cancelar no topo de um fluxo modal). */
-export function TextButton({ label, onPress, accessibilityHint, locale, testID }: TextButtonProps) {
+/** Ação de texto sem caixa ("Cancelar", "Entrar com e-mail"): 44px de altura, sem borda. */
+export function TextButton({
+  label,
+  onPress,
+  tone = 'ink',
+  disabled = false,
+  accessibilityHint,
+  locale,
+  testID,
+}: TextButtonProps) {
   const { colors, spacing } = useTheme()
+  const color = tone === 'onForest' ? colors.onForest : colors.ink
 
   return (
     <Pressable
@@ -21,15 +33,19 @@ export function TextButton({ label, onPress, accessibilityHint, locale, testID }
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={{
+      style={({ pressed }) => ({
         alignItems: 'center',
         alignSelf: 'flex-start',
         justifyContent: 'center',
         minHeight: spacing.targetMin,
-      }}
+        opacity: pressed || disabled ? 0.6 : 1,
+        ...(tone === 'onForest' ? { alignSelf: 'stretch' } : {}),
+      })}
     >
-      <Text variant="fieldInput" color={colors.ink} locale={locale}>
+      <Text variant="fieldInput" color={color} locale={locale} style={{ textAlign: 'center' }}>
         {label}
       </Text>
     </Pressable>
