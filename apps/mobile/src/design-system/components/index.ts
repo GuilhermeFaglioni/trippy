@@ -8,13 +8,25 @@ export {
   type AvatarStackProps,
 } from './avatar'
 export { Button, type ButtonProps, type ButtonVariant } from './button'
+export { CoverPicker, type CoverPickerProps } from './cover-picker'
+export { DecorTile, type DecorTileProps } from './decor-tile'
+export { TrippyLogo, type TrippyLogoProps } from './logo'
+export { TextButton, type TextButtonProps } from './text-button'
+export {
+  MemoryTile,
+  TripRow,
+  type MemoryTileProps,
+  type TripCoverTone,
+  type TripRowProps,
+} from './trip-row'
 export { CircleButton, type CircleButtonProps } from './circle-button'
 export { PersonChip, type PersonChipProps } from './person-chip'
 export { PhotoTile, type PhotoTileProps } from './photo-tile'
+export { RichText, type RichTextProps, type RichTextSegment } from './rich-text'
 export { StarRating, type StarRatingProps } from './star-rating'
 export { TextLink, type TextLinkProps } from './text-link'
 export { Card, Eyebrow, HighlightCard } from './card'
-export { derivePressedColor } from './color'
+export { derivePressedColor, withAlpha } from './color'
 export { DaySheet, type DaySheetOption, type DaySheetProps } from './day-sheet'
 export { FilterChip, type FilterChipProps } from './filter-chip'
 export { Icon, iconSet, type IconName, type IconProps } from './icon'
@@ -26,7 +38,6 @@ export { PlaceRow, type PlaceRowActions, type PlaceRowProps } from './place-row'
 export { ScreenHeader, type ScreenHeaderProps } from './screen-header'
 export { StatusChip, type StatusChipProps, type StatusChipTone } from './status-chip'
 export { TabBar, tripTabs, type TabBarItem, type TabBarProps } from './tab-bar'
-export { TextButton, type TextButtonProps } from './text-button'
 export { TextField, type TextFieldProps } from './text-field'
 export { Text, textStyles, type TextProps, type TextVariant } from './text'
 export {

@@ -1,49 +1,36 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Platform, ScrollView, View } from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Share } from 'react-native'
 
-import { canRemoveMember, canSetMemberRole } from '@trippy/domain'
 import type { LiveMember } from '@trippy/sync'
-import { Button, Card, Notice } from '../../components'
-import {
-  createTypographyTokens,
-  normalizeFontPlatform,
-  TypographyText,
-  useTheme,
-} from '../../design-system'
 import { useSession } from '../auth/session-provider'
+import { getApiBaseUrl } from '../diagnostics/health-client'
+import { createInviteClient, getInviteErrorMessage } from '../invites/invite-client'
 import { useSync } from '../sync/sync-provider'
-
-/** TestIDs Maestro: grupo-membro-<userId>-papel, grupo-membro-<userId>-promover/-rebaixar/-remover. */
-const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
+import { MembersView } from './members-view'
 
 type MembersScreenProps = {
   tripId: string
+  tripName?: string
   /** O título "Grupo · N" fica no cabeçalho da viagem. */
   onMemberCount?: (count: number) => void
   /** Ajustes da viagem (datas, encerrar), só para o organizador. */
   onOpenSettings?: () => void
 }
 
-const ROLE_LABELS: Record<LiveMember['role'], string> = {
-  organizer: 'Organizador',
-  coorganizer: 'Coorganizador',
-  member: 'Membro',
-}
-
-function memberName(member: LiveMember, currentUserId: string | undefined): string {
-  if (member.userId === currentUserId) return 'Você'
-  return `Participante ${member.userId.slice(-6)}`
-}
-
-export function MembersScreen({ tripId, onMemberCount, onOpenSettings }: MembersScreenProps) {
-  const theme = useTheme()
-  const { session } = useSession()
+export function MembersScreen({
+  tripId,
+  tripName,
+  onMemberCount,
+  onOpenSettings,
+}: MembersScreenProps) {
+  const { session, request } = useSession()
   const { client } = useSync()
+  const inviteClient = useMemo(() => createInviteClient(request), [request])
   const [members, setMembers] = useState<LiveMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [busyUserId, setBusyUserId] = useState<string | null>(null)
+  const [isInviting, setIsInviting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const actor = members.find((member) => member.userId === session?.user.id)
 
   const loadMembers = useCallback(
     async (showLoading = false) => {
@@ -78,6 +65,25 @@ export function MembersScreen({ tripId, onMemberCount, onOpenSettings }: Members
     if (client === null) return
     return client.subscribe(() => void loadMembers())
   }, [client, loadMembers])
+
+  const sendInvite = useCallback(async () => {
+    setError(null)
+    setIsInviting(true)
+    try {
+      const token = await inviteClient.create(tripId)
+      const baseUrl = getApiBaseUrl().replace(/\/+$/u, '')
+      await Share.share({
+        message: `Entre na viagem ${tripName ?? ''} no Trippy: ${baseUrl}/i/${token}`.replace(
+          /\s{2,}/gu,
+          ' ',
+        ),
+      })
+    } catch (inviteError) {
+      setError(getInviteErrorMessage(inviteError))
+    } finally {
+      setIsInviting(false)
+    }
+  }, [inviteClient, tripId, tripName])
 
   const runMemberMutation = useCallback(
     async (
@@ -121,99 +127,17 @@ export function MembersScreen({ tripId, onMemberCount, onOpenSettings }: Members
   )
 
   return (
-    <ScrollView
-      testID="tela-grupo"
-      contentContainerStyle={{ gap: theme.spacing.space4, padding: theme.spacing.space5 }}
-    >
-      {error ? <Notice testID="grupo-erro" tone="danger" message={error} /> : null}
-      {isLoading ? (
-        <View
-          accessibilityRole="progressbar"
-          testID="grupo-carregando"
-          style={{ alignItems: 'center' }}
-        >
-          <ActivityIndicator color={theme.colors.forest} />
-        </View>
-      ) : members.length === 0 ? (
-        <Notice
-          testID="grupo-vazio"
-          message="As pessoas da viagem aparecem aqui quando a sincronização local terminar."
-        />
-      ) : (
-        members.map((member) => {
-          const target = { userId: member.userId, role: member.role }
-          const canChangeRole = actor !== undefined && canSetMemberRole(actor, target)
-          const canRemove = actor !== undefined && canRemoveMember(actor, target)
-          const busy = busyUserId === member.userId
-          return (
-            <Card key={member.userId} testID={`grupo-membro-${member.userId}`}>
-              <View style={{ gap: theme.spacing.space3 }}>
-                <View style={{ gap: theme.spacing.space1 }}>
-                  <TypographyText
-                    family="display"
-                    style={[typography.titleM, { color: theme.colors.ink }]}
-                  >
-                    {memberName(member, session?.user.id)}
-                  </TypographyText>
-                  <TypographyText
-                    family="sans"
-                    testID={`grupo-membro-${member.userId}-papel`}
-                    style={{ color: theme.colors.forestInk }}
-                  >
-                    {ROLE_LABELS[member.role]}
-                  </TypographyText>
-                </View>
-
-                {canChangeRole || canRemove ? (
-                  <View style={{ gap: theme.spacing.space2 }}>
-                    {canChangeRole ? (
-                      <Button
-                        label={
-                          member.role === 'coorganizer' ? 'Voltar a membro' : 'Tornar coorganizador'
-                        }
-                        variant="secondary"
-                        disabled={busy}
-                        onPress={() =>
-                          void setRole(
-                            member,
-                            member.role === 'coorganizer' ? 'member' : 'coorganizer',
-                          )
-                        }
-                        testID={`grupo-membro-${member.userId}-${member.role === 'coorganizer' ? 'rebaixar' : 'promover'}`}
-                      />
-                    ) : null}
-                    {canRemove ? (
-                      <Button
-                        label="Remover"
-                        variant="secondary"
-                        disabled={busy}
-                        onPress={() => void remove(member)}
-                        testID={`grupo-membro-${member.userId}-remover`}
-                      />
-                    ) : null}
-                  </View>
-                ) : null}
-              </View>
-            </Card>
-          )
-        })
-      )}
-
-      {actor?.role === 'organizer' && onOpenSettings ? (
-        <Button
-          label="Ajustes da viagem"
-          variant="secondary"
-          onPress={onOpenSettings}
-          testID="grupo-ajustes"
-        />
-      ) : null}
-
-      {actor?.role === 'member' ? (
-        <Notice
-          testID="grupo-somente-leitura"
-          message="Só o organizador e os coorganizadores podem gerenciar o grupo."
-        />
-      ) : null}
-    </ScrollView>
+    <MembersView
+      members={members}
+      currentUserId={session?.user.id}
+      isLoading={isLoading}
+      busyUserId={busyUserId}
+      isInviting={isInviting}
+      error={error}
+      onInvite={() => void sendInvite()}
+      onSetRole={(member, role) => void setRole(member, role)}
+      onRemove={(member) => void remove(member)}
+      onOpenSettings={onOpenSettings}
+    />
   )
 }

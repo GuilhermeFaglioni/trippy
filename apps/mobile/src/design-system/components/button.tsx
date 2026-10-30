@@ -2,15 +2,18 @@ import { useState } from 'react'
 import { ActivityIndicator, Pressable, View } from 'react-native'
 
 import { useTheme } from '../theme-provider'
-import { derivePressedColor } from './color'
+import { derivePressedColor, withAlpha } from './color'
 import { FocusRing } from './focus-ring'
 import { Icon, type IconName } from './icon'
 import { toNativeShadow } from './shadow'
 import { Text } from './text'
 
 /** `inverse`: botão claro (`on-forest`, texto escuro) sobre o card de destaque nos dois temas. */
+/** `outlineInverse`: contorno claro sobre fundo forest (login). */
+/** `danger`: secundário destrutivo, borda e texto em `danger` (Remover do grupo). */
 /** `forest`: ação principal sobre fundo branco em tela cheia (cartão para mostrar). */
-export type ButtonVariant = 'primary' | 'secondary' | 'fab' | 'inverse' | 'forest'
+export type ButtonVariant =
+  'primary' | 'secondary' | 'fab' | 'inverse' | 'outlineInverse' | 'forest' | 'danger'
 
 export type ButtonProps = {
   label: string
@@ -24,6 +27,8 @@ export type ButtonProps = {
   tone?: 'default' | 'favorite'
   disabled?: boolean
   loading?: boolean
+  /** Altura mínima, quando a tela pede mais que o padrão da variante (login: 54). */
+  minHeight?: number
   /** Largura total. Padrão: só o principal. */
   block?: boolean
   accessibilityLabel?: string
@@ -41,7 +46,11 @@ export function Button({
   tone = 'default',
   disabled = false,
   loading = false,
-  block = variant === 'primary' || variant === 'inverse' || variant === 'forest',
+  minHeight,
+  block = variant === 'primary' ||
+    variant === 'inverse' ||
+    variant === 'outlineInverse' ||
+    variant === 'forest',
   accessibilityLabel,
   accessibilityHint,
   locale,
@@ -52,24 +61,29 @@ export function Button({
   const isDisabled = disabled || loading
   const isToggle = variant === 'secondary' && pressed !== undefined
   const isMarked = isToggle && pressed === true
+  const tall = variant === 'outlineInverse' || (variant === 'inverse' && minHeight !== undefined)
   const isFavoriteMarked = isMarked && tone === 'favorite'
   const isFilledMarked = isMarked && !isFavoriteMarked
   const borderRadius =
-    variant === 'secondary' || variant === 'inverse' ? radius.radiusSm : radius.radiusMd
+    (variant === 'secondary' || variant === 'inverse' || variant === 'danger') && !tall
+      ? radius.radiusSm
+      : radius.radiusMd
 
   const foreground = disabled
     ? colors.inkMuted
-    : variant === 'secondary'
-      ? isFilledMarked
-        ? colors.onForest
-        : isFavoriteMarked
-          ? colors.terracottaText
-          : colors.ink
-      : variant === 'inverse'
-        ? colors.onMustard
-        : variant === 'forest'
+    : variant === 'danger'
+      ? colors.danger
+      : variant === 'secondary'
+        ? isFilledMarked
           ? colors.onForest
-          : colors.onTerracotta
+          : isFavoriteMarked
+            ? colors.terracottaText
+            : colors.ink
+        : variant === 'inverse'
+          ? colors.onMustard
+          : variant === 'outlineInverse' || variant === 'forest'
+            ? colors.onForest
+            : colors.onTerracotta
 
   return (
     <View style={{ alignSelf: block ? 'stretch' : 'flex-start' }}>
@@ -92,32 +106,50 @@ export function Button({
           const terracotta = touching ? derivePressedColor(colors.terracotta) : colors.terracotta
           const backgroundColor = disabled
             ? colors.sand
-            : variant === 'secondary'
+            : variant === 'secondary' || variant === 'danger'
               ? isFilledMarked
                 ? colors.forest
                 : touching
                   ? colors.sand
                   : colors.surface
-              : variant === 'forest'
+              : variant === 'outlineInverse'
                 ? touching
-                  ? derivePressedColor(colors.forest)
-                  : colors.forest
-                : variant === 'inverse'
+                  ? withAlpha(colors.onForest, 0.12)
+                  : 'transparent'
+                : variant === 'forest'
                   ? touching
-                    ? derivePressedColor(colors.onForest)
-                    : colors.onForest
-                  : terracotta
-          const bordered = variant === 'secondary' && !disabled
+                    ? derivePressedColor(colors.forest)
+                    : colors.forest
+                  : variant === 'inverse'
+                    ? touching
+                      ? derivePressedColor(colors.onForest)
+                      : colors.onForest
+                    : terracotta
+          const bordered =
+            (variant === 'secondary' || variant === 'outlineInverse' || variant === 'danger') &&
+            !disabled
 
           return {
             alignItems: 'center',
             backgroundColor,
-            borderColor: isFilledMarked ? colors.forest : colors.lineStrong,
+            borderColor:
+              variant === 'outlineInverse'
+                ? withAlpha(colors.onForest, 0.4)
+                : variant === 'danger'
+                  ? colors.danger
+                  : isFilledMarked
+                    ? colors.forest
+                    : colors.lineStrong,
             borderRadius,
             borderWidth: bordered ? 1 : 0,
             justifyContent: 'center',
             minHeight:
-              variant === 'secondary' ? spacing.targetMin : variant === 'inverse' ? 48 : 56,
+              minHeight ??
+              (variant === 'secondary' || variant === 'danger'
+                ? spacing.targetMin
+                : variant === 'inverse'
+                  ? 48
+                  : 56),
             paddingHorizontal: spacing.space5,
             paddingVertical: spacing.space2,
             ...(variant === 'fab' && !disabled ? toNativeShadow(shadow.shadowFab) : {}),
@@ -138,7 +170,9 @@ export function Button({
           ) : null}
           <Text
             variant={
-              variant === 'secondary' || variant === 'inverse' ? 'buttonSecondary' : 'button'
+              variant === 'secondary' || variant === 'inverse' || variant === 'danger'
+                ? 'buttonSecondary'
+                : 'button'
             }
             color={foreground}
             locale={locale}

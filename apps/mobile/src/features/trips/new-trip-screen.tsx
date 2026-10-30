@@ -1,29 +1,31 @@
 import { useCallback, useState } from 'react'
-import { Platform, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button, Notice, TextField, TrippyWordmark } from '../../components'
 import {
-  createTypographyTokens,
-  normalizeFontPlatform,
-  TypographyText,
+  Button,
+  CoverPicker,
+  Notice,
+  Text,
+  TextButton,
+  TextField,
   useTheme,
 } from '../../design-system'
-import { getTripsErrorMessage, useTripsClient, type CreateTripInput } from './trips-client'
 import { useSync } from '../sync/sync-provider'
-
-const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
+import { parseDateInput } from './trip-format'
+import { getTripsErrorMessage, useTripsClient, type CreateTripInput } from './trips-client'
 
 type TripFormValues = {
   name: string
   destination: string
   startDate: string
   endDate: string
-  timezone: string
 }
 
 type TripFormErrors = Partial<Record<keyof TripFormValues, string>>
+
+const DATE_ERROR = 'Informe uma data válida, como 12 out 2026.'
 
 function deviceTimeZone(): string {
   try {
@@ -33,50 +35,15 @@ function deviceTimeZone(): string {
   }
 }
 
-function dateInputToIso(value: string): string | null {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim())
-  if (!match) return null
-
-  const [, dayText, monthText, yearText] = match
-  const day = Number(dayText)
-  const month = Number(monthText)
-  const year = Number(yearText)
-  if (year < 1) return null
-
-  const date = new Date(0)
-  date.setUTCFullYear(year, month - 1, day)
-  if (
-    date.getUTCFullYear() !== year ||
-    date.getUTCMonth() !== month - 1 ||
-    date.getUTCDate() !== day
-  ) {
-    return null
-  }
-
-  return `${yearText}-${monthText}-${dayText}`
-}
-
-function isValidTimeZone(value: string): boolean {
-  if (!value.trim()) return false
-
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: value.trim() })
-    return true
-  } catch {
-    return false
-  }
-}
-
-function validateTrip(values: TripFormValues): {
-  errors: TripFormErrors
-  input: CreateTripInput | null
-} {
+function validateTrip(
+  values: TripFormValues,
+  timezone: string,
+): { errors: TripFormErrors; input: CreateTripInput | null } {
   const errors: TripFormErrors = {}
   const name = values.name.trim()
   const destination = values.destination.trim()
-  const startDate = dateInputToIso(values.startDate)
-  const endDate = dateInputToIso(values.endDate)
-  const timezone = values.timezone.trim()
+  const startDate = parseDateInput(values.startDate)
+  const endDate = parseDateInput(values.endDate)
 
   if (!name) errors.name = 'Informe o nome da viagem.'
   else if (name.length > 120) errors.name = 'Use até 120 caracteres no nome da viagem.'
@@ -84,23 +51,17 @@ function validateTrip(values: TripFormValues): {
   if (!destination) errors.destination = 'Informe o destino.'
   else if (destination.length > 120) errors.destination = 'Use até 120 caracteres no destino.'
 
-  if (!startDate) errors.startDate = 'Informe uma data válida no formato DD/MM/AAAA.'
-  if (!endDate) errors.endDate = 'Informe uma data válida no formato DD/MM/AAAA.'
+  if (!startDate) errors.startDate = DATE_ERROR
+  if (!endDate) errors.endDate = DATE_ERROR
   if (startDate && endDate && endDate < startDate) {
-    errors.endDate = 'A data de volta deve ser igual ou posterior à data de ida.'
+    errors.endDate = 'A volta deve ser no mesmo dia da ida ou depois.'
   }
-
-  if (!timezone) errors.timezone = 'Informe o fuso horário da viagem.'
-  else if (!isValidTimeZone(timezone)) errors.timezone = 'Informe um fuso horário IANA válido.'
 
   if (Object.keys(errors).length > 0 || !startDate || !endDate) {
     return { errors, input: null }
   }
 
-  return {
-    errors,
-    input: { name, destination, startDate, endDate, timezone },
-  }
+  return { errors, input: { name, destination, startDate, endDate, timezone } }
 }
 
 export function NewTripScreen() {
@@ -108,15 +69,16 @@ export function NewTripScreen() {
   const router = useRouter()
   const client = useTripsClient()
   const { client: syncClient, rememberTripId } = useSync()
-  const [values, setValues] = useState<TripFormValues>(() => ({
+  const [timezone] = useState(deviceTimeZone)
+  const [values, setValues] = useState<TripFormValues>({
     name: '',
     destination: '',
     startDate: '',
     endDate: '',
-    timezone: deviceTimeZone(),
-  }))
+  })
   const [errors, setErrors] = useState<TripFormErrors>({})
   const [apiError, setApiError] = useState<string | null>(null)
+  const [coverHint, setCoverHint] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const updateField = useCallback((field: keyof TripFormValues, value: string) => {
@@ -126,7 +88,7 @@ export function NewTripScreen() {
   }, [])
 
   const submit = useCallback(async () => {
-    const validation = validateTrip(values)
+    const validation = validateTrip(values, timezone)
     setErrors(validation.errors)
     setApiError(null)
     if (!validation.input) return
@@ -148,37 +110,54 @@ export function NewTripScreen() {
     } finally {
       setIsSubmitting(false)
     }
-  }, [client, rememberTripId, router, syncClient, values])
+  }, [client, rememberTripId, router, syncClient, timezone, values])
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.ground }}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          gap: theme.spacing.space5,
-          padding: theme.spacing.space5,
-        }}
+    <SafeAreaView
+      testID="new-trip-screen"
+      style={{ flex: 1, backgroundColor: theme.colors.ground }}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
       >
-        <TrippyWordmark />
-        <View style={{ gap: theme.spacing.space2 }}>
-          <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
-            Nova viagem
-          </TypographyText>
-          <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-            Preencha os dados para criar sua viagem.
-          </TypographyText>
-        </View>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={{
+            flexGrow: 1,
+            gap: theme.spacing.space5,
+            paddingBottom: theme.spacing.space4,
+            paddingHorizontal: theme.spacing.space5,
+            paddingTop: theme.spacing.space1,
+          }}
+        >
+          <TextButton label="Cancelar" onPress={() => router.back()} testID="new-trip-back" />
+          <Text variant="titleL" color={theme.colors.ink} accessibilityRole="header">
+            Pra onde vocês vão?
+          </Text>
 
-        {apiError ? (
-          <Notice
-            testID="new-trip-api-error"
-            tone="danger"
-            title="Não foi possível criar a viagem."
-            message={apiError}
+          <CoverPicker
+            label="Adicionar capa (opcional · dá para trocar depois)"
+            onPress={() => setCoverHint(true)}
+            testID="new-trip-cover"
           />
-        ) : null}
+          {coverHint ? (
+            <Notice
+              testID="new-trip-cover-hint"
+              tone="offline"
+              segments={['Capas chegam numa próxima versão. Por enquanto a viagem usa uma cor.']}
+            />
+          ) : null}
 
-        <View style={{ gap: theme.spacing.space4 }}>
+          {apiError ? (
+            <Notice
+              testID="new-trip-api-error"
+              tone="change"
+              segments={[{ strong: 'Não foi possível criar a viagem.' }, ' ', apiError]}
+            />
+          ) : null}
+
           <TextField
             label="Nome da viagem"
             value={values.name}
@@ -193,56 +172,48 @@ export function NewTripScreen() {
             value={values.destination}
             onChangeText={(value) => updateField('destination', value)}
             error={errors.destination}
+            placeholder="Cidade ou país"
             maxLength={120}
             autoCapitalize="words"
             testID="new-trip-destination"
           />
-          <TextField
-            label="Data de ida"
-            value={values.startDate}
-            onChangeText={(value) => updateField('startDate', value)}
-            error={errors.startDate}
-            placeholder="DD/MM/AAAA"
-            keyboardType="numbers-and-punctuation"
-            testID="new-trip-start-date"
-          />
-          <TextField
-            label="Data de volta"
-            value={values.endDate}
-            onChangeText={(value) => updateField('endDate', value)}
-            error={errors.endDate}
-            placeholder="DD/MM/AAAA"
-            keyboardType="numbers-and-punctuation"
-            testID="new-trip-end-date"
-          />
-          <TextField
-            label="Fuso horário"
-            value={values.timezone}
-            onChangeText={(value) => updateField('timezone', value)}
-            error={errors.timezone}
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="America/Sao_Paulo"
-            testID="new-trip-timezone"
-          />
-        </View>
+          <View style={{ flexDirection: 'row', gap: theme.spacing.space3 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <TextField
+                label="Ida"
+                value={values.startDate}
+                onChangeText={(value) => updateField('startDate', value)}
+                error={errors.startDate}
+                placeholder="12 out 2026"
+                autoCorrect={false}
+                testID="new-trip-start-date"
+              />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <TextField
+                label="Volta"
+                value={values.endDate}
+                onChangeText={(value) => updateField('endDate', value)}
+                error={errors.endDate}
+                placeholder="24 out 2026"
+                autoCorrect={false}
+                testID="new-trip-end-date"
+              />
+            </View>
+          </View>
+          <Text variant="fieldHelp" color={theme.colors.inkMuted} style={{ lineHeight: 19 }}>
+            A viagem muda de fase sozinha pelas datas: planejando, em viagem e encerrada.
+          </Text>
 
-        <View style={{ gap: theme.spacing.space3 }}>
+          <View style={{ flexGrow: 1 }} />
           <Button
             label="Criar viagem"
             onPress={() => void submit()}
             loading={isSubmitting}
             testID="new-trip-submit"
           />
-          <Button
-            label="Voltar"
-            onPress={() => router.back()}
-            variant="secondary"
-            disabled={isSubmitting}
-            testID="new-trip-back"
-          />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }

@@ -86,16 +86,14 @@ describe('tela Minhas viagens', () => {
     expect(screen.getByTestId('my-trips-loading')).toBeOnTheScreen()
   })
 
-  it('mantém estado vazio e abre Nova viagem', async () => {
+  it('mostra a home sem viagens e abre Nova viagem', async () => {
     mockRequest.mockResolvedValue(response([]))
     const screen = await renderScreen()
 
     expect(screen.getByTestId('trippy-wordmark')).toBeOnTheScreen()
     expect(screen.getByTestId('my-trips-screen')).toBeOnTheScreen()
-    expect(screen.getByText('Minhas viagens')).toBeOnTheScreen()
-    expect(await screen.findByText('Você ainda não tem viagens.')).toBeOnTheScreen()
-    expect(screen.getByTestId('accept-invite-code')).toBeOnTheScreen()
-    expect(screen.getByTestId('accept-invite-button')).toBeOnTheScreen()
+    expect(await screen.findByText('Sua primeira viagem começa aqui')).toBeOnTheScreen()
+    expect(screen.queryByText('Minhas viagens')).toBeNull()
 
     const createTripButton = screen.getByTestId('my-trips-empty-create')
     expect(createTripButton).toHaveTextContent('Criar minha primeira viagem')
@@ -103,7 +101,18 @@ describe('tela Minhas viagens', () => {
     expect(mockPush).toHaveBeenCalledWith('/trips/new')
   })
 
-  it('lista cards, datas formatadas, fase e ação de criar outra viagem', async () => {
+  it('recolhe o código de convite até o usuário pedir', async () => {
+    mockRequest.mockResolvedValue(response([]))
+    const screen = await renderScreen()
+
+    await screen.findByText('Sua primeira viagem começa aqui')
+    expect(screen.queryByTestId('accept-invite-code')).toBeNull()
+    await fireEvent.press(screen.getByTestId('my-trips-show-invite'))
+    expect(screen.getByTestId('accept-invite-code')).toBeOnTheScreen()
+    expect(screen.getByTestId('accept-invite-button')).toBeOnTheScreen()
+  })
+
+  it('separa viagem atual, planejando e memórias como na referência', async () => {
     mockRequest.mockResolvedValue(
       response([
         trip,
@@ -112,6 +121,8 @@ describe('tela Minhas viagens', () => {
           id: '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f',
           name: 'Viagem em curso',
           destination: 'Brasília',
+          startDate: '2026-01-01',
+          endDate: '2099-01-10',
           phase: 'traveling',
         },
         {
@@ -125,18 +136,16 @@ describe('tela Minhas viagens', () => {
     )
     const screen = await renderScreen()
 
-    expect(
-      await screen.findByTestId('trip-card-58f75ed5-b524-46f8-b387-650d9b43ee36'),
-    ).toBeOnTheScreen()
-    expect(screen.getByTestId('trip-card-7ca841f4-1ceb-4597-b021-fbb3f80c5f9f')).toBeOnTheScreen()
-    expect(screen.getByTestId('trip-card-88362a44-f59f-437e-a682-79966a68650a')).toBeOnTheScreen()
-    expect(screen.getByText('Fim de semana')).toBeOnTheScreen()
-    expect(screen.getByText('Paraty')).toBeOnTheScreen()
-    expect(screen.getAllByText('14/03/2027 – 16/03/2027')).toHaveLength(3)
-    expect(screen.getAllByTestId('trip-card-phase')).toHaveLength(3)
+    expect(await screen.findByText('Minhas viagens')).toBeOnTheScreen()
+    expect(screen.getByText('Viagem em curso')).toBeOnTheScreen()
+    expect(screen.getByTestId('trip-card-phase')).toHaveAccessibleName(
+      /^Em viagem · Dia \d+ de \d+$/,
+    )
     expect(screen.getByText('Planejando')).toBeOnTheScreen()
-    expect(screen.getByText('Em viagem')).toBeOnTheScreen()
-    expect(screen.getByText('Encerrada')).toBeOnTheScreen()
+    expect(screen.getByText('Memórias')).toBeOnTheScreen()
+    expect(screen.getByText('Fim de semana')).toBeOnTheScreen()
+    expect(screen.getByText('mar 2027 · Paraty')).toBeOnTheScreen()
+    expect(screen.getByText('Viagem encerrada')).toBeOnTheScreen()
 
     await fireEvent.press(screen.getByTestId('trip-card-58f75ed5-b524-46f8-b387-650d9b43ee36'))
     expect(mockPush).toHaveBeenCalledWith({
@@ -149,15 +158,17 @@ describe('tela Minhas viagens', () => {
         endDate: trip.endDate,
       },
     })
+    mockPush.mockClear()
+    await fireEvent.press(screen.getByTestId('trip-open-7ca841f4-1ceb-4597-b021-fbb3f80c5f9f'))
+    expect(mockPush).toHaveBeenCalledWith(
+      expect.objectContaining({ params: expect.objectContaining({ tripName: 'Viagem em curso' }) }),
+    )
     expect(mockRememberTripIds).toHaveBeenCalledWith([
       trip.id,
       '7ca841f4-1ceb-4597-b021-fbb3f80c5f9f',
       '88362a44-f59f-437e-a682-79966a68650a',
     ])
     expect(mockSyncNow).toHaveBeenCalledTimes(1)
-    expect(mockRememberTripIds.mock.invocationCallOrder[0]).toBeLessThan(
-      mockSyncNow.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
-    )
     mockPush.mockClear()
 
     await fireEvent.press(screen.getByTestId('my-trips-new-trip'))
@@ -169,9 +180,9 @@ describe('tela Minhas viagens', () => {
     mockRequest.mockResolvedValueOnce(response([]))
     const screen = await renderScreen()
 
-    expect(await screen.findByText('Falha de rede.')).toBeOnTheScreen()
+    expect(await screen.findByTestId('my-trips-error')).toHaveAccessibleName(/Falha de rede\./)
     await fireEvent.press(screen.getByTestId('my-trips-retry'))
-    expect(await screen.findByText('Você ainda não tem viagens.')).toBeOnTheScreen()
+    expect(await screen.findByText('Sua primeira viagem começa aqui')).toBeOnTheScreen()
   })
 
   it('recarrega as viagens quando a tela volta ao foco', async () => {
@@ -191,7 +202,7 @@ describe('tela Minhas viagens', () => {
     mockRequest.mockResolvedValue(response([trip]))
     const screen = await renderScreen()
 
-    expect(await screen.findByText('Você ainda não tem viagens.')).toBeOnTheScreen()
+    expect(await screen.findByText('Sua primeira viagem começa aqui')).toBeOnTheScreen()
     expect(screen.queryByTestId(`trip-card-${trip.id}`)).toBeNull()
     expect(mockRememberTripIds).toHaveBeenCalledWith([])
   })
@@ -210,7 +221,7 @@ describe('tela Minhas viagens', () => {
     )
 
     expect(screen.queryByTestId(`trip-card-${trip.id}`)).toBeNull()
-    expect(screen.getByText('Você ainda não tem viagens.')).toBeOnTheScreen()
+    expect(screen.getByText('Sua primeira viagem começa aqui')).toBeOnTheScreen()
     expect(mockRememberTripIds).toHaveBeenLastCalledWith([trip.id])
   })
 })

@@ -1,38 +1,29 @@
 import { useCallback, useState } from 'react'
-import { ActivityIndicator, Platform, ScrollView, View } from 'react-native'
+import { ActivityIndicator, ScrollView, View } from 'react-native'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button, Card, Notice, TrippyWordmark } from '../../components'
+import {
+  Avatar,
+  Button,
+  DecorTile,
+  HighlightCard,
+  MemoryTile,
+  Notice,
+  StatusChip,
+  Text,
+  TextButton,
+  TripRow,
+  TrippyLogo,
+  useTheme,
+  withAlpha,
+  type TripCoverTone,
+} from '../../design-system'
+import { useSession } from '../auth/session-provider'
 import { AcceptInviteForm } from '../invites/accept-invite-form'
 import { useSync } from '../sync/sync-provider'
-import {
-  createTypographyTokens,
-  normalizeFontPlatform,
-  TypographyText,
-  useTheme,
-} from '../../design-system'
-import {
-  getTripsErrorMessage,
-  useTripsClient,
-  type TripPhase,
-  type TripSummary,
-} from './trips-client'
-
-const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
-
-const PHASE_LABELS: Record<TripPhase, string> = {
-  planning: 'Planejando',
-  traveling: 'Em viagem',
-  ended: 'Encerrada',
-}
-
-function formatDate(isoDate: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate)
-  if (!match) return isoDate
-
-  return `${match[3]}/${match[2]}/${match[1]}`
-}
+import { formatDateRange, formatMonthYear, formatTripDay } from './trip-format'
+import { getTripsErrorMessage, useTripsClient, type TripSummary } from './trips-client'
 
 function withoutRemovedTrips(
   trips: readonly TripSummary[],
@@ -42,42 +33,77 @@ function withoutRemovedTrips(
   return trips.filter((trip) => !removed.has(trip.id))
 }
 
-function TripCard({ trip, onPress }: { trip: TripSummary; onPress: () => void }) {
+function coverTone(index: number): TripCoverTone {
+  return ((index % 4) + 1) as TripCoverTone
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   const theme = useTheme()
 
   return (
-    <Card
+    <View style={{ gap: 10 }}>
+      <Text variant="label" color={theme.colors.inkMuted} accessibilityRole="header">
+        {title}
+      </Text>
+      {children}
+    </View>
+  )
+}
+
+function HighlightTrip({ trip, onOpen }: { trip: TripSummary; onOpen: () => void }) {
+  const theme = useTheme()
+  const onForest = theme.colors.onForest
+
+  return (
+    <HighlightCard
       testID={`trip-card-${trip.id}`}
-      onPress={onPress}
-      accessibilityLabel={`${trip.name}, ${trip.destination}`}
-      accessibilityHint="Abre esta viagem."
+      style={{
+        borderRadius: theme.radius.radiusLg,
+        gap: 0,
+        justifyContent: 'space-between',
+        minHeight: 260,
+        overflow: 'hidden',
+        padding: theme.spacing.space5,
+      }}
     >
-      <View style={{ gap: theme.spacing.space2 }}>
-        <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
+      <View style={{ position: 'absolute', right: -40, top: -40 }}>
+        <DecorTile color={withAlpha(onForest, 0.16)} width={200} height={200} radius={100} />
+      </View>
+      <StatusChip
+        tone="live"
+        label={`Em viagem · ${formatTripDay(trip)}`}
+        testID="trip-card-phase"
+      />
+      <View>
+        <Text
+          variant="titleM"
+          color={onForest}
+          accessibilityRole="header"
+          style={{ fontSize: 30, letterSpacing: -0.5, lineHeight: 34 }}
+        >
           {trip.name}
-        </TypographyText>
-        <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-          {trip.destination}
-        </TypographyText>
-        <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-          {`${formatDate(trip.startDate)} – ${formatDate(trip.endDate)}`}
-        </TypographyText>
+        </Text>
+        <Text variant="bodySm" color={withAlpha(onForest, 0.8)} style={{ marginTop: 4 }}>
+          {`${trip.destination} · ${formatDateRange(trip.startDate, trip.endDate)}`}
+        </Text>
         <View
-          testID="trip-card-phase"
           style={{
-            alignSelf: 'flex-start',
-            backgroundColor: theme.colors.forestTint,
-            borderRadius: theme.radius.radiusSm,
-            paddingHorizontal: theme.spacing.space3,
-            paddingVertical: theme.spacing.space1,
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            marginTop: theme.spacing.space4,
           }}
         >
-          <TypographyText family="sans" style={{ color: theme.colors.forestInk }}>
-            {PHASE_LABELS[trip.phase]}
-          </TypographyText>
+          <Button
+            label="Abrir Hoje"
+            variant="inverse"
+            block={false}
+            onPress={onOpen}
+            accessibilityLabel={`Abrir Hoje de ${trip.name}`}
+            testID={`trip-open-${trip.id}`}
+          />
         </View>
       </View>
-    </Card>
+    </HighlightCard>
   )
 }
 
@@ -85,10 +111,12 @@ export function MyTripsScreen() {
   const theme = useTheme()
   const router = useRouter()
   const client = useTripsClient()
+  const { session } = useSession()
   const { client: syncClient, rememberTripIds, removedTrips } = useSync()
   const [trips, setTrips] = useState<TripSummary[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showInvite, setShowInvite] = useState(false)
 
   const loadTrips = useCallback(async () => {
     setIsLoading(true)
@@ -116,8 +144,49 @@ export function MyTripsScreen() {
   )
 
   const visibleTrips = trips === null ? null : withoutRemovedTrips(trips, removedTrips)
+  const traveling = visibleTrips?.filter((trip) => trip.phase === 'traveling') ?? []
+  const planning = visibleTrips?.filter((trip) => trip.phase === 'planning') ?? []
+  const ended = visibleTrips?.filter((trip) => trip.phase === 'ended') ?? []
+  const [current, ...otherTraveling] = traveling
+  const isEmpty = visibleTrips?.length === 0
 
   const openNewTrip = useCallback(() => router.push('/trips/new'), [router])
+  const openTrip = useCallback(
+    (trip: TripSummary) =>
+      router.push({
+        pathname: '/trips/[id]',
+        params: {
+          id: trip.id,
+          tripName: trip.name,
+          role: trip.role,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+        },
+      }),
+    [router],
+  )
+
+  const accountName =
+    session?.user.name ?? session?.user.email.split('@')[0]?.replace(/[._-]+/g, ' ') ?? 'Conta'
+
+  const rows = (list: TripSummary[], offset: number) => (
+    <View style={{ gap: theme.spacing.space3 }}>
+      {list.map((trip, index) => (
+        <TripRow
+          key={trip.id}
+          testID={`trip-card-${trip.id}`}
+          title={trip.name}
+          meta={
+            trip.phase === 'traveling'
+              ? `${trip.destination} · ${formatDateRange(trip.startDate, trip.endDate)}`
+              : `${formatMonthYear(trip.startDate)} · ${trip.destination}`
+          }
+          cover={coverTone(offset + index)}
+          onPress={() => openTrip(trip)}
+        />
+      ))}
+    </View>
+  )
 
   return (
     <SafeAreaView
@@ -128,13 +197,17 @@ export function MyTripsScreen() {
         contentContainerStyle={{
           flexGrow: 1,
           gap: theme.spacing.space5,
-          padding: theme.spacing.space5,
+          paddingBottom: theme.spacing.space4,
+          paddingHorizontal: theme.spacing.space5,
+          paddingTop: theme.spacing.space1,
         }}
       >
-        <TrippyWordmark />
-        <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
-          Minhas viagens
-        </TypographyText>
+        <View
+          style={{ alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }}
+        >
+          <TrippyLogo testID="trippy-wordmark" />
+          <Avatar name={accountName} color={1} testID="my-trips-avatar" />
+        </View>
 
         {isLoading ? (
           <View
@@ -149,9 +222,8 @@ export function MyTripsScreen() {
           <View style={{ gap: theme.spacing.space4 }}>
             <Notice
               testID="my-trips-error"
-              tone="danger"
-              title="Não foi possível carregar suas viagens."
-              message={error}
+              tone="change"
+              segments={[{ strong: 'Não foi possível carregar suas viagens.' }, ' ', error]}
             />
             <Button
               label="Tentar de novo"
@@ -159,45 +231,87 @@ export function MyTripsScreen() {
               testID="my-trips-retry"
             />
           </View>
-        ) : visibleTrips?.length === 0 ? (
-          <Card testID="my-trips-empty-card">
-            <View style={{ gap: theme.spacing.space4 }}>
-              <Notice
-                title="Você ainda não tem viagens."
-                message="Suas viagens vão aparecer aqui quando você criar uma ou aceitar um convite."
+        ) : isEmpty ? (
+          <View
+            testID="my-trips-empty-card"
+            style={{ flex: 1, gap: theme.spacing.space4, justifyContent: 'center' }}
+          >
+            <View style={{ flexDirection: 'row', gap: theme.spacing.space2 }}>
+              <DecorTile
+                color={theme.colors.photo1}
+                width={80}
+                height={104}
+                radius={18}
+                rotate={-6}
               />
-              <Button
-                label="Criar minha primeira viagem"
-                onPress={openNewTrip}
-                testID="my-trips-empty-create"
+              <DecorTile
+                color={theme.colors.photo2}
+                width={80}
+                height={104}
+                radius={18}
+                rotate={4}
+                offsetY={12}
               />
             </View>
-          </Card>
-        ) : (
-          <View style={{ gap: theme.spacing.space4 }}>
-            {visibleTrips?.map((trip) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                onPress={() =>
-                  router.push({
-                    pathname: '/trips/[id]',
-                    params: {
-                      id: trip.id,
-                      tripName: trip.name,
-                      role: trip.role,
-                      startDate: trip.startDate,
-                      endDate: trip.endDate,
-                    },
-                  })
-                }
-              />
-            ))}
-            <Button label="Nova viagem" onPress={openNewTrip} testID="my-trips-new-trip" />
+            <Text
+              variant="titleL"
+              color={theme.colors.ink}
+              accessibilityRole="header"
+              style={{ lineHeight: 35, marginTop: theme.spacing.space4 }}
+            >
+              Sua primeira viagem começa aqui
+            </Text>
+            <Text variant="body" color={theme.colors.inkMuted}>
+              Crie a viagem, chame o grupo e comecem a sugerir lugares. Se alguém te mandou um
+              convite, abra o link que ele te leva direto.
+            </Text>
           </View>
+        ) : (
+          <>
+            <Text variant="titleL" color={theme.colors.ink} accessibilityRole="header">
+              Minhas viagens
+            </Text>
+            {current ? <HighlightTrip trip={current} onOpen={() => openTrip(current)} /> : null}
+            {otherTraveling.length > 0 ? (
+              <Section title="Em viagem">{rows(otherTraveling, 1)}</Section>
+            ) : null}
+            {planning.length > 0 ? <Section title="Planejando">{rows(planning, 1)}</Section> : null}
+            {ended.length > 0 ? (
+              <Section title="Memórias">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                  {ended.map((trip, index) => (
+                    <View key={trip.id} style={{ flexBasis: '47%', flexGrow: 1 }}>
+                      <MemoryTile
+                        testID={`trip-card-${trip.id}`}
+                        title={trip.name}
+                        cover={index % 2 === 0 ? 1 : 4}
+                        onPress={() => openTrip(trip)}
+                      />
+                    </View>
+                  ))}
+                </View>
+              </Section>
+            ) : null}
+          </>
         )}
 
-        <AcceptInviteForm />
+        <View style={{ flexGrow: 1 }} />
+        {error === null && !isLoading ? (
+          <Button
+            label={isEmpty ? 'Criar minha primeira viagem' : '+ Nova viagem'}
+            onPress={openNewTrip}
+            testID={isEmpty ? 'my-trips-empty-create' : 'my-trips-new-trip'}
+          />
+        ) : null}
+        {showInvite ? (
+          <AcceptInviteForm />
+        ) : (
+          <TextButton
+            label="Tenho um código de convite"
+            onPress={() => setShowInvite(true)}
+            testID="my-trips-show-invite"
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   )
