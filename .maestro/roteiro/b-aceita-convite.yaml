@@ -40,6 +40,12 @@ appId: app.trippy.mobile
 - hideKeyboard
 - tapOn:
     id: accept-invite-button
+- scrollUntilVisible:
+    element:
+      id: accept-invite-terms-accept
+    direction: DOWN
+- tapOn:
+    id: accept-invite-terms-accept
 - assertVisible:
     id: trip-detail-screen
 - assertVisible: ${TRIP_NAME}

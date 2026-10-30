@@ -26,9 +26,13 @@ const defaultPlatform: SyncTriggerPlatform = {
   },
 }
 
+function logSyncFailure(error: unknown): void {
+  if (__DEV__) console.warn('[sync] falha ao sincronizar:', error)
+}
+
 function trySync(syncNow: () => Promise<void>): void {
   try {
-    void syncNow().catch(() => undefined)
+    void syncNow().catch(logSyncFailure)
   } catch {
     // Um sync pode falhar antes de devolver Promise; o próximo gatilho tenta de novo.
   }
@@ -64,7 +68,8 @@ export function withWriteSyncTriggers(
     const result = await write()
     try {
       await requestSync()
-    } catch {
+    } catch (error) {
+      logSyncFailure(error)
       // A operação já foi persistida no SQLite; o sync tentará de novo depois.
     }
     return result

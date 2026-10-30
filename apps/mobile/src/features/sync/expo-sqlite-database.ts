@@ -14,6 +14,10 @@ export function userDatabaseName(userId: string): string {
   return `trippy-${normalizedUserId}.db`
 }
 
+// A transação exclusiva abre outra conexão; sem espera, uma escrita concorrente (sync em
+// segundo plano x gravação da tela) falha na hora com "database is locked".
+const BUSY_TIMEOUT_SQL = 'PRAGMA busy_timeout = 5000;'
+
 export class ExpoSqlDatabase implements SqlDatabase {
   constructor(private readonly database: SQLite.SQLiteDatabase) {}
 
@@ -55,6 +59,7 @@ export class ExpoSqlDatabase implements SqlDatabase {
   async transaction<T>(operation: (database: SqlDatabase) => Promise<T>): Promise<T> {
     let result: T
     await this.database.withExclusiveTransactionAsync(async (transactionDatabase) => {
+      await transactionDatabase.execAsync(BUSY_TIMEOUT_SQL)
       result = await operation(new ExpoSqlDatabase(transactionDatabase))
     })
     return result!
@@ -63,5 +68,6 @@ export class ExpoSqlDatabase implements SqlDatabase {
 
 export async function openUserSqlDatabase(userId: string): Promise<SqlDatabase> {
   const database = await SQLite.openDatabaseAsync(userDatabaseName(userId))
+  await database.execAsync(`PRAGMA journal_mode = WAL; ${BUSY_TIMEOUT_SQL}`)
   return new ExpoSqlDatabase(database)
 }
