@@ -6,26 +6,30 @@ import { Text } from './text'
 export type TextButtonProps = {
   label: string
   onPress: () => void
-  accessibilityHint?: string
-  /** `danger` pinta o texto de vermelho (Sair do grupo). */
-  tone?: 'default' | 'danger'
-  /** Centraliza o texto na largura toda (Cancelar numa folha). */
+  /** `onForest`: texto claro sobre fundo forest; `danger`: vermelho (Sair do grupo). */
+  tone?: 'ink' | 'onForest' | 'danger'
+  /** Ocupa a largura toda, com o texto centralizado (Cancelar numa folha). */
   block?: boolean
+  disabled?: boolean
+  accessibilityHint?: string
   locale?: string
   testID?: string
 }
 
-/** Ação de texto sem caixa (ex.: Cancelar no topo de um fluxo modal). */
+/** Ação de texto sem caixa ("Cancelar", "Entrar com e-mail"): 44px de altura, sem borda. */
 export function TextButton({
   label,
   onPress,
-  accessibilityHint,
-  tone = 'default',
+  tone = 'ink',
   block = false,
+  disabled = false,
+  accessibilityHint,
   locale,
   testID,
 }: TextButtonProps) {
   const { colors, spacing } = useTheme()
+  const color =
+    tone === 'onForest' ? colors.onForest : tone === 'danger' ? colors.danger : colors.ink
 
   return (
     <Pressable
@@ -33,19 +37,19 @@ export function TextButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={{
+      style={({ pressed }) => ({
         alignItems: 'center',
-        alignSelf: block ? 'stretch' : 'flex-start',
+        alignSelf: 'flex-start',
         justifyContent: 'center',
         minHeight: spacing.targetMin,
-      }}
+        opacity: pressed || disabled ? 0.6 : 1,
+        ...(tone === 'onForest' || block ? { alignSelf: 'stretch' } : {}),
+      })}
     >
-      <Text
-        variant="fieldInput"
-        color={tone === 'danger' ? colors.danger : colors.ink}
-        locale={locale}
-      >
+      <Text variant="fieldInput" color={color} locale={locale} style={{ textAlign: 'center' }}>
         {label}
       </Text>
     </Pressable>
