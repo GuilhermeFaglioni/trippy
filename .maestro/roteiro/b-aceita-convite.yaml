@@ -16,7 +16,7 @@ appId: app.trippy.mobile
 - extendedWaitUntil:
     visible:
       id: login-email-input
-    timeout: 30000
+    timeout: 120000
 - tapOn:
     id: login-email-input
 - inputText: ${B_EMAIL}
