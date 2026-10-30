@@ -7,8 +7,19 @@ export {
   type AvatarStackProps,
 } from './avatar'
 export { Button, type ButtonProps, type ButtonVariant } from './button'
+export { CoverPicker, type CoverPickerProps } from './cover-picker'
+export { DecorTile, type DecorTileProps } from './decor-tile'
+export { TrippyLogo, type TrippyLogoProps } from './logo'
+export { TextButton, type TextButtonProps } from './text-button'
+export {
+  MemoryTile,
+  TripRow,
+  type MemoryTileProps,
+  type TripCoverTone,
+  type TripRowProps,
+} from './trip-row'
 export { Card, Eyebrow, HighlightCard } from './card'
-export { derivePressedColor } from './color'
+export { derivePressedColor, withAlpha } from './color'
 export { DaySheet, type DaySheetOption, type DaySheetProps } from './day-sheet'
 export { FilterChip, type FilterChipProps } from './filter-chip'
 export { Icon, iconSet, type IconName, type IconProps } from './icon'
