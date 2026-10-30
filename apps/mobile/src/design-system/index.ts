@@ -34,3 +34,4 @@ export {
   type TypographyTokens,
 } from './typography'
 export { TypographyText, type TypographyTextProps } from './typography-text'
+export * from './components'

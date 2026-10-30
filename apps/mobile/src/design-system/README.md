@@ -16,3 +16,18 @@ Fontes locais: subconjuntos variáveis regionais oficiais Noto Sans CJK, em [not
 | **Total**                 | **37.779.284 (36,03 MiB)** |
 
 O total aumenta o bundle mobile em cerca de 36 MiB antes de compressão. O SDK Expo 58 carrega os assets por `useFonts`; veja a [documentação Expo Font SDK 58](https://docs.expo.dev/versions/v58.0.0/sdk/font/).
+
+## Componentes
+
+`components/` reproduz as classes `tp-*` de `docs/design-system/componentes/bundle.css` com os tokens de `tokens.json`: `Button` (principal, secundário alternável, flutuante e `inverse` para o card de destaque), `IconButton` (44 × 44; com `count`, o "quero ir" de 52 × 52), `Card`, `HighlightCard`, `Eyebrow`, `StatusChip` (botão com `onPress`, selo sem), `FilterChip`, `Avatar`, `AvatarStack`, `Notice`, `TextField`, `PlaceRow`, `TabBar`, `ScreenHeader` e `DaySheet`. Ícones são Lucide (`Icon`, só os nomes de `iconSet`).
+
+- Área tocável mínima de 44px: o desenho menor (chips de 32/36px) é completado com `hitSlop`.
+- Todo texto usa `Text`/`TypographyText` e escala com Dynamic Type até 200%; alturas são mínimas. `TabBar` quebra rótulos em 2 linhas acima de 150%.
+- `DaySheet` respeita "Reduzir movimento": só opacidade, em `duration-fast`.
+- Estado alternável anuncia `accessibilityState.checked` (botões) ou `selected` (filtros, abas, dias).
+- Galeria só de desenvolvimento: rota `/dev/design-system` (fora de `__DEV__` volta para a home). Alterne claro/escuro pela aparência do Simulator (`xcrun simctl ui booted appearance dark`).
+- `src/components` é o conjunto antigo, usado pelas telas atuais; sai quando as telas migrarem para estes componentes.
+
+## Lint
+
+Em `apps/mobile/src/features`, o ESLint bloqueia cor/raio literal e `Pressable`/`TextInput`/`Touchable*` direto. Exceção explícita: `// eslint-disable-next-line <regra> -- <motivo>`. As telas antigas que ainda violam ficam em `FEATURES_COM_EXCECAO` (`eslint.config.mjs`). Testes da regra: `pnpm --filter @trippy/mobile test:lint-rule`.
