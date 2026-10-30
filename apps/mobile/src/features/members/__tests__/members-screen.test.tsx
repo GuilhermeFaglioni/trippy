@@ -81,18 +81,26 @@ describe('tela Grupo', () => {
     const client = createClient()
     const screen = await renderScreen(client)
 
-    expect(await screen.findByTestId('grupo-membro-member-1-papel')).toHaveTextContent('Membro')
-    expect(screen.getByTestId('grupo-membro-organizer-1-papel')).toHaveTextContent('Organizador')
+    expect(await screen.findByTestId('grupo-membro-member-1-papel')).toHaveTextContent(
+      'Membro · ainda não abriu',
+    )
+    expect(screen.getByTestId('grupo-convite')).toBeOnTheScreen()
+    expect(screen.getByTestId('grupo-membro-organizer-1-papel')).toHaveTextContent(
+      'Organizador · ainda não abriu',
+    )
     expect(screen.queryByTestId('grupo-membro-organizer-1-remover')).toBeNull()
 
+    await fireEvent.press(screen.getByTestId('grupo-membro-member-1-opcoes'))
     await fireEvent.press(screen.getByTestId('grupo-membro-member-1-promover'))
     await waitFor(() =>
       expect(client.setMemberRole).toHaveBeenCalledWith('trip-1', 'member-1', 'coorganizer'),
     )
+    await fireEvent.press(screen.getByTestId('grupo-membro-coorganizer-1-opcoes'))
     await fireEvent.press(screen.getByTestId('grupo-membro-coorganizer-1-rebaixar'))
     await waitFor(() =>
       expect(client.setMemberRole).toHaveBeenCalledWith('trip-1', 'coorganizer-1', 'member'),
     )
+    await fireEvent.press(screen.getByTestId('grupo-membro-coorganizer-1-opcoes'))
     await fireEvent.press(screen.getByTestId('grupo-membro-coorganizer-1-remover'))
     await waitFor(() => expect(client.removeMember).toHaveBeenCalledWith('trip-1', 'coorganizer-1'))
   })
@@ -116,9 +124,10 @@ describe('tela Grupo', () => {
     ])
     const screen = await renderScreen(client)
 
+    await fireEvent.press(await screen.findByTestId('grupo-membro-member-1-opcoes'))
     expect(await screen.findByTestId('grupo-membro-member-1-remover')).toBeOnTheScreen()
-    expect(screen.queryByTestId('grupo-membro-coorganizer-2-remover')).toBeNull()
     expect(screen.queryByTestId('grupo-membro-member-1-promover')).toBeNull()
+    expect(screen.queryByTestId('grupo-membro-coorganizer-2-opcoes')).toBeNull()
     await fireEvent.press(screen.getByTestId('grupo-membro-member-1-remover'))
     await waitFor(() => expect(client.removeMember).toHaveBeenCalledWith('trip-1', 'member-1'))
     expect(client.setMemberRole).not.toHaveBeenCalled()
@@ -132,7 +141,7 @@ describe('tela Grupo', () => {
     const screen = await renderScreen(client)
 
     expect(await screen.findByTestId('grupo-somente-leitura')).toBeOnTheScreen()
-    expect(screen.queryByTestId('grupo-membro-member-2-remover')).toBeNull()
-    expect(screen.queryByTestId('grupo-membro-member-2-promover')).toBeNull()
+    expect(screen.queryByTestId('grupo-membro-member-2-opcoes')).toBeNull()
+    expect(screen.queryByTestId('grupo-convite')).toBeNull()
   })
 })

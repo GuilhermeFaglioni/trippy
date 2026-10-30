@@ -10,9 +10,10 @@ import { Text } from './text'
 
 /** `inverse`: botão claro (`on-forest`, texto escuro) sobre o card de destaque nos dois temas. */
 /** `outlineInverse`: contorno claro sobre fundo forest (login). */
+/** `danger`: secundário destrutivo, borda e texto em `danger` (Remover do grupo). */
 /** `forest`: ação principal sobre fundo branco em tela cheia (cartão para mostrar). */
 export type ButtonVariant =
-  'primary' | 'secondary' | 'fab' | 'inverse' | 'outlineInverse' | 'forest'
+  'primary' | 'secondary' | 'fab' | 'inverse' | 'outlineInverse' | 'forest' | 'danger'
 
 export type ButtonProps = {
   label: string
@@ -64,21 +65,25 @@ export function Button({
   const isFavoriteMarked = isMarked && tone === 'favorite'
   const isFilledMarked = isMarked && !isFavoriteMarked
   const borderRadius =
-    (variant === 'secondary' || variant === 'inverse') && !tall ? radius.radiusSm : radius.radiusMd
+    (variant === 'secondary' || variant === 'inverse' || variant === 'danger') && !tall
+      ? radius.radiusSm
+      : radius.radiusMd
 
   const foreground = disabled
     ? colors.inkMuted
-    : variant === 'secondary'
-      ? isFilledMarked
-        ? colors.onForest
-        : isFavoriteMarked
-          ? colors.terracottaText
-          : colors.ink
-      : variant === 'inverse'
-        ? colors.onMustard
-        : variant === 'outlineInverse' || variant === 'forest'
+    : variant === 'danger'
+      ? colors.danger
+      : variant === 'secondary'
+        ? isFilledMarked
           ? colors.onForest
-          : colors.onTerracotta
+          : isFavoriteMarked
+            ? colors.terracottaText
+            : colors.ink
+        : variant === 'inverse'
+          ? colors.onMustard
+          : variant === 'outlineInverse' || variant === 'forest'
+            ? colors.onForest
+            : colors.onTerracotta
 
   return (
     <View style={{ alignSelf: block ? 'stretch' : 'flex-start' }}>
@@ -101,7 +106,7 @@ export function Button({
           const terracotta = touching ? derivePressedColor(colors.terracotta) : colors.terracotta
           const backgroundColor = disabled
             ? colors.sand
-            : variant === 'secondary'
+            : variant === 'secondary' || variant === 'danger'
               ? isFilledMarked
                 ? colors.forest
                 : touching
@@ -120,7 +125,9 @@ export function Button({
                       ? derivePressedColor(colors.onForest)
                       : colors.onForest
                     : terracotta
-          const bordered = (variant === 'secondary' || variant === 'outlineInverse') && !disabled
+          const bordered =
+            (variant === 'secondary' || variant === 'outlineInverse' || variant === 'danger') &&
+            !disabled
 
           return {
             alignItems: 'center',
@@ -128,15 +135,21 @@ export function Button({
             borderColor:
               variant === 'outlineInverse'
                 ? withAlpha(colors.onForest, 0.4)
-                : isFilledMarked
-                  ? colors.forest
-                  : colors.lineStrong,
+                : variant === 'danger'
+                  ? colors.danger
+                  : isFilledMarked
+                    ? colors.forest
+                    : colors.lineStrong,
             borderRadius,
             borderWidth: bordered ? 1 : 0,
             justifyContent: 'center',
             minHeight:
               minHeight ??
-              (variant === 'secondary' ? spacing.targetMin : variant === 'inverse' ? 48 : 56),
+              (variant === 'secondary' || variant === 'danger'
+                ? spacing.targetMin
+                : variant === 'inverse'
+                  ? 48
+                  : 56),
             paddingHorizontal: spacing.space5,
             paddingVertical: spacing.space2,
             ...(variant === 'fab' && !disabled ? toNativeShadow(shadow.shadowFab) : {}),
@@ -157,7 +170,9 @@ export function Button({
           ) : null}
           <Text
             variant={
-              variant === 'secondary' || variant === 'inverse' ? 'buttonSecondary' : 'button'
+              variant === 'secondary' || variant === 'inverse' || variant === 'danger'
+                ? 'buttonSecondary'
+                : 'button'
             }
             color={foreground}
             locale={locale}

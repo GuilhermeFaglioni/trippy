@@ -22,6 +22,7 @@ export {
 export { CircleButton, type CircleButtonProps } from './circle-button'
 export { PersonChip, type PersonChipProps } from './person-chip'
 export { PhotoTile, type PhotoTileProps } from './photo-tile'
+export { RichText, type RichTextProps, type RichTextSegment } from './rich-text'
 export { StarRating, type StarRatingProps } from './star-rating'
 export { TextLink, type TextLinkProps } from './text-link'
 export { Card, Eyebrow, HighlightCard } from './card'

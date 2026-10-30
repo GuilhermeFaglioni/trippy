@@ -215,6 +215,7 @@ export default function TripRoute() {
       return (
         <MembersScreen
           tripId={tripId}
+          tripName={displayName}
           onMemberCount={setMemberCount}
           onOpenSettings={() =>
             router.push({

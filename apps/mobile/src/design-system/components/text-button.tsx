@@ -6,8 +6,10 @@ import { Text } from './text'
 export type TextButtonProps = {
   label: string
   onPress: () => void
-  /** `onForest`: texto claro sobre fundo forest. */
-  tone?: 'ink' | 'onForest'
+  /** `onForest`: texto claro sobre fundo forest; `danger`: vermelho (Sair do grupo). */
+  tone?: 'ink' | 'onForest' | 'danger'
+  /** Ocupa a largura toda, com o texto centralizado (Cancelar numa folha). */
+  block?: boolean
   disabled?: boolean
   accessibilityHint?: string
   locale?: string
@@ -19,13 +21,15 @@ export function TextButton({
   label,
   onPress,
   tone = 'ink',
+  block = false,
   disabled = false,
   accessibilityHint,
   locale,
   testID,
 }: TextButtonProps) {
   const { colors, spacing } = useTheme()
-  const color = tone === 'onForest' ? colors.onForest : colors.ink
+  const color =
+    tone === 'onForest' ? colors.onForest : tone === 'danger' ? colors.danger : colors.ink
 
   return (
     <Pressable
@@ -42,7 +46,7 @@ export function TextButton({
         justifyContent: 'center',
         minHeight: spacing.targetMin,
         opacity: pressed || disabled ? 0.6 : 1,
-        ...(tone === 'onForest' ? { alignSelf: 'stretch' } : {}),
+        ...(tone === 'onForest' || block ? { alignSelf: 'stretch' } : {}),
       })}
     >
       <Text variant="fieldInput" color={color} locale={locale} style={{ textAlign: 'center' }}>
