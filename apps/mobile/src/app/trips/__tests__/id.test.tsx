@@ -124,7 +124,9 @@ describe('rota da viagem', () => {
 
     await fireEvent.press(screen.getByTestId('trip-tab-grupo'))
     expect(await screen.findByTestId('tela-grupo')).toBeOnTheScreen()
-    expect(await screen.findByTestId('grupo-membro-user-1-papel')).toHaveTextContent('Organizador')
+    expect(await screen.findByTestId('grupo-membro-user-1-papel')).toHaveTextContent(
+      'Organizador · ainda não abriu',
+    )
   })
 
   it('viagem em andamento abre direto na aba Hoje', async () => {

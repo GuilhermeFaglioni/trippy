@@ -6,7 +6,7 @@ import { FocusRing } from './focus-ring'
 import { Icon, type IconName } from './icon'
 import { Text } from './text'
 
-export type IconButtonTone = 'default' | 'favorite'
+export type IconButtonTone = 'default' | 'favorite' | 'plain'
 
 export type IconButtonProps = {
   icon: IconName
@@ -15,6 +15,7 @@ export type IconButtonProps = {
   onPress: () => void
   /** Alternável (`aria-pressed`): marcado preenche o ícone ou, no check, engrossa o traço. */
   pressed?: boolean
+  /** `plain` tira o fundo e a borda (opções na linha de uma lista). */
   /** `favorite` mantém o fundo e pinta a estrela de terracotta quando marcada. */
   tone?: IconButtonTone
   disabled?: boolean
@@ -24,6 +25,7 @@ export type IconButtonProps = {
 }
 
 const FILLABLE: readonly IconName[] = ['star', 'heart']
+const SOLID: readonly IconName[] = ['more']
 
 export function IconButton({
   icon,
@@ -42,6 +44,7 @@ export function IconButton({
   const hasCount = count !== undefined
   const size = hasCount ? 52 : spacing.targetMin
 
+  const plain = tone === 'plain'
   const filledBackground = isMarked && tone === 'default'
   // "Quero ir" marcado é terracotta; os demais alternáveis, forest.
   const markedBackground = hasCount ? colors.terracotta : colors.forest
@@ -68,16 +71,18 @@ export function IconButton({
         onBlur={() => setFocused(false)}
         style={({ pressed: touching }) => ({
           alignItems: 'center',
-          backgroundColor: disabled
-            ? colors.sand
-            : filledBackground
-              ? markedBackground
-              : touching
-                ? colors.sand
-                : colors.surface,
+          backgroundColor: plain
+            ? 'transparent'
+            : disabled
+              ? colors.sand
+              : filledBackground
+                ? markedBackground
+                : touching
+                  ? colors.sand
+                  : colors.surface,
           borderColor: filledBackground ? 'transparent' : colors.lineStrong,
           borderRadius: radius.radiusSm,
-          borderWidth: disabled || filledBackground ? 0 : 1,
+          borderWidth: plain || disabled || filledBackground ? 0 : 1,
           height: size,
           justifyContent: 'center',
           gap: 2,
@@ -89,7 +94,7 @@ export function IconButton({
           color={foreground}
           size={hasCount ? 16 : 20}
           strokeWidth={icon === 'check' && isMarked ? 2.8 : 2}
-          filled={isMarked && FILLABLE.includes(icon)}
+          filled={SOLID.includes(icon) || (isMarked && FILLABLE.includes(icon))}
         />
         {hasCount ? (
           <Text variant="count" color={foreground}>

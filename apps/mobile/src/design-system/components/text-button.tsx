@@ -7,12 +7,24 @@ export type TextButtonProps = {
   label: string
   onPress: () => void
   accessibilityHint?: string
+  /** `danger` pinta o texto de vermelho (Sair do grupo). */
+  tone?: 'default' | 'danger'
+  /** Centraliza o texto na largura toda (Cancelar numa folha). */
+  block?: boolean
   locale?: string
   testID?: string
 }
 
 /** Ação de texto sem caixa (ex.: Cancelar no topo de um fluxo modal). */
-export function TextButton({ label, onPress, accessibilityHint, locale, testID }: TextButtonProps) {
+export function TextButton({
+  label,
+  onPress,
+  accessibilityHint,
+  tone = 'default',
+  block = false,
+  locale,
+  testID,
+}: TextButtonProps) {
   const { colors, spacing } = useTheme()
 
   return (
@@ -24,12 +36,16 @@ export function TextButton({ label, onPress, accessibilityHint, locale, testID }
       onPress={onPress}
       style={{
         alignItems: 'center',
-        alignSelf: 'flex-start',
+        alignSelf: block ? 'stretch' : 'flex-start',
         justifyContent: 'center',
         minHeight: spacing.targetMin,
       }}
     >
-      <Text variant="fieldInput" color={colors.ink} locale={locale}>
+      <Text
+        variant="fieldInput"
+        color={tone === 'danger' ? colors.danger : colors.ink}
+        locale={locale}
+      >
         {label}
       </Text>
     </Pressable>

@@ -6,6 +6,7 @@ import { Button, Card, Notice, TextField } from '../../components'
 import { TypographyText, useTheme } from '../../design-system'
 import { useSession } from '../auth/session-provider'
 import { useSync } from '../sync/sync-provider'
+import { JoinNoticeScreen } from './join-notice-screen'
 import { createInviteClient, getInviteErrorMessage } from './invite-client'
 
 export function AcceptInviteForm() {
@@ -37,6 +38,7 @@ export function AcceptInviteForm() {
         params: { id: trip.id, tripName: trip.name, role: trip.role },
       })
     } catch (acceptError) {
+      setShowTerms(false)
       setError(getInviteErrorMessage(acceptError))
     } finally {
       setIsSubmitting(false)
@@ -66,39 +68,21 @@ export function AcceptInviteForm() {
           testID="accept-invite-code"
         />
         {error ? <Notice tone="danger" message={error} testID="accept-invite-error" /> : null}
-        {showTerms ? (
-          <View style={{ gap: theme.spacing.space3 }}>
-            <Notice
-              title="Antes de entrar"
-              message="Ao participar desta viagem, você autoriza o Trippy a incluir suas fotos no vídeo recap do grupo e a compartilhá-lo, inclusive fora do app."
-              testID="accept-invite-terms"
-            />
-            <Button
-              label="Aceitar e entrar"
-              onPress={() => void accept()}
-              loading={isSubmitting}
-              disabled={isSubmitting}
-              testID="accept-invite-terms-accept"
-            />
-            <Button
-              label="Recusar"
-              variant="secondary"
-              onPress={decline}
-              disabled={isSubmitting}
-              testID="accept-invite-terms-decline"
-            />
-          </View>
-        ) : (
-          <Button
-            label="Entrar com convite"
-            onPress={() => {
-              setError(null)
-              setShowTerms(true)
-            }}
-            disabled={!token.trim()}
-            testID="accept-invite-button"
-          />
-        )}
+        <JoinNoticeScreen
+          visible={showTerms}
+          loading={isSubmitting}
+          onAccept={() => void accept()}
+          onDecline={decline}
+        />
+        <Button
+          label="Entrar com convite"
+          onPress={() => {
+            setError(null)
+            setShowTerms(true)
+          }}
+          disabled={!token.trim()}
+          testID="accept-invite-button"
+        />
       </View>
     </Card>
   )
