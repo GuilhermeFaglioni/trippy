@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   GripVertical,
   Heart,
+  Image,
   Images,
   ListOrdered,
   MapPin,
@@ -24,6 +25,19 @@ const AddressCard = createLucideIcon('AddressCard', [
   ['path', { d: 'M7 10h6M7 14h10', key: 'lines' }],
 ])
 
+/** Três pontos das opções da linha (tela do grupo), preenchidos. */
+const More = createLucideIcon('More', [
+  ['circle', { cx: '5', cy: '12', r: '1.8', key: 'a' }],
+  ['circle', { cx: '12', cy: '12', r: '1.8', key: 'b' }],
+  ['circle', { cx: '19', cy: '12', r: '1.8', key: 'c' }],
+])
+
+/** Câmera de vídeo do aviso do recap. */
+const VideoCamera = createLucideIcon('VideoCamera', [
+  ['rect', { x: '3', y: '6', width: '13', height: '12', rx: '2', key: 'body' }],
+  ['path', { d: 'M16 10l5-3v10l-5-3', key: 'lens' }],
+])
+
 export const iconSet = {
   sun: Sun,
   'list-ordered': ListOrdered,
@@ -33,6 +47,7 @@ export const iconSet = {
   check: Check,
   star: Star,
   heart: Heart,
+  image: Image,
   camera: Camera,
   'wifi-off': WifiOff,
   'grip-vertical': GripVertical,
@@ -41,6 +56,8 @@ export const iconSet = {
   search: Search,
   x: X,
   'address-card': AddressCard,
+  more: More,
+  'video-camera': VideoCamera,
 } as const satisfies Record<string, LucideIcon>
 
 export type IconName = keyof typeof iconSet

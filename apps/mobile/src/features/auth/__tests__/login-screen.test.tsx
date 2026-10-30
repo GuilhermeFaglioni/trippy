@@ -57,6 +57,9 @@ describe('tela de login', () => {
     const screen = await renderLogin(fetcher)
 
     expect(screen.getByTestId('login-brand-symbol')).toBeOnTheScreen()
+    expect(screen.getByText('Continuar com Apple')).toBeOnTheScreen()
+    expect(screen.getByText('Continuar com Google')).toBeOnTheScreen()
+    await fireEvent.press(screen.getByTestId('login-use-email'))
     await fireEvent.changeText(screen.getByTestId('login-email-input'), 'pessoa@example.com')
     await fireEvent.press(screen.getByTestId('login-email-submit'))
 
@@ -91,15 +94,33 @@ describe('tela de login', () => {
       )
     const screen = await renderLogin(fetcher)
 
+    await fireEvent.press(screen.getByTestId('login-use-email'))
     await fireEvent.changeText(screen.getByTestId('login-email-input'), 'pessoa@example.com')
     await fireEvent.press(screen.getByTestId('login-email-submit'))
     await screen.findByTestId('login-code-input')
     await fireEvent.press(screen.getByTestId('login-code-resend'))
 
-    expect(
-      await screen.findByText('Aguarde 60 segundos para pedir outro código.'),
-    ).toBeOnTheScreen()
+    await waitFor(() =>
+      expect(screen.getByTestId('login-notice')).toHaveAccessibleName(
+        /Aguarde 60 segundos para pedir outro código\./,
+      ),
+    )
     expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  it('avisa que Apple e Google ainda não estão disponíveis', async () => {
+    const screen = await renderLogin(
+      jest.fn<Promise<Response>, [url: string, init?: RequestInit]>(),
+    )
+
+    await fireEvent.press(screen.getByTestId('login-apple'))
+    expect(screen.getByTestId('login-notice')).toHaveAccessibleName(
+      /Apple ainda não está disponível/,
+    )
+    await fireEvent.press(screen.getByTestId('login-google'))
+    expect(screen.getByTestId('login-notice')).toHaveAccessibleName(
+      /Google ainda não está disponível/,
+    )
   })
 
   it('oferece acesso ao diagnóstico da API', async () => {

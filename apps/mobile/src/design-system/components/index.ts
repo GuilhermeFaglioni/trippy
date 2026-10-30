@@ -8,26 +8,37 @@ export {
   type AvatarStackProps,
 } from './avatar'
 export { Button, type ButtonProps, type ButtonVariant } from './button'
+export { CoverPicker, type CoverPickerProps } from './cover-picker'
+export { DecorTile, type DecorTileProps } from './decor-tile'
+export { TrippyLogo, type TrippyLogoProps } from './logo'
+export { TextButton, type TextButtonProps } from './text-button'
+export {
+  MemoryTile,
+  TripRow,
+  type MemoryTileProps,
+  type TripCoverTone,
+  type TripRowProps,
+} from './trip-row'
 export { CircleButton, type CircleButtonProps } from './circle-button'
 export { PersonChip, type PersonChipProps } from './person-chip'
 export { PhotoTile, type PhotoTileProps } from './photo-tile'
+export { RichText, type RichTextProps, type RichTextSegment } from './rich-text'
 export { StarRating, type StarRatingProps } from './star-rating'
 export { TextLink, type TextLinkProps } from './text-link'
 export { Card, Eyebrow, HighlightCard } from './card'
-export { derivePressedColor } from './color'
+export { derivePressedColor, withAlpha } from './color'
 export { DaySheet, type DaySheetOption, type DaySheetProps } from './day-sheet'
 export { FilterChip, type FilterChipProps } from './filter-chip'
 export { EmptyState, type EmptyStateProps } from './empty-state'
 export { Icon, iconSet, type IconName, type IconProps } from './icon'
 export { IconButton, type IconButtonProps, type IconButtonTone } from './icon-button'
 export { NoteLine, type NoteLineProps } from './note-line'
-export { Notice, type NoticeProps, type NoticeSegment, type NoticeTone } from './notice'
+export { InfoNote, Notice, type NoticeProps, type NoticeSegment, type NoticeTone } from './notice'
 export { PlaceListRow, type PlaceListRowProps } from './place-list-row'
 export { PlaceResult, type PlaceResultProps } from './place-result'
 export { PlaceRow, type PlaceRowActions, type PlaceRowProps } from './place-row'
 export { ScreenHeader, type ScreenHeaderProps } from './screen-header'
 export { StatusChip, type StatusChipProps, type StatusChipTone } from './status-chip'
 export { TabBar, tripTabs, type TabBarItem, type TabBarProps } from './tab-bar'
-export { TextButton, type TextButtonProps } from './text-button'
 export { TextField, type TextFieldProps } from './text-field'
 export { Text, textStyles, type TextProps, type TextVariant } from './text'
