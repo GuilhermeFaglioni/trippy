@@ -1,3 +1,4 @@
+export { ActionSheet, type ActionSheetProps } from './action-sheet'
 export {
   Avatar,
   AvatarStack,

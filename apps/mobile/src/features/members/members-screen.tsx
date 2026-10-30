@@ -16,7 +16,13 @@ import { useSync } from '../sync/sync-provider'
 /** TestIDs Maestro: grupo-membro-<userId>-papel, grupo-membro-<userId>-promover/-rebaixar/-remover. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
-type MembersScreenProps = { tripId: string }
+type MembersScreenProps = {
+  tripId: string
+  /** O título "Grupo · N" fica no cabeçalho da viagem. */
+  onMemberCount?: (count: number) => void
+  /** Ajustes da viagem (datas, encerrar), só para o organizador. */
+  onOpenSettings?: () => void
+}
 
 const ROLE_LABELS: Record<LiveMember['role'], string> = {
   organizer: 'Organizador',
@@ -29,7 +35,7 @@ function memberName(member: LiveMember, currentUserId: string | undefined): stri
   return `Participante ${member.userId.slice(-6)}`
 }
 
-export function MembersScreen({ tripId }: MembersScreenProps) {
+export function MembersScreen({ tripId, onMemberCount, onOpenSettings }: MembersScreenProps) {
   const theme = useTheme()
   const { session } = useSession()
   const { client } = useSync()
@@ -62,6 +68,10 @@ export function MembersScreen({ tripId }: MembersScreenProps) {
     },
     [client, tripId],
   )
+
+  useEffect(() => {
+    onMemberCount?.(members.length)
+  }, [members.length, onMemberCount])
 
   useEffect(() => {
     void loadMembers(true)
@@ -115,15 +125,6 @@ export function MembersScreen({ tripId }: MembersScreenProps) {
       testID="tela-grupo"
       contentContainerStyle={{ gap: theme.spacing.space4, padding: theme.spacing.space5 }}
     >
-      <View style={{ gap: theme.spacing.space2 }}>
-        <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
-          Grupo
-        </TypographyText>
-        <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-          {`${members.length} ${members.length === 1 ? 'pessoa' : 'pessoas'} na viagem`}
-        </TypographyText>
-      </View>
-
       {error ? <Notice testID="grupo-erro" tone="danger" message={error} /> : null}
       {isLoading ? (
         <View
@@ -197,6 +198,15 @@ export function MembersScreen({ tripId }: MembersScreenProps) {
           )
         })
       )}
+
+      {actor?.role === 'organizer' && onOpenSettings ? (
+        <Button
+          label="Ajustes da viagem"
+          variant="secondary"
+          onPress={onOpenSettings}
+          testID="grupo-ajustes"
+        />
+      ) : null}
 
       {actor?.role === 'member' ? (
         <Notice

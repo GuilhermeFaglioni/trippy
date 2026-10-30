@@ -25,7 +25,6 @@ const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
 type TodayScreenProps = {
   tripId: string
-  tripName: string
   timezone: string
   startDate: string
   endDate: string
@@ -49,7 +48,6 @@ function displayName(place: LivePlace): string {
 
 export function TodayScreen({
   tripId,
-  tripName,
   timezone,
   startDate,
   endDate,
@@ -161,15 +159,6 @@ export function TodayScreen({
       contentContainerStyle={{ gap: theme.spacing.space4, padding: theme.spacing.space5 }}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={{ gap: theme.spacing.space2 }}>
-        <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
-          Hoje
-        </TypographyText>
-        <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-          {tripName}
-        </TypographyText>
-      </View>
-
       <Notice
         testID="hoje-banner-desatualizacao"
         tone={needsAttention ? 'warning' : 'neutral'}
