@@ -1,4 +1,7 @@
+import type { ComponentProps } from 'react'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
+
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import type { LiveMember, LivePlace, PlaceDetail, SyncClient } from '@trippy/sync'
 import { DesignSystemProvider } from '../../../design-system'
@@ -14,6 +17,11 @@ jest
         typeof sessionProvider.useSession
       >,
   )
+
+const safeArea = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+}
 
 function place(overrides: Partial<LivePlace> = {}): LivePlace {
   return {
@@ -70,13 +78,18 @@ function createClient(current: PlaceDetail, members: LiveMember[]) {
   return client as unknown as SyncClient & typeof client
 }
 
-async function renderPlace(client: SyncClient) {
+async function renderPlace(
+  client: SyncClient,
+  props: Partial<ComponentProps<typeof PlaceDetailScreen>> = {},
+) {
   return await render(
-    <DesignSystemProvider>
-      <SyncProvider client={client}>
-        <PlaceDetailScreen tripId="trip-1" placeId="place-1" />
-      </SyncProvider>
-    </DesignSystemProvider>,
+    <SafeAreaProvider initialMetrics={safeArea}>
+      <DesignSystemProvider>
+        <SyncProvider client={client}>
+          <PlaceDetailScreen tripId="trip-1" placeId="place-1" {...props} />
+        </SyncProvider>
+      </DesignSystemProvider>
+    </SafeAreaProvider>,
   )
 }
 
@@ -142,15 +155,45 @@ describe('tela do lugar', () => {
     await fireEvent.press(screen.getByTestId('lugar-nota-4'))
     await waitFor(() => expect(client.ratePlace).toHaveBeenCalledWith('trip-1', 'place-1', 4))
 
-    await waitFor(() =>
-      expect(screen.getByTestId('lugar-observacao-salvar').props.accessibilityState.disabled).toBe(
-        false,
-      ),
-    )
+    await fireEvent.press(await screen.findByTestId('lugar-observacao-escrever'))
     await fireEvent.changeText(screen.getByTestId('lugar-observacao-campo'), 'Vale a pena')
     await fireEvent.press(screen.getByTestId('lugar-observacao-salvar'))
     await waitFor(() =>
       expect(client.setPlaceNote).toHaveBeenCalledWith('trip-1', 'place-1', 'Vale a pena'),
     )
+  })
+
+  it('organizador edita nome e endereço locais na tela do lugar', async () => {
+    const current = detail({ place: place({ countryCode: 'CN' }) })
+    const client = createClient(current, [member('user-1', 'organizer')])
+    Object.assign(client, { setLocalDetails: jest.fn().mockResolvedValue(undefined) })
+    const screen = await renderPlace(client)
+
+    await fireEvent.changeText(await screen.findByTestId('local-name-place-1'), '外滩')
+    await fireEvent.changeText(screen.getByTestId('local-address-place-1'), '中山东一路')
+    await fireEvent.press(screen.getByTestId('save-local-details-place-1'))
+    await waitFor(() =>
+      expect(client.setLocalDetails).toHaveBeenCalledWith('trip-1', 'place-1', {
+        localName: '外滩',
+        localAddress: '中山东一路',
+      }),
+    )
+  })
+
+  it('membro comum não vê a edição de nome e endereço locais', async () => {
+    const client = createClient(detail(), [member('user-1', 'member')])
+    const screen = await renderPlace(client)
+
+    await screen.findByTestId('lugar-favorito')
+    expect(screen.queryByTestId('local-details-editor')).toBeNull()
+  })
+
+  it('o botão do cartão abre o endereço para mostrar', async () => {
+    const onShowAddress = jest.fn()
+    const client = createClient(detail(), [member('user-1', 'member')])
+    const screen = await renderPlace(client, { onShowAddress })
+
+    await fireEvent.press(await screen.findByTestId('lugar-mostrar-endereco'))
+    expect(onShowAddress).toHaveBeenCalledWith('place-1')
   })
 })

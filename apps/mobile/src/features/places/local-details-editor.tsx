@@ -4,8 +4,7 @@ import { View } from 'react-native'
 import { classifyLocalDetail } from '@trippy/domain'
 import type { LocalDetailStatus } from '@trippy/domain'
 import type { LivePlace, SyncClient } from '@trippy/sync'
-import { Button, Notice, TextField } from '../../components'
-import { TypographyText, useTheme } from '../../design-system'
+import { Button, Notice, Text, TextField, useTheme } from '../../design-system'
 
 function statusMessage(status: LocalDetailStatus, label: string): string | null {
   if (status === 'missing') return `${label} local ausente. Você pode salvar com essa pendência.`
@@ -87,9 +86,9 @@ export function LocalDetailsEditor({
 
   return (
     <View testID="local-details-editor" style={{ gap: theme.spacing.space3 }}>
-      <TypographyText family="sans" style={{ color: theme.colors.ink }}>
+      <Text variant="titleS" color={theme.colors.ink}>
         Nome e endereço locais
-      </TypographyText>
+      </Text>
       <TextField
         label="Nome local"
         value={localName}
@@ -101,7 +100,7 @@ export function LocalDetailsEditor({
         testID={`local-name-${place.id}`}
       />
       {nameWarning ? (
-        <Notice testID={`local-name-warning-${place.id}`} tone="warning" message={nameWarning} />
+        <Notice testID={`local-name-warning-${place.id}`} tone="change" segments={[nameWarning]} />
       ) : null}
       <TextField
         label="Endereço local"
@@ -116,17 +115,17 @@ export function LocalDetailsEditor({
       {addressWarning ? (
         <Notice
           testID={`local-address-warning-${place.id}`}
-          tone="warning"
-          message={addressWarning}
+          tone="change"
+          segments={[addressWarning]}
         />
       ) : null}
       {saveError ? (
-        <Notice testID={`local-details-error-${place.id}`} tone="danger" message={saveError} />
+        <Notice testID={`local-details-error-${place.id}`} tone="change" segments={[saveError]} />
       ) : null}
       {saveMessage ? (
-        <TypographyText family="sans" style={{ color: theme.colors.forest }}>
+        <Text variant="notice" color={theme.colors.forestInk}>
           {saveMessage}
-        </TypographyText>
+        </Text>
       ) : null}
       <Button
         label="Salvar dados locais"
