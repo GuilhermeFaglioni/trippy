@@ -9,13 +9,21 @@ import {
   MapPin,
   Plus,
   Camera,
+  Search,
   Star,
   Sun,
   Users,
   WifiOff,
   X,
+  createLucideIcon,
   type LucideIcon,
 } from 'lucide-react-native'
+
+/** Cartão para mostrar (retângulo com duas linhas), traço da tela do lugar. */
+const AddressCard = createLucideIcon('AddressCard', [
+  ['rect', { x: '3', y: '5', width: '18', height: '14', rx: '2', key: 'frame' }],
+  ['path', { d: 'M7 10h6M7 14h10', key: 'lines' }],
+])
 
 export const iconSet = {
   sun: Sun,
@@ -32,7 +40,9 @@ export const iconSet = {
   'grip-vertical': GripVertical,
   'chevron-left': ChevronLeft,
   plus: Plus,
+  search: Search,
   x: X,
+  'address-card': AddressCard,
 } as const satisfies Record<string, LucideIcon>
 
 export type IconName = keyof typeof iconSet

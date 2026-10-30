@@ -9,7 +9,15 @@ import { toNativeShadow } from './shadow'
 import { Text } from './text'
 
 /** `inverse`: botão claro (`on-forest`, texto escuro) sobre o card de destaque nos dois temas. */
-export type ButtonVariant = 'primary' | 'secondary' | 'fab' | 'inverse' | 'outlineInverse'
+/** `outlineInverse`: contorno claro sobre fundo forest (login). */
+/** `forest`: ação principal sobre fundo branco em tela cheia (cartão para mostrar). */
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'fab'
+  | 'inverse'
+  | 'outlineInverse'
+  | 'forest'
 
 export type ButtonProps = {
   label: string
@@ -19,6 +27,8 @@ export type ButtonProps = {
   icon?: IconName
   /** Secundário alternável (`aria-pressed`): marcado vira forest. */
   pressed?: boolean
+  /** `favorite`: marcado mantém o fundo e pinta rótulo e estrela de terracotta (Favoritar). */
+  tone?: 'default' | 'favorite'
   disabled?: boolean
   loading?: boolean
   /** Altura mínima, quando a tela pede mais que o padrão da variante (login: 54). */
@@ -37,10 +47,14 @@ export function Button({
   variant = 'primary',
   icon,
   pressed,
+  tone = 'default',
   disabled = false,
   loading = false,
   minHeight,
-  block = variant === 'primary' || variant === 'inverse' || variant === 'outlineInverse',
+  block = variant === 'primary' ||
+    variant === 'inverse' ||
+    variant === 'outlineInverse' ||
+    variant === 'forest',
   accessibilityLabel,
   accessibilityHint,
   locale,
@@ -52,18 +66,22 @@ export function Button({
   const isToggle = variant === 'secondary' && pressed !== undefined
   const isMarked = isToggle && pressed === true
   const tall = variant === 'outlineInverse' || (variant === 'inverse' && minHeight !== undefined)
+  const isFavoriteMarked = isMarked && tone === 'favorite'
+  const isFilledMarked = isMarked && !isFavoriteMarked
   const borderRadius =
     (variant === 'secondary' || variant === 'inverse') && !tall ? radius.radiusSm : radius.radiusMd
 
   const foreground = disabled
     ? colors.inkMuted
     : variant === 'secondary'
-      ? isMarked
+      ? isFilledMarked
         ? colors.onForest
-        : colors.ink
+        : isFavoriteMarked
+          ? colors.terracottaText
+          : colors.ink
       : variant === 'inverse'
         ? colors.onMustard
-        : variant === 'outlineInverse'
+        : variant === 'outlineInverse' || variant === 'forest'
           ? colors.onForest
           : colors.onTerracotta
 
@@ -89,7 +107,7 @@ export function Button({
           const backgroundColor = disabled
             ? colors.sand
             : variant === 'secondary'
-              ? isMarked
+              ? isFilledMarked
                 ? colors.forest
                 : touching
                   ? colors.sand
@@ -98,6 +116,10 @@ export function Button({
                 ? touching
                   ? withAlpha(colors.onForest, 0.12)
                   : 'transparent'
+                : variant === 'forest'
+                  ? touching
+                    ? derivePressedColor(colors.forest)
+                    : colors.forest
                 : variant === 'inverse'
                   ? touching
                     ? derivePressedColor(colors.onForest)
@@ -111,7 +133,7 @@ export function Button({
             borderColor:
               variant === 'outlineInverse'
                 ? withAlpha(colors.onForest, 0.4)
-                : isMarked
+                : isFilledMarked
                   ? colors.forest
                   : colors.lineStrong,
             borderRadius,
@@ -135,7 +157,9 @@ export function Button({
             opacity: loading ? 0 : 1,
           }}
         >
-          {icon ? <Icon name={icon} color={foreground} size={20} /> : null}
+          {icon ? (
+            <Icon name={icon} color={foreground} size={20} filled={isFavoriteMarked} />
+          ) : null}
           <Text
             variant={
               variant === 'secondary' || variant === 'inverse' ? 'buttonSecondary' : 'button'

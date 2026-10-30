@@ -68,7 +68,6 @@ async function renderToday(
       <SyncProvider client={client}>
         <TodayScreen
           tripId="trip-1"
-          tripName="Fim de semana"
           timezone="UTC"
           startDate={startDate}
           endDate={endDate}

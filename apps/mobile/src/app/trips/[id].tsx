@@ -3,7 +3,8 @@ import { ActivityIndicator, Platform, View } from 'react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button, Card, Notice } from '../../components'
+import { Card, Notice } from '../../components'
+import { ScreenHeader, TabBar, tripTabs, type TabBarItem } from '../../design-system/components'
 import {
   createTypographyTokens,
   normalizeFontPlatform,
@@ -11,6 +12,7 @@ import {
   useTheme,
 } from '../../design-system'
 import { ItineraryScreen } from '../../features/itinerary/itinerary-screen'
+import { TripMemoriesScreen } from '../../features/photos/trip-memories-screen'
 import { MembersScreen } from '../../features/members/members-screen'
 import { useSync } from '../../features/sync/sync-provider'
 import { TripPlacesScreen } from '../../features/places/trip-places-screen'
@@ -27,18 +29,28 @@ import {
 /** TestIDs Maestro: viagem-removida, trip-tab-lugares, trip-tab-roteiro, trip-tab-grupo, trip-tab-hoje. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
-const PHASE_LABELS: Record<TripPhase, string> = {
-  planning: 'Planejando',
-  traveling: 'Em viagem',
-  ended: 'Encerrada',
-}
-
 /** Aba inicial por fase; Hoje e Recap entram nas telas próprias. */
 function initialSection(phase: TripPhase): TripSection {
   return phase === 'traveling' ? 'hoje' : 'lugares'
 }
 
-type TripSection = 'hoje' | 'lugares' | 'roteiro' | 'grupo'
+type TripSection = 'hoje' | 'roteiro' | 'lugares' | 'memorias' | 'grupo'
+
+const SECTION_TITLES: Record<TripSection, string> = {
+  hoje: 'Hoje',
+  roteiro: 'Roteiro',
+  lugares: 'Lugares',
+  memorias: 'Memórias',
+  grupo: 'Grupo',
+}
+
+const SECTION_TABS: Record<TripSection, TabBarItem> = {
+  hoje: { ...tripTabs.today, testID: 'trip-tab-hoje' },
+  roteiro: { ...tripTabs.itinerary, testID: 'trip-tab-roteiro' },
+  lugares: { ...tripTabs.places, testID: 'trip-tab-lugares' },
+  memorias: { ...tripTabs.memories, testID: 'trip-tab-memorias' },
+  grupo: { ...tripTabs.group, testID: 'trip-tab-grupo' },
+}
 type MembershipState = 'loading' | 'active' | 'removed' | 'error'
 
 function firstParam(value: string | string[] | undefined): string {
@@ -77,62 +89,6 @@ function RemovedTripNotice({ pending }: { pending: number }) {
   )
 }
 
-function TripTabs({
-  active,
-  showToday,
-  onChange,
-}: {
-  active: TripSection
-  showToday: boolean
-  onChange: (section: TripSection) => void
-}) {
-  const theme = useTheme()
-  return (
-    <View
-      testID="viagem-abas"
-      style={{
-        backgroundColor: theme.colors.ground,
-        borderBottomColor: theme.colors.line,
-        borderBottomWidth: 1,
-        flexDirection: 'row',
-        gap: theme.spacing.space2,
-        padding: theme.spacing.space3,
-      }}
-    >
-      {showToday ? (
-        <Button
-          label="Hoje"
-          variant="secondary"
-          selected={active === 'hoje'}
-          onPress={() => onChange('hoje')}
-          testID="trip-tab-hoje"
-        />
-      ) : null}
-      <Button
-        label="Lugares"
-        variant="secondary"
-        selected={active === 'lugares'}
-        onPress={() => onChange('lugares')}
-        testID="trip-tab-lugares"
-      />
-      <Button
-        label="Roteiro"
-        variant="secondary"
-        selected={active === 'roteiro'}
-        onPress={() => onChange('roteiro')}
-        testID="trip-tab-roteiro"
-      />
-      <Button
-        label="Grupo"
-        variant="secondary"
-        selected={active === 'grupo'}
-        onPress={() => onChange('grupo')}
-        testID="trip-tab-grupo"
-      />
-    </View>
-  )
-}
-
 export default function TripRoute() {
   const router = useRouter()
   const params = useLocalSearchParams<{
@@ -155,8 +111,7 @@ export default function TripRoute() {
   const [section, setSection] = useState<TripSection>('lugares')
   const [trip, setTrip] = useState<TripSummary | null>(null)
   const sectionChosenRef = useRef(false)
-  const [confirmingEnd, setConfirmingEnd] = useState(false)
-  const [locallyEnded, setLocallyEnded] = useState(false)
+  const [memberCount, setMemberCount] = useState<number | null>(null)
   const openedTripRef = useRef<string | null>(null)
 
   const checkMembership = useCallback(async () => {
@@ -222,18 +177,9 @@ export default function TripRoute() {
     })()
   }, [client, membership, tripId])
 
-  const phase: TripPhase | null = locallyEnded ? 'ended' : (trip?.phase ?? null)
+  const phase: TripPhase | null = trip?.phase ?? null
   const canSeeReadyToTravel =
     trip !== null && (trip.role === 'organizer' || trip.role === 'coorganizer')
-  const canEndTrip = role === 'organizer' && phase !== null && phase !== 'ended'
-
-  async function endTrip() {
-    if (client === null) return
-    setConfirmingEnd(false)
-    await client.endTrip(tripId)
-    setLocallyEnded(true)
-  }
-
   const startDate = trip?.startDate ?? routeStartDate
   const endDate = trip?.endDate ?? routeEndDate
   const timezone = trip?.timezone ?? 'UTC'
@@ -253,7 +199,6 @@ export default function TripRoute() {
       return (
         <TodayScreen
           tripId={tripId}
-          tripName={displayName}
           timezone={timezone}
           startDate={startDate}
           endDate={endDate}
@@ -265,17 +210,35 @@ export default function TripRoute() {
     if (section === 'roteiro') {
       return <ItineraryScreen tripId={tripId} startDate={startDate} endDate={endDate} />
     }
-    if (section === 'grupo') return <MembersScreen tripId={tripId} />
+    if (section === 'memorias') return <TripMemoriesScreen onSendPhotos={openPhotos} />
+    if (section === 'grupo') {
+      return (
+        <MembersScreen
+          tripId={tripId}
+          onMemberCount={setMemberCount}
+          onOpenSettings={() =>
+            router.push({
+              pathname: '/trips/[id]/settings',
+              params: { id: tripId, tripName: displayName, role },
+            })
+          }
+        />
+      )
+    }
     return (
       <TripPlacesScreen
         tripId={tripId}
         tripName={displayName}
         role={role}
-        onOpenPhotos={openPhotos}
         onShowAddress={openAddressCard}
       />
     )
   }, [displayName, endDate, role, router, section, startDate, timezone, tripId])
+
+  const tabKeys: TripSection[] =
+    phase === 'traveling'
+      ? ['hoje', 'roteiro', 'lugares', 'memorias', 'grupo']
+      : ['roteiro', 'lugares', 'memorias', 'grupo']
 
   if (membership === 'loading') {
     return (
@@ -319,64 +282,25 @@ export default function TripRoute() {
       <SafeAreaView edges={['top']}>
         <View
           style={{
-            gap: theme.spacing.space2,
+            gap: theme.spacing.space4,
             paddingHorizontal: theme.spacing.space5,
             paddingTop: theme.spacing.space3,
           }}
         >
-          <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
-            {displayName || 'Viagem'}
-          </TypographyText>
-          {phase ? (
-            <TypographyText
-              family="sans"
-              testID="trip-header-phase"
-              style={{ color: theme.colors.inkMuted }}
-            >
-              {PHASE_LABELS[phase]}
-            </TypographyText>
-          ) : null}
-          {canEndTrip && !confirmingEnd ? (
-            <Button
-              label="Encerrar viagem"
-              variant="secondary"
-              onPress={() => setConfirmingEnd(true)}
-              testID="trip-end-button"
-            />
-          ) : null}
-          {confirmingEnd ? (
-            <View style={{ gap: theme.spacing.space2 }}>
-              <TypographyText family="sans" style={{ color: theme.colors.ink }}>
-                Encerrar a viagem agora? Nada é apagado.
-              </TypographyText>
-              <Button
-                label="Confirmar encerramento"
-                onPress={() => void endTrip()}
-                testID="trip-end-confirm"
-              />
-              <Button
-                label="Cancelar"
-                variant="secondary"
-                onPress={() => setConfirmingEnd(false)}
-              />
-            </View>
+          <ScreenHeader
+            testID="trip-header"
+            backLabel={displayName ? `Minhas viagens · ${displayName}` : 'Minhas viagens'}
+            onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+            title={
+              section === 'grupo' && memberCount !== null
+                ? `Grupo · ${memberCount}`
+                : SECTION_TITLES[section]
+            }
+          />
+          {section === 'roteiro' && canSeeReadyToTravel && trip ? (
+            <ReadyToTravelCard tripId={tripId} tripName={displayName} trip={trip} />
           ) : null}
         </View>
-        {canSeeReadyToTravel && trip ? (
-          <View
-            style={{ paddingHorizontal: theme.spacing.space5, paddingTop: theme.spacing.space3 }}
-          >
-            <ReadyToTravelCard tripId={tripId} tripName={displayName} trip={trip} />
-          </View>
-        ) : null}
-        <TripTabs
-          active={section}
-          showToday={phase === 'traveling'}
-          onChange={(next) => {
-            sectionChosenRef.current = true
-            setSection(next)
-          }}
-        />
       </SafeAreaView>
       <View style={{ flex: 1 }}>
         {syncError ? (
@@ -388,6 +312,17 @@ export default function TripRoute() {
         ) : null}
         {routeContent}
       </View>
+      <TabBar
+        testID="viagem-abas"
+        items={tabKeys.map((key) => SECTION_TABS[key])}
+        currentKey={SECTION_TABS[section].key}
+        onSelect={(key) => {
+          const next = tabKeys.find((candidate) => SECTION_TABS[candidate].key === key)
+          if (!next) return
+          sectionChosenRef.current = true
+          setSection(next)
+        }}
+      />
     </View>
   )
 }

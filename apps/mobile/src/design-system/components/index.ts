@@ -1,3 +1,4 @@
+export { ActionSheet, type ActionSheetProps } from './action-sheet'
 export {
   Avatar,
   AvatarStack,
@@ -18,16 +19,24 @@ export {
   type TripCoverTone,
   type TripRowProps,
 } from './trip-row'
+export { CircleButton, type CircleButtonProps } from './circle-button'
+export { PersonChip, type PersonChipProps } from './person-chip'
+export { PhotoTile, type PhotoTileProps } from './photo-tile'
+export { StarRating, type StarRatingProps } from './star-rating'
+export { TextLink, type TextLinkProps } from './text-link'
 export { Card, Eyebrow, HighlightCard } from './card'
 export { derivePressedColor, withAlpha } from './color'
 export { DaySheet, type DaySheetOption, type DaySheetProps } from './day-sheet'
 export { FilterChip, type FilterChipProps } from './filter-chip'
 export { Icon, iconSet, type IconName, type IconProps } from './icon'
 export { IconButton, type IconButtonProps, type IconButtonTone } from './icon-button'
+export { NoteLine, type NoteLineProps } from './note-line'
 export { Notice, type NoticeProps, type NoticeSegment, type NoticeTone } from './notice'
+export { PlaceResult, type PlaceResultProps } from './place-result'
 export { PlaceRow, type PlaceRowActions, type PlaceRowProps } from './place-row'
 export { ScreenHeader, type ScreenHeaderProps } from './screen-header'
 export { StatusChip, type StatusChipProps, type StatusChipTone } from './status-chip'
 export { TabBar, tripTabs, type TabBarItem, type TabBarProps } from './tab-bar'
+export { TextButton, type TextButtonProps } from './text-button'
 export { TextField, type TextFieldProps } from './text-field'
 export { Text, textStyles, type TextProps, type TextVariant } from './text'

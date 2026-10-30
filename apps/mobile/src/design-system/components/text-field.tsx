@@ -4,6 +4,7 @@ import { Platform, TextInput, View, type TextInputProps } from 'react-native'
 import { useTheme } from '../theme-provider'
 import { getTextInputFontFamily, normalizeFontPlatform, TEXT_SCALING_PROPS } from '../typography'
 import { FocusRing } from './focus-ring'
+import { Icon, type IconName } from './icon'
 import { Text, textStyles } from './text'
 
 export type TextFieldProps = Omit<
@@ -26,6 +27,12 @@ export type TextFieldProps = Omit<
   error?: string
   /** Ajuda abaixo do campo (some enquanto houver erro). */
   help?: string
+  /** Marca o rótulo com "(opcional)". */
+  optional?: boolean
+  /** Ícone de 18px à esquerda do texto (busca). */
+  leadingIcon?: IconName
+  /** Altura mínima do campo; padrão 52 (campo de várias linhas pode pedir mais). */
+  minHeight?: number
   disabled?: boolean
   locale?: string
   testID?: string
@@ -37,6 +44,9 @@ export function TextField({
   onChangeText,
   error,
   help,
+  optional = false,
+  leadingIcon,
+  minHeight = 52,
   disabled = false,
   locale,
   placeholder,
@@ -62,9 +72,21 @@ export function TextField({
 
   return (
     <View style={{ gap: 6, minWidth: 0 }}>
-      <Text variant="fieldLabel" color={colors.ink} locale={locale}>
-        {label}
-      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <Text variant="fieldLabel" color={colors.ink} locale={locale}>
+          {label}
+        </Text>
+        {optional ? (
+          <Text
+            variant="fieldLabel"
+            color={colors.inkMuted}
+            locale={locale}
+            style={{ fontWeight: '500' }}
+          >
+            {' (opcional)'}
+          </Text>
+        ) : null}
+      </View>
       <View>
         <TextInput
           {...inputProps}
@@ -104,14 +126,30 @@ export function TextField({
                 normalizeFontPlatform(Platform.OS),
                 locale,
               ),
-              minHeight: 52,
+              minHeight,
               // A borda de 2px não empurra o texto: o padding compensa.
               paddingHorizontal: spacing.space4 + 1 - borderWidth,
+              ...(leadingIcon ? { paddingLeft: spacing.space4 + 1 - borderWidth + 28 } : {}),
               paddingVertical: multiline ? spacing.space3 : 0,
               width: '100%',
             },
           ]}
         />
+        {leadingIcon ? (
+          <View
+            pointerEvents="none"
+            style={{
+              alignItems: 'center',
+              bottom: 0,
+              justifyContent: 'center',
+              left: spacing.space4 - 1,
+              position: 'absolute',
+              top: 0,
+            }}
+          >
+            <Icon name={leadingIcon} color={colors.inkMuted} size={18} />
+          </View>
+        ) : null}
         {focused && !disabled ? (
           <FocusRing
             radius={radius.radiusSm}

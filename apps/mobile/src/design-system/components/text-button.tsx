@@ -9,6 +9,8 @@ export type TextButtonProps = {
   /** `onForest`: texto claro sobre fundo forest. */
   tone?: 'ink' | 'onForest'
   disabled?: boolean
+  accessibilityHint?: string
+  locale?: string
   testID?: string
 }
 
@@ -18,6 +20,8 @@ export function TextButton({
   onPress,
   tone = 'ink',
   disabled = false,
+  accessibilityHint,
+  locale,
   testID,
 }: TextButtonProps) {
   const { colors, spacing } = useTheme()
@@ -28,6 +32,7 @@ export function TextButton({
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
@@ -40,7 +45,7 @@ export function TextButton({
         ...(tone === 'onForest' ? { alignSelf: 'stretch' } : {}),
       })}
     >
-      <Text variant="fieldInput" color={color} style={{ textAlign: 'center' }}>
+      <Text variant="fieldInput" color={color} locale={locale} style={{ textAlign: 'center' }}>
         {label}
       </Text>
     </Pressable>

@@ -1,21 +1,29 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Platform, ScrollView, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { ActivityIndicator, ScrollView, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { LiveMember, PlaceDetail, SyncClient } from '@trippy/sync'
-import { Button, Card, Notice, TextField } from '../../components'
 import {
-  createTypographyTokens,
-  normalizeFontPlatform,
-  TypographyText,
+  Button,
+  Card,
+  CircleButton,
+  IconButton,
+  NoteLine,
+  Notice,
+  PersonChip,
+  PhotoTile,
+  StarRating,
+  Text,
+  TextField,
+  TextLink,
   useTheme,
 } from '../../design-system'
 import { useSession } from '../auth/session-provider'
 import { useSync } from '../sync/sync-provider'
+import { LocalDetailsEditor } from './local-details-editor'
 
-const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
-const RATINGS = [1, 2, 3, 4, 5] as const
 const NOTE_MAX_LENGTH = 500
+const CARD_PADDING = { paddingHorizontal: 14, paddingVertical: 12 } as const
 
 /** Formata a média com vírgula, como o restante do app em pt-BR. */
 function formatAverage(value: number): string {
@@ -27,16 +35,29 @@ type Identity = { label: string; slug: string }
 export type PlaceDetailScreenProps = {
   tripId: string
   placeId: string
+  onBack?: () => void
+  onShowAddress?: (placeId: string) => void
+  onOpenPhotos?: () => void
 }
 
 /**
- * Tela do lugar: favorito, nota, observação e quem foi.
- * TestIDs Maestro: lugar-favorito, lugar-nota-<n>, lugar-media, lugar-observacao-campo,
- * lugar-observacao-salvar, lugar-observacao-pessoa-<n>, lugar-quem-foi, lugar-visita-voce,
- * lugar-visita-pessoa-<n>.
+ * Tela do lugar (referência `08-lugar`): ações, fotos, quem foi, nota, observações e, para quem
+ * organiza, a edição de nome e endereço locais.
+ * TestIDs Maestro: lugar-voltar, lugar-fui, lugar-favorito, lugar-mostrar-endereco,
+ * lugar-fotos-ver-todas, lugar-nota-<n>, lugar-media, lugar-observacao-escrever,
+ * lugar-observacao-campo, lugar-observacao-salvar, lugar-observacao-pessoa-<n>, lugar-quem-foi,
+ * lugar-visita-voce, lugar-visita-pessoa-<n>, local-name-<id>, local-address-<id>,
+ * save-local-details-<id>.
  */
-export function PlaceDetailScreen({ tripId, placeId }: PlaceDetailScreenProps) {
+export function PlaceDetailScreen({
+  tripId,
+  placeId,
+  onBack,
+  onShowAddress,
+  onOpenPhotos,
+}: PlaceDetailScreenProps) {
   const theme = useTheme()
+  const insets = useSafeAreaInsets()
   const { session } = useSession()
   const { client, ready, error: syncError } = useSync()
   const userId = session?.user.id ?? null
@@ -46,6 +67,7 @@ export function PlaceDetailScreen({ tripId, placeId }: PlaceDetailScreenProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [screenError, setScreenError] = useState<string | null>(null)
   const [noteDraft, setNoteDraft] = useState('')
+  const [isWriting, setIsWriting] = useState(false)
 
   const load = useCallback(async () => {
     if (client === null) {
@@ -117,6 +139,7 @@ export function PlaceDetailScreen({ tripId, placeId }: PlaceDetailScreenProps) {
   const canManageVisits = me?.role === 'organizer' || me?.role === 'coorganizer'
   const orderedMembers = me ? [me, ...others] : others
   const visitorIds = new Set(detail?.visitors.map((visitor) => visitor.userId) ?? [])
+  const iWent = userId !== null && visitorIds.has(userId)
 
   // Não há nomes no sync: a própria pessoa vira "Você" e as outras, "Pessoa N" na ordem da lista.
   const identify = (memberId: string): Identity => {
@@ -158,202 +181,311 @@ export function PlaceDetailScreen({ tripId, placeId }: PlaceDetailScreenProps) {
   const saveNote = () => {
     if (detail === null) return
     const note = noteDraft.trim()
-    if (note === (detail.myNote ?? '')) return
+    if (note === (detail.myNote ?? '')) {
+      setIsWriting(false)
+      return
+    }
     void write(
       (syncClient) => syncClient.setPlaceNote(tripId, placeId, note.length > 0 ? note : null),
       'Não foi possível salvar sua observação.',
-    )
+    ).then(() => setIsWriting(false))
   }
 
-  const name = detail
-    ? (detail.place.userLocalName ?? detail.place.localName ?? detail.place.name)
+  const place = detail?.place ?? null
+  const name = place?.name ?? ''
+  const localLine = place
+    ? [place.userLocalName ?? place.localName, place.userLocalAddress ?? place.localAddress]
+        .filter((part): part is string => part != null && part.trim() !== '')
+        .join(' · ')
     : ''
+  const contextLine = place
+    ? [
+        place.dayIndex != null ? `Dia ${place.dayIndex + 1}` : null,
+        place.suggestedBy === userId
+          ? 'sugerido por você'
+          : `sugerido por ${identify(place.suggestedBy).label}`,
+      ]
+        .filter((part) => part !== null)
+        .join(' · ')
+    : ''
+  const visitCount = detail?.visitors.length ?? 0
+  const noteCount = (detail?.notes.length ?? 0) + (detail?.myNote ? 1 : 0)
 
   return (
-    <SafeAreaView testID="tela-lugar" style={{ flex: 1, backgroundColor: theme.colors.ground }}>
+    <View testID="tela-lugar" style={{ flex: 1, backgroundColor: theme.colors.ground }}>
       <ScrollView
-        contentContainerStyle={{
-          gap: theme.spacing.space4,
-          padding: theme.spacing.space5,
-        }}
+        contentContainerStyle={{ paddingBottom: theme.spacing.space6 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ gap: theme.spacing.space2 }}>
-          <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
-            {name || 'Lugar'}
-          </TypographyText>
-          <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-            Detalhes do lugar
-          </TypographyText>
+        <View
+          style={{
+            backgroundColor: theme.colors.photo1,
+            height: 200,
+            paddingHorizontal: theme.spacing.space5,
+            paddingTop: insets.top + theme.spacing.space1,
+          }}
+        >
+          {onBack ? (
+            <View style={{ alignSelf: 'flex-start' }}>
+              <CircleButton
+                icon="chevron-left"
+                accessibilityLabel="Voltar"
+                onPress={onBack}
+                testID="lugar-voltar"
+              />
+            </View>
+          ) : null}
         </View>
 
-        {syncError ? (
-          <Notice
-            testID="lugar-sync-indisponivel"
-            tone="warning"
-            title="Sincronização local indisponível."
-            message={syncError}
-          />
-        ) : null}
-        {screenError ? <Notice testID="lugar-erro" tone="danger" message={screenError} /> : null}
+        <View
+          style={{
+            gap: 14,
+            paddingHorizontal: theme.spacing.space5,
+            paddingTop: theme.spacing.space4,
+          }}
+        >
+          {syncError ? (
+            <Notice
+              testID="lugar-sync-indisponivel"
+              tone="change"
+              segments={[{ strong: 'Sincronização local indisponível. ' }, syncError]}
+            />
+          ) : null}
+          {screenError ? (
+            <Notice testID="lugar-erro" tone="change" segments={[screenError]} />
+          ) : null}
 
-        {!isLoading && detail === null ? (
-          <Notice
-            testID="lugar-nao-encontrado"
-            message="Este lugar não está disponível neste aparelho."
-          />
-        ) : null}
+          {!isLoading && detail === null ? (
+            <Notice
+              testID="lugar-nao-encontrado"
+              tone="offline"
+              segments={['Este lugar não está disponível neste aparelho.']}
+            />
+          ) : null}
 
-        {detail !== null ? (
-          <>
-            <Card>
-              <View style={{ gap: theme.spacing.space3 }}>
-                <Button
-                  label={detail.favoriteByMe ? 'Favorito ✓' : 'Favorito'}
-                  variant="secondary"
-                  selected={detail.favoriteByMe}
-                  disabled={isSaving}
-                  onPress={toggleFavorite}
-                  testID="lugar-favorito"
-                />
-                <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-                  {`${detail.favoriteCount} ${detail.favoriteCount === 1 ? 'favorito' : 'favoritos'} no grupo`}
-                </TypographyText>
-              </View>
-            </Card>
-
-            <Card>
-              <View style={{ gap: theme.spacing.space3 }}>
-                <TypographyText
-                  family="display"
-                  style={[typography.titleS, { color: theme.colors.ink }]}
+          {detail !== null && place !== null ? (
+            <>
+              <View style={{ gap: theme.spacing.space1 }}>
+                {contextLine ? (
+                  <Text variant="notice" color={theme.colors.inkMuted} testID="lugar-contexto">
+                    {contextLine}
+                  </Text>
+                ) : null}
+                <Text
+                  variant="titleL"
+                  color={theme.colors.ink}
+                  accessibilityRole="header"
+                  testID="lugar-nome"
+                  style={{ fontSize: 28, letterSpacing: -0.6, lineHeight: 31 }}
                 >
-                  Sua nota
-                </TypographyText>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.space2 }}>
-                  {RATINGS.map((rating) => (
-                    <Button
-                      key={rating}
-                      label={String(rating)}
-                      accessibilityLabel={`Nota ${rating} de 5`}
-                      variant="secondary"
-                      selected={detail.myRating === rating}
-                      disabled={isSaving}
-                      onPress={() => rate(rating)}
-                      testID={`lugar-nota-${rating}`}
-                    />
-                  ))}
+                  {name || 'Lugar'}
+                </Text>
+                {localLine ? (
+                  <Text variant="bodySm" color={theme.colors.inkMuted} testID="lugar-nome-local">
+                    {localLine}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View style={{ alignItems: 'flex-start', flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label="Fui"
+                    icon="check"
+                    variant="secondary"
+                    block
+                    pressed={iWent}
+                    disabled={isSaving || userId === null}
+                    onPress={() => userId !== null && toggleVisit(userId, iWent)}
+                    testID="lugar-fui"
+                  />
                 </View>
-                {detail.ratingAverage !== null ? (
-                  <TypographyText
-                    family="sans"
-                    testID="lugar-media"
-                    style={{ color: theme.colors.inkMuted }}
-                  >
-                    {`média ${formatAverage(detail.ratingAverage)} · ${detail.ratingCount} ${detail.ratingCount === 1 ? 'avaliação' : 'avaliações'}`}
-                  </TypographyText>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    label={detail.favoriteByMe ? 'Favorito' : 'Favoritar'}
+                    icon="star"
+                    variant="secondary"
+                    tone="favorite"
+                    block
+                    pressed={detail.favoriteByMe}
+                    disabled={isSaving}
+                    onPress={toggleFavorite}
+                    testID="lugar-favorito"
+                  />
+                </View>
+                {onShowAddress ? (
+                  <IconButton
+                    icon="address-card"
+                    accessibilityLabel="Mostrar endereço"
+                    onPress={() => onShowAddress(placeId)}
+                    testID="lugar-mostrar-endereco"
+                  />
                 ) : null}
               </View>
-            </Card>
 
-            <Card>
-              <View style={{ gap: theme.spacing.space3 }}>
-                <TextField
-                  label="Sua observação"
-                  value={noteDraft}
-                  onChangeText={setNoteDraft}
-                  onBlur={saveNote}
-                  multiline
-                  maxLength={NOTE_MAX_LENGTH}
-                  testID="lugar-observacao-campo"
-                />
-                <Button
-                  label="Salvar observação"
-                  variant="secondary"
-                  disabled={isSaving}
-                  onPress={saveNote}
-                  testID="lugar-observacao-salvar"
-                />
-                {detail.notes.length > 0 ? (
-                  <View testID="lugar-observacoes-do-grupo" style={{ gap: theme.spacing.space2 }}>
-                    <TypographyText family="sans" style={{ color: theme.colors.ink }}>
-                      Observações do grupo
-                    </TypographyText>
-                    {detail.notes.map((note) => {
-                      const { label, slug } = identify(note.userId)
-                      return (
-                        <TypographyText
-                          key={note.userId}
-                          family="sans"
-                          testID={`lugar-observacao-${slug}`}
-                          style={{ color: theme.colors.inkMuted }}
-                        >
-                          {`${label}: ${note.note}`}
-                        </TypographyText>
-                      )
-                    })}
-                  </View>
-                ) : null}
-              </View>
-            </Card>
-
-            <Card testID="lugar-quem-foi">
-              <View style={{ gap: theme.spacing.space3 }}>
-                <TypographyText
-                  family="display"
-                  style={[typography.titleS, { color: theme.colors.ink }]}
+              <View style={{ gap: theme.spacing.space2 }}>
+                <View
+                  style={{
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
                 >
-                  Quem foi
-                </TypographyText>
-                {orderedMembers.map((member) => {
-                  const { label, slug } = identify(member.userId)
-                  const isMe = member.userId === userId
-                  const visited = visitorIds.has(member.userId)
-                  const canToggle = isMe || canManageVisits
-                  return (
-                    <View
-                      key={member.userId}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: theme.spacing.space2,
-                      }}
-                    >
-                      <View>
-                        <TypographyText family="sans" style={{ color: theme.colors.ink }}>
-                          {label}
-                        </TypographyText>
-                        <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-                          {visited ? 'Foi' : 'Não foi'}
-                        </TypographyText>
-                      </View>
-                      {canToggle ? (
-                        <Button
-                          label={
-                            isMe
-                              ? visited
-                                ? 'Eu fui ✓'
-                                : 'Eu fui'
-                              : visited
-                                ? 'Foi ✓'
-                                : 'Marcar como foi'
+                  <Text variant="count" color={theme.colors.inkMuted}>
+                    Fotos
+                  </Text>
+                  {onOpenPhotos ? (
+                    <TextLink
+                      label="Ver todas"
+                      onPress={onOpenPhotos}
+                      testID="lugar-fotos-ver-todas"
+                    />
+                  ) : null}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <PhotoTile
+                    kind="add"
+                    accessibilityLabel="Adicionar foto"
+                    onPress={onOpenPhotos}
+                    testID="lugar-fotos-adicionar"
+                  />
+                </View>
+              </View>
+
+              <Card testID="lugar-quem-foi" style={{ gap: 8, ...CARD_PADDING }}>
+                <Text variant="count" color={theme.colors.inkMuted}>
+                  {`Quem foi · ${visitCount}`}
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {orderedMembers.map((member) => {
+                    const { label, slug } = identify(member.userId)
+                    const isMe = member.userId === userId
+                    const visited = visitorIds.has(member.userId)
+                    const canToggle = (isMe || canManageVisits) && !isSaving
+                    if (visited) {
+                      return (
+                        <PersonChip
+                          key={member.userId}
+                          label={label}
+                          removable={canToggle && member.userId === userId}
+                          accessibilityLabel={
+                            canToggle ? `${label} foi. Tocar para desmarcar` : `${label} foi`
                           }
-                          variant="secondary"
-                          selected={visited}
-                          disabled={isSaving}
-                          onPress={() => toggleVisit(member.userId, visited)}
+                          onPress={canToggle ? () => toggleVisit(member.userId, true) : undefined}
                           testID={`lugar-visita-${slug}`}
                         />
-                      ) : null}
-                    </View>
-                  )
-                })}
-              </View>
-            </Card>
-          </>
-        ) : null}
+                      )
+                    }
+                    return canToggle ? (
+                      <PersonChip
+                        key={member.userId}
+                        tone="add"
+                        label={isMe ? '+ marcar' : `+ ${label}`}
+                        accessibilityLabel={`Marcar ${label} como foi`}
+                        onPress={() => toggleVisit(member.userId, false)}
+                        testID={`lugar-visita-${slug}`}
+                      />
+                    ) : null
+                  })}
+                </View>
+                <Text variant="caption" color={theme.colors.inkMuted}>
+                  Toque no seu nome para desmarcar.
+                </Text>
+              </Card>
+
+              <Card
+                style={{ gap: theme.spacing.space1, paddingHorizontal: 14, paddingVertical: 8 }}
+              >
+                <View style={{ alignItems: 'center', flexDirection: 'row', gap: 4 }}>
+                  <Text variant="count" color={theme.colors.inkMuted} style={{ flex: 1 }}>
+                    Sua avaliação
+                  </Text>
+                  <StarRating
+                    value={detail.myRating ?? 0}
+                    disabled={isSaving}
+                    onChange={rate}
+                    testID="lugar-nota"
+                  />
+                </View>
+                {detail.ratingAverage !== null ? (
+                  <Text variant="caption" color={theme.colors.inkMuted} testID="lugar-media">
+                    {`média ${formatAverage(detail.ratingAverage)} · ${detail.ratingCount} ${detail.ratingCount === 1 ? 'avaliação' : 'avaliações'}`}
+                  </Text>
+                ) : null}
+              </Card>
+
+              <Card style={{ gap: 10, ...CARD_PADDING }}>
+                <View
+                  style={{
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Text variant="count" color={theme.colors.inkMuted}>
+                    {`Observações · ${noteCount}`}
+                  </Text>
+                  {isWriting ? null : (
+                    <TextLink
+                      label={detail.myNote ? 'Editar' : 'Escrever'}
+                      onPress={() => setIsWriting(true)}
+                      compact
+                      testID="lugar-observacao-escrever"
+                    />
+                  )}
+                </View>
+                {isWriting ? (
+                  <View style={{ gap: theme.spacing.space3 }}>
+                    <TextField
+                      label="Sua observação"
+                      value={noteDraft}
+                      onChangeText={setNoteDraft}
+                      multiline
+                      maxLength={NOTE_MAX_LENGTH}
+                      testID="lugar-observacao-campo"
+                    />
+                    <Button
+                      label="Salvar observação"
+                      variant="secondary"
+                      block
+                      disabled={isSaving}
+                      onPress={saveNote}
+                      testID="lugar-observacao-salvar"
+                    />
+                  </View>
+                ) : null}
+                <View testID="lugar-observacoes-do-grupo" style={{ gap: 10 }}>
+                  {detail.notes.map((note) => {
+                    const { label, slug } = identify(note.userId)
+                    return (
+                      <NoteLine
+                        key={note.userId}
+                        author={label}
+                        text={note.note}
+                        testID={`lugar-observacao-${slug}`}
+                      />
+                    )
+                  })}
+                  {detail.myNote ? (
+                    <NoteLine author="Você" text={detail.myNote} testID="lugar-observacao-voce" />
+                  ) : null}
+                </View>
+              </Card>
+
+              {canManageVisits && client !== null ? (
+                <Card>
+                  <LocalDetailsEditor
+                    place={place}
+                    tripId={tripId}
+                    client={client}
+                    onSaved={load}
+                  />
+                </Card>
+              ) : null}
+            </>
+          ) : null}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   )
 }

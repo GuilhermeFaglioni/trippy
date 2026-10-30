@@ -6,6 +6,7 @@
     "@trippy/domain": "workspace:*",
     "@trippy/sync": "workspace:*",
     "expo": "~58.0.16",
+    "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.12",
     "expo-crypto": "~58.0.7",
     "expo-dev-client": "~58.0.14",

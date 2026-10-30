@@ -10,6 +10,8 @@ export type TabBarItem = {
   key: string
   label: string
   icon: IconName
+  /** Substitui o testID derivado (`<barra>-<key>`). */
+  testID?: string
 }
 
 export type TabBarProps = {
@@ -57,7 +59,7 @@ export function TabBar({ items, currentKey, onSelect, testID }: TabBarProps) {
         return (
           <Pressable
             key={item.key}
-            testID={testID ? `${testID}-${item.key}` : undefined}
+            testID={item.testID ?? (testID ? `${testID}-${item.key}` : undefined)}
             accessibilityRole="tab"
             accessibilityLabel={item.label}
             accessibilityState={{ selected: current }}

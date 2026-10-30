@@ -186,32 +186,6 @@ describe('ficha do lugar', () => {
     )
   })
 
-  it('classifica pendências locais, deixa editar e permite salvar com aviso', async () => {
-    const screen = await renderCard(createPlace({ countryCode: 'CN' }))
-
-    expect(screen.getByTestId('local-name-warning-place-1')).toHaveTextContent(/Nome local ausente/)
-    expect(screen.getByTestId('local-address-warning-place-1')).toHaveTextContent(
-      /Endereço local ausente/,
-    )
-
-    await fireEvent.changeText(screen.getByTestId('local-name-place-1'), 'Forbidden City')
-    await fireEvent.changeText(screen.getByTestId('local-address-place-1'), 'Rua')
-    expect(screen.getByTestId('local-name-warning-place-1')).toHaveTextContent(
-      /pode não estar no idioma do destino/,
-    )
-    expect(screen.getByTestId('local-address-warning-place-1')).toHaveTextContent(
-      /parece incompleto/,
-    )
-
-    await fireEvent.press(screen.getByTestId('save-local-details-place-1'))
-    await waitFor(() =>
-      expect(syncClient.setLocalDetails).toHaveBeenCalledWith('trip-1', 'place-1', {
-        localName: 'Forbidden City',
-        localAddress: 'Rua',
-      }),
-    )
-  })
-
   it('exibe Google separado com marca, foto sem cache, atribuição e links', async () => {
     mockRequest.mockImplementation(async () => response(details))
     const screen = await renderCard()
