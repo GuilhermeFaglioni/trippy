@@ -202,16 +202,21 @@ function createTestApp(
 function providerWithCalls(
   candidates: PlaceSearchCandidateFields[] = [candidateFields],
 ): PlacesProvider {
+  const respond = async (
+    _input: unknown,
+    onProviderCall?: Parameters<PlacesProvider['search']>[1],
+  ) => {
+    await onProviderCall?.({
+      provider: 'geoapify',
+      sku: 'geocoding',
+      status: '200',
+      latencyMs: 5,
+    })
+    return candidates
+  }
   return {
-    search: vi.fn(async (_input, onProviderCall) => {
-      await onProviderCall?.({
-        provider: 'geoapify',
-        sku: 'geocoding',
-        status: '200',
-        latencyMs: 5,
-      })
-      return candidates
-    }),
+    search: vi.fn(respond),
+    nearby: vi.fn(respond),
   }
 }
 
@@ -264,7 +269,10 @@ async function post(
 
 it('exige autenticação e oculta a viagem de não membros', async () => {
   const tripId = await createTrip()
-  const provider = { search: vi.fn(async () => [candidateFields]) }
+  const provider = {
+    search: vi.fn(async () => [candidateFields]),
+    nearby: vi.fn(async () => [candidateFields]),
+  }
   const app = createTestApp({ geoapifyApiKey: 'geo-key', placesProvider: provider })
 
   const unauthenticated = await app.request(
@@ -293,6 +301,9 @@ it('busca a tentativa pedida, assina cada candidato e registra chamadas Geoapify
       })
       await onProviderCall?.({ provider: 'geoapify', sku: 'places', status: '200', latencyMs: 8 })
       return [{ ...candidateFields, method: 'places' }]
+    },
+    async nearby() {
+      return []
     },
   }
   const app = createTestApp({ geoapifyApiKey: 'geo-key', placesProvider: provider })
@@ -328,6 +339,10 @@ it('respeita idioma do Accept-Language e deixa o provider aplicar o padrão sem 
       languages.push(input.lang)
       return []
     },
+    async nearby(input) {
+      languages.push(input.lang)
+      return []
+    },
   }
   const app = createTestApp({ geoapifyApiKey: 'geo-key', placesProvider: provider })
 
@@ -346,7 +361,10 @@ it('respeita idioma do Accept-Language e deixa o provider aplicar o padrão sem 
 it('retorna 503 sem chave Geoapify ou Google', async () => {
   const tripId = await createTrip()
   const placeId = await addPlace(tripId)
-  const provider = { search: vi.fn(async () => [candidateFields]) }
+  const provider = {
+    search: vi.fn(async () => [candidateFields]),
+    nearby: vi.fn(async () => [candidateFields]),
+  }
   const google = { getDetails: vi.fn(async () => googleDetails) }
   const app = createTestApp({ placesProvider: provider, googleProvider: google })
 
@@ -514,4 +532,73 @@ it('conta cada toque de Detalhes do Google dentro da janela UTC diária', async 
     error: 'rate_limited',
     message: expect.stringMatching(/limite diário/i),
   })
+})
+
+it('busca lugares próximos, assina os candidatos e registra chamadas Geoapify', async () => {
+  const tripId = await createTrip()
+  const provider: PlacesProvider = {
+    search: vi.fn(async () => []),
+    async nearby(input, onProviderCall) {
+      expect(input).toMatchObject({ lat: 38.7223, lng: -9.1393, lang: 'pt' })
+      await onProviderCall?.({ provider: 'geoapify', sku: 'places', status: '200', latencyMs: 7 })
+      return [{ ...candidateFields, method: 'places' }]
+    },
+  }
+  const app = createTestApp({ geoapifyApiKey: 'geo-key', placesProvider: provider })
+
+  const response = await get(app, `/trips/${tripId}/places/nearby?lat=38.7223&lng=-9.1393&lang=pt`)
+  const result = (await response.json()) as {
+    candidates: Array<PlaceSearchCandidateFields & { token: string }>
+  }
+
+  expect(response.status).toBe(200)
+  expect(result.candidates).toHaveLength(1)
+  expect(result.candidates[0]).toMatchObject({ method: 'places', token: expect.any(String) })
+  const { token, ...fields } = result.candidates[0]!
+  const { verifyPlaceSearchCandidate } = await import('@trippy/adapters/places')
+  expect(verifyPlaceSearchCandidate({ ...fields, token }, candidateSecret)).toBe(true)
+  expect(provider.search).not.toHaveBeenCalled()
+  const logged = await pool.query(
+    'SELECT provider, sku, status, latency_ms FROM places_provider_calls WHERE trip_id = $1',
+    [tripId],
+  )
+  expect(logged.rows).toEqual([
+    { provider: 'geoapify', sku: 'places', status: '200', latency_ms: 7 },
+  ])
+})
+
+it.each([
+  'lat=abc&lng=-9.1393',
+  'lat=91&lng=-9.1393',
+  'lat=38.7&lng=181',
+  'lat=38.7',
+  'lat=0x10&lng=-9.1393',
+])('retorna 400 para localização inválida (%s)', async (query) => {
+  const tripId = await createTrip()
+  const provider = providerWithCalls()
+  const app = createTestApp({ geoapifyApiKey: 'geo-key', placesProvider: provider })
+
+  const response = await get(app, `/trips/${tripId}/places/nearby?${query}`)
+
+  expect(response.status).toBe(400)
+  expect(await response.json()).toEqual({
+    error: 'invalid_search',
+    message: 'Informe uma localização válida.',
+  })
+  expect(provider.nearby).not.toHaveBeenCalled()
+})
+
+it('oculta a busca próxima de não membros com 404', async () => {
+  const tripId = await createTrip()
+  const provider = providerWithCalls()
+  const app = createTestApp({ geoapifyApiKey: 'geo-key', placesProvider: provider })
+
+  const outsider = await get(
+    app,
+    `/trips/${tripId}/places/nearby?lat=38.7223&lng=-9.1393`,
+    'outsider-token',
+  )
+
+  expect(outsider.status).toBe(404)
+  expect(provider.nearby).not.toHaveBeenCalled()
 })

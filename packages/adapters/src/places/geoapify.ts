@@ -1,6 +1,7 @@
 import type { PlaceSearchCandidateFields } from '@trippy/domain/places'
 import {
   PlacesProviderError,
+  type PlacesNearbyInput,
   type PlacesProvider,
   type PlacesSearchInput,
   type ProviderCallHandler,
@@ -40,6 +41,9 @@ export interface GeoapifyPlacesOptions {
   timeoutMs?: number
   searchRadiusMeters?: number
 }
+
+// Raio fixo da busca "perto de mim": lugares além disso não são úteis para "Estamos aqui".
+const NEARBY_RADIUS_METERS = 300
 
 const geoapifyUrl = (path: string): URL => new URL(path, 'https://api.geoapify.com')
 
@@ -109,6 +113,33 @@ export class GeoapifyPlacesProvider implements PlacesProvider {
           ? candidate.countryCode === null || candidate.countryCode === destination.countryCode
           : distanceMeters(destination, candidate) <= this.searchRadiusMeters,
       )
+      .slice(0, 5)
+  }
+
+  async nearby(
+    input: PlacesNearbyInput,
+    onProviderCall?: ProviderCallHandler,
+  ): Promise<PlaceSearchCandidateFields[]> {
+    if (!this.apiKey) throw new PlacesProviderError('provider_error')
+    if (!validCoordinates(input.lat, input.lng)) {
+      throw new PlacesProviderError('location_unavailable')
+    }
+
+    const deadlineAt = this.now() + this.timeoutMs
+    const url = geoapifyUrl('/v2/places')
+    url.searchParams.set('apiKey', this.apiKey)
+    url.searchParams.set('limit', '5')
+    if (input.lang) url.searchParams.set('lang', input.lang)
+    url.searchParams.set('bias', `proximity:${input.lng},${input.lat}`)
+    url.searchParams.set('filter', `circle:${input.lng},${input.lat},${NEARBY_RADIUS_METERS}`)
+    url.searchParams.set('categories', PLACES_SEARCH_CATEGORIES)
+
+    const body = await this.requestJson(url, 'places', deadlineAt, onProviderCall)
+    const origin = { lat: input.lat, lng: input.lng }
+    return asArray(asRecord(body)?.features)
+      .map((feature) => mapCandidate(feature, 'places'))
+      .filter((candidate): candidate is PlaceSearchCandidateFields => candidate !== null)
+      .filter((candidate) => distanceMeters(origin, candidate) <= NEARBY_RADIUS_METERS)
       .slice(0, 5)
   }
 

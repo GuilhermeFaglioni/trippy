@@ -21,6 +21,7 @@ import {
   type SyncPlace,
   type SyncTransport,
   type SyncVisit,
+  type SyncReview,
   type SyncWant,
   type SyncMember,
   type UUID,
@@ -191,7 +192,21 @@ async function readLocalState(database: SqlDatabase, currentTripId: UUID) {
      FROM wants WHERE trip_id = ?`,
     [currentTripId],
   )
-  return canonicalTripState({ places, visits, wants, members })
+  const reviews = await database.all<
+    Omit<SyncReview, 'favorite'> & { favorite: number } & Record<string, unknown>
+  >(
+    `SELECT place_id AS placeId, trip_id AS tripId, user_id AS userId, favorite, rating, note,
+            updated_at AS updatedAt, seq, deleted_at AS deletedAt
+     FROM reviews WHERE trip_id = ?`,
+    [currentTripId],
+  )
+  return canonicalTripState({
+    places,
+    visits,
+    wants,
+    reviews: reviews.map((review) => ({ ...review, favorite: review.favorite === 1 })),
+    members,
+  })
 }
 
 async function readServerState(currentTripId: UUID) {
@@ -220,6 +235,12 @@ async function readServerState(currentTripId: UUID) {
      FROM place_wants WHERE trip_id = $1`,
     [currentTripId],
   )
+  const reviewRows = await pool.query<SyncReview>(
+    `SELECT place_id AS "placeId", trip_id AS "tripId", user_id AS "userId", favorite, rating,
+            note, updated_at AS "updatedAt", seq::text AS seq, deleted_at AS "deletedAt"
+     FROM place_reviews WHERE trip_id = $1`,
+    [currentTripId],
+  )
   const memberRows = await pool.query<SyncMember>(
     `SELECT trip_id AS "tripId", user_id AS "userId", role, joined_at AS "joinedAt",
             seq::text AS seq, left_at AS "deletedAt"
@@ -241,6 +262,11 @@ async function readServerState(currentTripId: UUID) {
       ...want,
       createdAt: new Date(want.createdAt).toISOString(),
       deletedAt: want.deletedAt === null ? null : new Date(want.deletedAt).toISOString(),
+    })),
+    reviews: reviewRows.rows.map((review) => ({
+      ...review,
+      updatedAt: new Date(review.updatedAt).toISOString(),
+      deletedAt: review.deletedAt === null ? null : new Date(review.deletedAt).toISOString(),
     })),
     members: memberRows.rows.map((member) => ({
       ...member,

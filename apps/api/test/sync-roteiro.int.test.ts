@@ -379,3 +379,48 @@ it('expõe versão do roteiro e seq_counter atual mesmo ao continuar bootstrap a
   expect(body.hasMore).toBe(false)
   expect(body.nextCursor).toBe(firstPage.snapshotSeq)
 })
+
+it('cria lugar já posicionado num dia do roteiro, inclusive para membro comum, e ignora lugares removidos', async () => {
+  const tripId = await createTrip()
+  await addMember(tripId, memberId)
+  const pushPlace = async (token: string, dayIndex: number | undefined, placeId = randomUUID()) => {
+    const operation = {
+      type: 'place.add' as const,
+      opId: randomUUID(),
+      tripId,
+      placeId,
+      name: `Lugar ${placeId.slice(0, 8)}`,
+      ...(dayIndex === undefined ? {} : { dayIndex }),
+    }
+    const response = await post('/sync/push', { operations: [operation] }, token)
+    expect(await response.json()).toEqual({
+      results: [{ opId: operation.opId, status: 'applied' }],
+    })
+    return placeId
+  }
+  const placements = async () =>
+    (
+      await pool.query<{ id: string; day_index: number | null; position: number | null }>(
+        'SELECT id, day_index, position FROM places WHERE trip_id = $1 ORDER BY seq',
+        [tripId],
+      )
+    ).rows
+
+  const first = await pushPlace('organizer-token', 2)
+  const second = await pushPlace('member-token', 2)
+  const outside = await pushPlace('member-token', undefined)
+  const removed = await pushPlace('organizer-token', 2)
+  const removal = await post('/sync/push', {
+    operations: [{ type: 'place.remove', opId: randomUUID(), tripId, placeId: removed }],
+  })
+  expect(await removal.json()).toMatchObject({ results: [{ status: 'applied' }] })
+  const third = await pushPlace('member-token', 2)
+
+  expect(await placements()).toEqual([
+    { id: first, day_index: 2, position: 0 },
+    { id: second, day_index: 2, position: 1 },
+    { id: outside, day_index: null, position: null },
+    { id: removed, day_index: 2, position: 2 },
+    { id: third, day_index: 2, position: 2 },
+  ])
+})

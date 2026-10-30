@@ -10,6 +10,7 @@ import {
   useTheme,
 } from '../../design-system'
 import { useSync } from '../sync/sync-provider'
+import { HereCard } from './here-card'
 import {
   computeTodayState,
   isDayDone,
@@ -19,7 +20,7 @@ import {
   staleness,
 } from './today-model'
 
-/** TestIDs Maestro: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-lugar-<slug>, hoje-eu-fui-<slug>, hoje-o-que-mudou. */
+/** TestIDs Maestro: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-estamos-aqui (cartão Estamos aqui, só durante a viagem; painel: hoje-aqui-*), hoje-lugar-<slug>, hoje-eu-fui-<slug>, hoje-o-que-mudou. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
 type TodayScreenProps = {
@@ -29,6 +30,7 @@ type TodayScreenProps = {
   startDate: string
   endDate: string
   onOpenPhotos?: () => void
+  onShowAddress?: (placeId: string) => void
 }
 
 function testSlug(value: string): string {
@@ -52,6 +54,7 @@ export function TodayScreen({
   startDate,
   endDate,
   onOpenPhotos,
+  onShowAddress,
 }: TodayScreenProps) {
   const theme = useTheme()
   const { client, status } = useSync()
@@ -96,6 +99,25 @@ export function TodayScreen({
           writeError instanceof Error
             ? writeError.message
             : 'Não foi possível salvar sua presença neste lugar.',
+        )
+      } finally {
+        setBusyPlaceId(null)
+      }
+    },
+    [client, loadPlaces, tripId],
+  )
+
+  const toggleFavorite = useCallback(
+    async (place: LivePlace) => {
+      if (client === null) return
+      setBusyPlaceId(place.id)
+      setError(null)
+      try {
+        await client.setFavorite(tripId, place.id, !place.favoriteByMe)
+        await loadPlaces()
+      } catch (writeError) {
+        setError(
+          writeError instanceof Error ? writeError.message : 'Não foi possível salvar o favorito.',
         )
       } finally {
         setBusyPlaceId(null)
@@ -181,6 +203,10 @@ export function TodayScreen({
         </Card>
       ) : null}
 
+      {todayState.kind === 'during' ? (
+        <HereCard tripId={tripId} dayIndex={todayState.dayIndex} />
+      ) : null}
+
       {todayState.kind === 'during'
         ? dayPlaces.map((place) => {
             const slug = testSlug(displayName(place))
@@ -203,10 +229,11 @@ export function TodayScreen({
                       testID={`hoje-eu-fui-${slug}`}
                     />
                     <Button
-                      label="Favorito"
+                      label={place.favoriteByMe ? 'Favorito ✓' : 'Favorito'}
                       variant="secondary"
-                      disabled
-                      onPress={() => undefined}
+                      selected={place.favoriteByMe}
+                      loading={busy}
+                      onPress={() => void toggleFavorite(place)}
                       testID={`hoje-favorito-${slug}`}
                     />
                     <Button
@@ -215,6 +242,14 @@ export function TodayScreen({
                       onPress={() => onOpenPhotos?.()}
                       testID={`hoje-foto-${slug}`}
                     />
+                    {onShowAddress ? (
+                      <Button
+                        label="Mostrar endereço"
+                        variant="secondary"
+                        onPress={() => onShowAddress(place.id)}
+                        testID={`hoje-mostrar-endereco-${slug}`}
+                      />
+                    ) : null}
                   </View>
                 </View>
               </Card>

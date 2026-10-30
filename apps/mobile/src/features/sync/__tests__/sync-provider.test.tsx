@@ -57,6 +57,10 @@ describe('SyncProvider', () => {
       unmarkVisit: jest.fn().mockResolvedValue(undefined),
       wantPlace: jest.fn().mockResolvedValue(undefined),
       unwantPlace: jest.fn().mockResolvedValue(undefined),
+      setFavorite: jest.fn().mockResolvedValue(undefined),
+      ratePlace: jest.fn().mockResolvedValue(undefined),
+      setPlaceNote: jest.fn().mockResolvedValue(undefined),
+      getPlaceDetail: jest.fn().mockResolvedValue(null),
       arrangeItinerary: jest.fn().mockResolvedValue(undefined),
       listItineraryDrafts: jest.fn().mockResolvedValue([]),
       discardItineraryDraft: jest.fn().mockResolvedValue(undefined),
@@ -87,7 +91,7 @@ describe('SyncProvider', () => {
     await fireEvent.press(screen.getByTestId('provider-add-place'))
 
     await waitFor(() => {
-      expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque')
+      expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque', undefined)
       expect(client.syncNow).toHaveBeenCalledTimes(2)
     })
   })

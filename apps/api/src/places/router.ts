@@ -157,6 +157,74 @@ export function createPlacesRouter(config: PlacesRouterConfig, options: PlacesRo
     }
   })
 
+  router.get('/trips/:tripId/places/nearby', authenticateRequest, async (context) => {
+    const tripId = context.req.param('tripId')
+    if (!tripIdPattern.test(tripId)) {
+      return context.json({ error: 'trip_not_found', message: 'Viagem não encontrada.' }, 404)
+    }
+    const trip = await tripStore.getTripForMember(context.get('userId'), tripId)
+    if (!trip) {
+      return context.json({ error: 'trip_not_found', message: 'Viagem não encontrada.' }, 404)
+    }
+
+    const location = parseCoordinates(context.req.query('lat'), context.req.query('lng'))
+    if (!location) {
+      return context.json(
+        { error: 'invalid_search', message: 'Informe uma localização válida.' },
+        400,
+      )
+    }
+    const language = requestedLanguage(
+      context.req.query('lang'),
+      context.req.header('accept-language'),
+    )
+    if (language === null) {
+      return context.json(
+        { error: 'invalid_search', message: 'O idioma informado é inválido.' },
+        400,
+      )
+    }
+    if (!config.geoapifyApiKey || !placesProvider) {
+      return context.json(
+        { error: 'provider_unavailable', message: 'A busca de lugares está indisponível.' },
+        503,
+      )
+    }
+
+    const userId = context.get('userId')
+    const usage = await usageStore.consume({
+      userId,
+      tripId,
+      provider: 'geoapify',
+      usageType: 'search',
+      userDailyLimit: config.placesSearchUserDailyLimit ?? 200,
+      tripDailyLimit: config.placesSearchTripDailyLimit ?? 1_000,
+    })
+    if (!usage.allowed) {
+      const message =
+        usage.exceeded === 'user'
+          ? 'Você atingiu o limite diário de buscas de lugares da sua conta.'
+          : 'Esta viagem atingiu o limite diário de buscas de lugares.'
+      return context.json({ error: 'rate_limited', message }, 429)
+    }
+
+    const touchId = randomUUID()
+    try {
+      const candidates = await placesProvider.nearby(
+        { ...location, ...(language ? { lang: language } : {}) },
+        (call) => usageStore.recordCall({ userId, tripId, placeId: null, touchId, call }),
+      )
+      return context.json({
+        candidates: candidates
+          .slice(0, 5)
+          .map((candidate) => signPlaceSearchCandidate(candidate, config.placesCandidateSecret)),
+      })
+    } catch (error) {
+      if (error instanceof PlacesProviderError) return providerErrorResponse(context, error)
+      throw error
+    }
+  })
+
   router.post(
     '/trips/:tripId/places/:placeId/google-details',
     authenticateRequest,
@@ -264,6 +332,22 @@ async function findPlace(pool: Pool, tripId: string, placeId: string): Promise<S
     [tripId, placeId],
   )
   return result.rows[0] ?? null
+}
+
+const coordinatePattern = /^-?\d+(?:\.\d+)?$/u
+
+function parseCoordinates(
+  latValue: string | undefined,
+  lngValue: string | undefined,
+): { lat: number; lng: number } | null {
+  const latText = latValue?.trim()
+  const lngText = lngValue?.trim()
+  if (!latText || !lngText) return null
+  if (!coordinatePattern.test(latText) || !coordinatePattern.test(lngText)) return null
+  const lat = Number(latText)
+  const lng = Number(lngText)
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+  return { lat, lng }
 }
 
 function requestedLanguage(

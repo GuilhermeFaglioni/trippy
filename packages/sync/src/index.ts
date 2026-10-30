@@ -6,6 +6,7 @@ export type {
   ItineraryDraft,
   LiveMember,
   LivePlace,
+  PlaceDetail,
   SyncClient,
   SyncClientStatus,
   SyncTransport,

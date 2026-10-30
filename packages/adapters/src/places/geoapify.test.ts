@@ -460,4 +460,56 @@ describe('adaptador Geoapify', () => {
     expect(destinationRequests.map((url) => url.searchParams.get('lang'))).toEqual(['pt', 'zh'])
     expect(requests[3]!.searchParams.get('bias')).toBe('proximity:116.4074,39.9042')
   })
+
+  it('busca lugares próximos por círculo de 300 m com bias, categorias e idioma, sem geocodificar', async () => {
+    const requests: URL[] = []
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      requests.push(new URL(input.toString()))
+      return json({ features: [] })
+    })
+    const provider = new GeoapifyPlacesProvider('chave-teste', { fetcher: fetcher as typeof fetch })
+
+    await provider.nearby({ lat: 38.7223, lng: -9.1393, lang: 'pt' })
+
+    expect(requests).toHaveLength(1)
+    expect(requests[0]).toMatchObject({ hostname: 'api.geoapify.com', pathname: '/v2/places' })
+    expect(requests[0]!.searchParams.get('filter')).toBe('circle:-9.1393,38.7223,300')
+    expect(requests[0]!.searchParams.get('bias')).toBe('proximity:-9.1393,38.7223')
+    expect(requests[0]!.searchParams.get('categories')?.split(',')).toEqual(placesCategories)
+    expect(requests[0]!.searchParams.get('limit')).toBe('5')
+    expect(requests[0]!.searchParams.get('lang')).toBe('pt')
+    expect(requests[0]!.searchParams.has('name')).toBe(false)
+  })
+
+  it('descarta lugares a mais de 300 m e mantém os dentro do raio', async () => {
+    const fetcher = vi.fn(async () =>
+      json({
+        features: [
+          syntheticPlace('synthetic-near', 'Perto', 38.7233, -9.1393, 'pt'),
+          syntheticPlace('synthetic-far', 'Longe', 38.7323, -9.1393, 'pt'),
+        ],
+      }),
+    )
+    const provider = new GeoapifyPlacesProvider('chave-teste', { fetcher: fetcher as typeof fetch })
+
+    const candidates = await provider.nearby({ lat: 38.7223, lng: -9.1393 })
+
+    expect(candidates.map((candidate) => candidate.providerRef)).toEqual(['synthetic-near'])
+    expect(candidates[0]).toMatchObject({ provider: 'geoapify', method: 'places' })
+  })
+
+  it.each([
+    { lat: 91, lng: 0 },
+    { lat: -91, lng: 0 },
+    { lat: 0, lng: 181 },
+    { lat: Number.NaN, lng: 0 },
+  ])('rejeita coordenada inválida $lat,$lng sem chamar o fornecedor', async ({ lat, lng }) => {
+    const fetcher = vi.fn(async () => json({ features: [] }))
+    const provider = new GeoapifyPlacesProvider('chave-teste', { fetcher: fetcher as typeof fetch })
+
+    await expect(provider.nearby({ lat, lng })).rejects.toMatchObject({
+      kind: 'location_unavailable',
+    })
+    expect(fetcher).not.toHaveBeenCalled()
+  })
 })

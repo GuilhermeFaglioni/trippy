@@ -12,6 +12,10 @@ function createClient(): jest.Mocked<SyncClient> {
     unmarkVisit: jest.fn().mockResolvedValue(undefined),
     wantPlace: jest.fn().mockResolvedValue(undefined),
     unwantPlace: jest.fn().mockResolvedValue(undefined),
+    setFavorite: jest.fn().mockResolvedValue(undefined),
+    ratePlace: jest.fn().mockResolvedValue(undefined),
+    setPlaceNote: jest.fn().mockResolvedValue(undefined),
+    getPlaceDetail: jest.fn().mockResolvedValue(null),
     arrangeItinerary: jest.fn().mockResolvedValue(undefined),
     listItineraryDrafts: jest.fn().mockResolvedValue([]),
     discardItineraryDraft: jest.fn().mockResolvedValue(undefined),
@@ -78,7 +82,7 @@ describe('gatilhos de sincronização', () => {
     client.syncNow.mockRejectedValueOnce(new Error('Network request failed'))
 
     await expect(wrapped.addPlace('trip-1', 'Parque')).resolves.toBe('place-1')
-    expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque')
+    expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Parque', undefined)
     expect(client.syncNow).toHaveBeenCalledTimes(1)
   })
 

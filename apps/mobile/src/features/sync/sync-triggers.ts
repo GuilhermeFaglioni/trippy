@@ -76,16 +76,25 @@ export function withWriteSyncTriggers(
   }
 
   return {
-    addPlace: (tripId, name) => afterWrite(() => client.addPlace(tripId, name)),
-    addPlaceFromCandidate: (tripId, candidate) =>
-      afterWrite(() => client.addPlaceFromCandidate(tripId, candidate)),
+    addPlace: (tripId, name, options) => afterWrite(() => client.addPlace(tripId, name, options)),
+    addPlaceFromCandidate: (tripId, candidate, options) =>
+      afterWrite(() => client.addPlaceFromCandidate(tripId, candidate, options)),
     removePlace: (tripId, placeId) => afterWrite(() => client.removePlace(tripId, placeId)),
     linkGooglePlace: (tripId, placeId, googlePlaceId) =>
       afterWrite(() => client.linkGooglePlace(tripId, placeId, googlePlaceId)),
     setLocalDetails: (tripId, placeId, details) =>
       afterWrite(() => client.setLocalDetails(tripId, placeId, details)),
-    markVisit: (tripId, placeId) => afterWrite(() => client.markVisit(tripId, placeId)),
-    unmarkVisit: (tripId, placeId) => afterWrite(() => client.unmarkVisit(tripId, placeId)),
+    markVisit: (tripId, placeId, userId) =>
+      afterWrite(() => client.markVisit(tripId, placeId, userId)),
+    unmarkVisit: (tripId, placeId, userId) =>
+      afterWrite(() => client.unmarkVisit(tripId, placeId, userId)),
+    setFavorite: (tripId, placeId, favorite) =>
+      afterWrite(() => client.setFavorite(tripId, placeId, favorite)),
+    ratePlace: (tripId, placeId, rating) =>
+      afterWrite(() => client.ratePlace(tripId, placeId, rating)),
+    setPlaceNote: (tripId, placeId, note) =>
+      afterWrite(() => client.setPlaceNote(tripId, placeId, note)),
+    getPlaceDetail: (tripId, placeId) => client.getPlaceDetail(tripId, placeId),
     wantPlace: (tripId, placeId) => afterWrite(() => client.wantPlace(tripId, placeId)),
     unwantPlace: (tripId, placeId) => afterWrite(() => client.unwantPlace(tripId, placeId)),
     arrangeItinerary: (tripId, days) => afterWrite(() => client.arrangeItinerary(tripId, days)),

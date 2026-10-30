@@ -26,7 +26,9 @@ export function PlaceCard({
   onToggleVisit,
   onToggleWant,
   onRemove,
+  onOpen,
   onRefresh,
+  onShowAddress,
   testSlug,
 }: {
   place: LivePlace
@@ -38,7 +40,9 @@ export function PlaceCard({
   onToggleVisit: () => void
   onToggleWant: () => void
   onRemove?: () => void
+  onOpen: () => void
   onRefresh: () => Promise<void>
+  onShowAddress?: (placeId: string) => void
   testSlug: string
 }) {
   const theme = useTheme()
@@ -113,6 +117,22 @@ export function PlaceCard({
             disabled={busy}
             testID={`place-want-${testSlug}`}
           />
+          <Button
+            label="Abrir lugar"
+            onPress={onOpen}
+            variant="secondary"
+            disabled={busy}
+            testID={`abrir-lugar-${place.id}`}
+          />
+          {onShowAddress ? (
+            <Button
+              label="Mostrar endereço"
+              onPress={() => onShowAddress(place.id)}
+              variant="secondary"
+              disabled={busy}
+              testID={`place-address-card-${testSlug}`}
+            />
+          ) : null}
           {onRemove ? (
             <Button
               label="Remover lugar"

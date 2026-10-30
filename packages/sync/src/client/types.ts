@@ -14,10 +14,26 @@ import type { PlaceSearchCandidate } from '@trippy/domain'
 export type LivePlace = Omit<SyncPlace, 'deletedAt'> & {
   deletedAt: null
   visitedByMe: boolean
+  favoriteByMe: boolean
   /** Quantidade de pessoas que querem ir, sem contar reações removidas. */
   wantCount: number
   wantedByMe: boolean
 } & LivePlaceLocalStatuses
+
+/** Visão do lugar para a tela de detalhe, já resumida para a pessoa local. */
+export interface PlaceDetail {
+  place: LivePlace
+  favoriteByMe: boolean
+  myRating: number | null
+  myNote: string | null
+  favoriteCount: number
+  ratingCount: number
+  /** Média das notas; só existe quando há pelo menos duas avaliações. */
+  ratingAverage: number | null
+  /** Observações de outras pessoas, sem as vazias. */
+  notes: { userId: UUID; note: string }[]
+  visitors: { userId: UUID; markedBy: UUID }[]
+}
 
 export interface ItineraryDraft {
   opId: UUID
@@ -43,9 +59,18 @@ export interface SyncClientStatus {
   lastError?: string | null
 }
 
+export interface AddPlaceOptions {
+  /** Dia do roteiro em que o lugar é criado já posicionado. */
+  dayIndex?: number
+}
+
 export interface SyncClient {
-  addPlace(tripId: UUID, name: string): Promise<UUID>
-  addPlaceFromCandidate(tripId: UUID, candidate: PlaceSearchCandidate): Promise<UUID>
+  addPlace(tripId: UUID, name: string, options?: AddPlaceOptions): Promise<UUID>
+  addPlaceFromCandidate(
+    tripId: UUID,
+    candidate: PlaceSearchCandidate,
+    options?: AddPlaceOptions,
+  ): Promise<UUID>
   removePlace(tripId: UUID, placeId: UUID): Promise<void>
   linkGooglePlace(tripId: UUID, placeId: UUID, googlePlaceId: string | null): Promise<void>
   setLocalDetails(
@@ -53,8 +78,18 @@ export interface SyncClient {
     placeId: UUID,
     details: { localName?: string | null; localAddress?: string | null },
   ): Promise<void>
-  markVisit(tripId: UUID, placeId: UUID): Promise<void>
-  unmarkVisit(tripId: UUID, placeId: UUID): Promise<void>
+  /** Marca visita; `userId` ausente marca a pessoa local. Outra pessoa exige organizador ou coorganizador. */
+  markVisit(tripId: UUID, placeId: UUID, userId?: UUID): Promise<void>
+  /** Desmarca visita; `userId` ausente desmarca a pessoa local. */
+  unmarkVisit(tripId: UUID, placeId: UUID, userId?: UUID): Promise<void>
+  /** Marca ou desmarca o lugar como favorito da pessoa local. */
+  setFavorite(tripId: UUID, placeId: UUID, favorite: boolean): Promise<void>
+  /** Define a nota de 1 a 5 da pessoa local; null remove a nota. */
+  ratePlace(tripId: UUID, placeId: UUID, rating: number | null): Promise<void>
+  /** Define a observação da pessoa local; null ou texto vazio remove a observação. */
+  setPlaceNote(tripId: UUID, placeId: UUID, note: string | null): Promise<void>
+  /** Monta a tela do lugar a partir do estado local; null se o lugar não está visível. */
+  getPlaceDetail(tripId: UUID, placeId: UUID): Promise<PlaceDetail | null>
   /** Registra a reação "quero ir" da pessoa local no lugar. */
   wantPlace(tripId: UUID, placeId: UUID): Promise<void>
   /** Remove a reação "quero ir" da pessoa local no lugar. */

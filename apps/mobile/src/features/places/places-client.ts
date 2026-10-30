@@ -12,6 +12,7 @@ export type SearchAttempt = 'primary' | 'secondary'
 
 export type PlacesClient = {
   search(tripId: string, query: string, attempt: SearchAttempt): Promise<PlaceSearchResponse>
+  nearby(tripId: string, lat: number, lng: number): Promise<PlaceSearchResponse>
   googleDetails(
     tripId: string,
     placeId: string,
@@ -122,19 +123,31 @@ function invalidResponse(): PlacesApiError {
   )
 }
 
+async function requestCandidates(
+  request: PlacesRequest,
+  path: string,
+): Promise<PlaceSearchResponse> {
+  const response = await request(path)
+  const payload = await readJson(response)
+
+  if (!response.ok) throw errorFor(response, payload)
+  if (!isRecord(payload)) throw invalidResponse()
+  const candidates = payload.candidates
+  if (!Array.isArray(candidates) || !candidates.every(isCandidate)) throw invalidResponse()
+
+  return { candidates }
+}
+
 export function createPlacesClient(request: PlacesRequest): PlacesClient {
   return {
     async search(tripId, query, attempt) {
       const path = `/trips/${encodeURIComponent(tripId)}/places/search?q=${encodeURIComponent(query)}&attempt=${attempt}`
-      const response = await request(path)
-      const payload = await readJson(response)
+      return requestCandidates(request, path)
+    },
 
-      if (!response.ok) throw errorFor(response, payload)
-      if (!isRecord(payload)) throw invalidResponse()
-      const candidates = payload.candidates
-      if (!Array.isArray(candidates) || !candidates.every(isCandidate)) throw invalidResponse()
-
-      return { candidates }
+    async nearby(tripId, lat, lng) {
+      const path = `/trips/${encodeURIComponent(tripId)}/places/nearby?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}`
+      return requestCandidates(request, path)
     },
 
     async googleDetails(tripId, placeId, googlePlaceId) {

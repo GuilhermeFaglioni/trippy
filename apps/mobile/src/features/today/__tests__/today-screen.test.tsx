@@ -47,6 +47,7 @@ function createClient(places: LivePlace[], notSent = 0) {
     listPlaces: jest.fn().mockResolvedValue(places),
     markVisit: jest.fn().mockResolvedValue(undefined),
     unmarkVisit: jest.fn().mockResolvedValue(undefined),
+    setFavorite: jest.fn().mockResolvedValue(undefined),
     listRemovedTrips: jest.fn().mockResolvedValue([]),
     countNotSent: jest.fn().mockResolvedValue(0),
     syncNow: jest.fn().mockResolvedValue(undefined),
@@ -56,7 +57,12 @@ function createClient(places: LivePlace[], notSent = 0) {
   return client as unknown as SyncClient & typeof client
 }
 
-async function renderToday(client: SyncClient, startDate: string, endDate: string) {
+async function renderToday(
+  client: SyncClient,
+  startDate: string,
+  endDate: string,
+  onShowAddress?: (placeId: string) => void,
+) {
   return await render(
     <DesignSystemProvider>
       <SyncProvider client={client}>
@@ -67,6 +73,7 @@ async function renderToday(client: SyncClient, startDate: string, endDate: strin
           startDate={startDate}
           endDate={endDate}
           onOpenPhotos={jest.fn()}
+          onShowAddress={onShowAddress}
         />
       </SyncProvider>
     </DesignSystemProvider>,
@@ -89,7 +96,36 @@ describe('tela Hoje', () => {
     expect(screen.getByTestId('hoje-proximo-lugar')).toHaveTextContent('Mercado Central')
 
     await fireEvent.press(screen.getByTestId('hoje-eu-fui-mercado-central'))
-    await waitFor(() => expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1'))
+    // Pessoa local: o wrapper de escrita repassa o userId ausente como undefined.
+    await waitFor(() =>
+      expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1', undefined),
+    )
+  })
+
+  it('marca e desmarca favorito pelo botão do lugar', async () => {
+    const client = createClient([
+      place({ id: 'place-1', name: 'Mercado Central', favoriteByMe: false }),
+      place({ id: 'place-2', name: 'Feira Livre', position: 1, favoriteByMe: true }),
+    ])
+    const screen = await renderToday(client, start, end)
+
+    expect(await screen.findByTestId('hoje-favorito-mercado-central')).toHaveTextContent('Favorito')
+    expect(screen.getByTestId('hoje-favorito-feira-livre')).toHaveTextContent('Favorito ✓')
+
+    await fireEvent.press(screen.getByTestId('hoje-favorito-mercado-central'))
+    await waitFor(() => expect(client.setFavorite).toHaveBeenCalledWith('trip-1', 'place-1', true))
+
+    await fireEvent.press(screen.getByTestId('hoje-favorito-feira-livre'))
+    await waitFor(() => expect(client.setFavorite).toHaveBeenCalledWith('trip-1', 'place-2', false))
+  })
+
+  it('mostra o botão Mostrar endereço em cada lugar do dia', async () => {
+    const onShowAddress = jest.fn()
+    const client = createClient([place({ id: 'place-1', name: 'Mercado Central' })])
+    const screen = await renderToday(client, start, end, onShowAddress)
+
+    await fireEvent.press(await screen.findByTestId('hoje-mostrar-endereco-mercado-central'))
+    expect(onShowAddress).toHaveBeenCalledWith('place-1')
   })
 
   it('mostra alterações não enviadas no banner de desatualização', async () => {
@@ -107,5 +143,16 @@ describe('tela Hoje', () => {
     expect(await screen.findByTestId('hoje-dia')).toHaveTextContent(/A viagem começa em 2 dias/u)
     expect(screen.queryByTestId('hoje-proximo-lugar')).toBeNull()
     expect(screen.queryByTestId('hoje-lugar-mercado-central')).toBeNull()
+  })
+
+  it('mostra o cartão Estamos aqui durante a viagem', async () => {
+    const screen = await renderToday(createClient([]), start, end)
+    expect(await screen.findByTestId('hoje-estamos-aqui')).toBeOnTheScreen()
+  })
+
+  it('não mostra o cartão Estamos aqui antes da viagem', async () => {
+    const screen = await renderToday(createClient([]), isoDayOffset(2), isoDayOffset(4))
+    expect(await screen.findByTestId('hoje-dia')).toBeOnTheScreen()
+    expect(screen.queryByTestId('hoje-estamos-aqui')).toBeNull()
   })
 })

@@ -25,6 +25,7 @@ type TripPlacesScreenProps = {
   tripName: string
   role: TripRole
   onOpenPhotos?: () => void
+  onShowAddress?: (placeId: string) => void
 }
 
 function toTestSlug(value: string): string {
@@ -97,7 +98,13 @@ function SyncFooter({ status }: { status: SyncClientStatus }) {
   )
 }
 
-export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripPlacesScreenProps) {
+export function TripPlacesScreen({
+  tripId,
+  tripName,
+  role,
+  onOpenPhotos,
+  onShowAddress,
+}: TripPlacesScreenProps) {
   const theme = useTheme()
   const router = useRouter()
   const { session, request } = useSession()
@@ -312,7 +319,14 @@ export function TripPlacesScreen({ tripId, tripName, role, onOpenPhotos }: TripP
                   onToggleVisit={() => void toggleVisit(place)}
                   onToggleWant={() => void toggleWant(place)}
                   onRemove={canRemove ? () => void removePlace(place.id) : undefined}
+                  onOpen={() =>
+                    router.push({
+                      pathname: '/trips/[id]/places/[placeId]',
+                      params: { id: tripId, placeId: place.id },
+                    })
+                  }
                   onRefresh={loadPlaces}
+                  onShowAddress={onShowAddress}
                 />
               )
             })}
