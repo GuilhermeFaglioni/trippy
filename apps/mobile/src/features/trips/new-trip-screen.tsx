@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -117,95 +117,103 @@ export function NewTripScreen() {
       testID="new-trip-screen"
       style={{ flex: 1, backgroundColor: theme.colors.ground }}
     >
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          flexGrow: 1,
-          gap: theme.spacing.space5,
-          paddingBottom: theme.spacing.space4,
-          paddingHorizontal: theme.spacing.space5,
-          paddingTop: theme.spacing.space1,
-        }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
       >
-        <TextButton label="Cancelar" onPress={() => router.back()} testID="new-trip-back" />
-        <Text variant="titleL" color={theme.colors.ink} accessibilityRole="header">
-          Pra onde vocês vão?
-        </Text>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={{
+            flexGrow: 1,
+            gap: theme.spacing.space5,
+            paddingBottom: theme.spacing.space4,
+            paddingHorizontal: theme.spacing.space5,
+            paddingTop: theme.spacing.space1,
+          }}
+        >
+          <TextButton label="Cancelar" onPress={() => router.back()} testID="new-trip-back" />
+          <Text variant="titleL" color={theme.colors.ink} accessibilityRole="header">
+            Pra onde vocês vão?
+          </Text>
 
-        <CoverPicker
-          label="Adicionar capa (opcional · dá para trocar depois)"
-          onPress={() => setCoverHint(true)}
-          testID="new-trip-cover"
-        />
-        {coverHint ? (
-          <Notice
-            testID="new-trip-cover-hint"
-            tone="offline"
-            segments={['Capas chegam numa próxima versão. Por enquanto a viagem usa uma cor.']}
+          <CoverPicker
+            label="Adicionar capa (opcional · dá para trocar depois)"
+            onPress={() => setCoverHint(true)}
+            testID="new-trip-cover"
           />
-        ) : null}
+          {coverHint ? (
+            <Notice
+              testID="new-trip-cover-hint"
+              tone="offline"
+              segments={['Capas chegam numa próxima versão. Por enquanto a viagem usa uma cor.']}
+            />
+          ) : null}
 
-        {apiError ? (
-          <Notice
-            testID="new-trip-api-error"
-            tone="change"
-            segments={[{ strong: 'Não foi possível criar a viagem.' }, ' ', apiError]}
+          {apiError ? (
+            <Notice
+              testID="new-trip-api-error"
+              tone="change"
+              segments={[{ strong: 'Não foi possível criar a viagem.' }, ' ', apiError]}
+            />
+          ) : null}
+
+          <TextField
+            label="Nome da viagem"
+            value={values.name}
+            onChangeText={(value) => updateField('name', value)}
+            error={errors.name}
+            maxLength={120}
+            autoCapitalize="sentences"
+            testID="new-trip-name"
           />
-        ) : null}
-
-        <TextField
-          label="Nome da viagem"
-          value={values.name}
-          onChangeText={(value) => updateField('name', value)}
-          error={errors.name}
-          maxLength={120}
-          autoCapitalize="sentences"
-          testID="new-trip-name"
-        />
-        <TextField
-          label="Destino"
-          value={values.destination}
-          onChangeText={(value) => updateField('destination', value)}
-          error={errors.destination}
-          placeholder="Cidade ou país"
-          maxLength={120}
-          autoCapitalize="words"
-          testID="new-trip-destination"
-        />
-        <View style={{ flexDirection: 'row', gap: theme.spacing.space3 }}>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <TextField
-              label="Ida"
-              value={values.startDate}
-              onChangeText={(value) => updateField('startDate', value)}
-              error={errors.startDate}
-              placeholder="12 out 2026"
-              testID="new-trip-start-date"
-            />
+          <TextField
+            label="Destino"
+            value={values.destination}
+            onChangeText={(value) => updateField('destination', value)}
+            error={errors.destination}
+            placeholder="Cidade ou país"
+            maxLength={120}
+            autoCapitalize="words"
+            testID="new-trip-destination"
+          />
+          <View style={{ flexDirection: 'row', gap: theme.spacing.space3 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <TextField
+                label="Ida"
+                value={values.startDate}
+                onChangeText={(value) => updateField('startDate', value)}
+                error={errors.startDate}
+                placeholder="12 out 2026"
+                autoCorrect={false}
+                testID="new-trip-start-date"
+              />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <TextField
+                label="Volta"
+                value={values.endDate}
+                onChangeText={(value) => updateField('endDate', value)}
+                error={errors.endDate}
+                placeholder="24 out 2026"
+                autoCorrect={false}
+                testID="new-trip-end-date"
+              />
+            </View>
           </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <TextField
-              label="Volta"
-              value={values.endDate}
-              onChangeText={(value) => updateField('endDate', value)}
-              error={errors.endDate}
-              placeholder="24 out 2026"
-              testID="new-trip-end-date"
-            />
-          </View>
-        </View>
-        <Text variant="fieldHelp" color={theme.colors.inkMuted} style={{ lineHeight: 19 }}>
-          A viagem muda de fase sozinha pelas datas: planejando, em viagem e encerrada.
-        </Text>
+          <Text variant="fieldHelp" color={theme.colors.inkMuted} style={{ lineHeight: 19 }}>
+            A viagem muda de fase sozinha pelas datas: planejando, em viagem e encerrada.
+          </Text>
 
-        <View style={{ flexGrow: 1 }} />
-        <Button
-          label="Criar viagem"
-          onPress={() => void submit()}
-          loading={isSubmitting}
-          testID="new-trip-submit"
-        />
-      </ScrollView>
+          <View style={{ flexGrow: 1 }} />
+          <Button
+            label="Criar viagem"
+            onPress={() => void submit()}
+            loading={isSubmitting}
+            testID="new-trip-submit"
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }

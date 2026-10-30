@@ -67,7 +67,7 @@ function HighlightTrip({ trip, onOpen }: { trip: TripSummary; onOpen: () => void
       }}
     >
       <View style={{ position: 'absolute', right: -40, top: -40 }}>
-        <DecorTile color={withAlpha(onForest, 0.1)} width={200} height={200} radius={100} />
+        <DecorTile color={withAlpha(onForest, 0.16)} width={200} height={200} radius={100} />
       </View>
       <StatusChip
         tone="live"
@@ -86,7 +86,13 @@ function HighlightTrip({ trip, onOpen }: { trip: TripSummary; onOpen: () => void
         <Text variant="bodySm" color={withAlpha(onForest, 0.8)} style={{ marginTop: 4 }}>
           {`${trip.destination} · ${formatDateRange(trip.startDate, trip.endDate)}`}
         </Text>
-        <View style={{ marginTop: theme.spacing.space4 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            marginTop: theme.spacing.space4,
+          }}
+        >
           <Button
             label="Abrir Hoje"
             variant="inverse"
@@ -160,7 +166,8 @@ export function MyTripsScreen() {
     [router],
   )
 
-  const accountName = session?.user.name ?? session?.user.email.split('@')[0] ?? 'Conta'
+  const accountName =
+    session?.user.name ?? session?.user.email.split('@')[0]?.replace(/[._-]+/g, ' ') ?? 'Conta'
 
   const rows = (list: TripSummary[], offset: number) => (
     <View style={{ gap: theme.spacing.space3 }}>
@@ -288,6 +295,14 @@ export function MyTripsScreen() {
           </>
         )}
 
+        <View style={{ flexGrow: 1 }} />
+        {error === null && !isLoading ? (
+          <Button
+            label={isEmpty ? 'Criar minha primeira viagem' : '+ Nova viagem'}
+            onPress={openNewTrip}
+            testID={isEmpty ? 'my-trips-empty-create' : 'my-trips-new-trip'}
+          />
+        ) : null}
         {showInvite ? (
           <AcceptInviteForm />
         ) : (
@@ -297,15 +312,6 @@ export function MyTripsScreen() {
             testID="my-trips-show-invite"
           />
         )}
-
-        <View style={{ flexGrow: 1 }} />
-        {error === null && !isLoading ? (
-          <Button
-            label={isEmpty ? 'Criar minha primeira viagem' : '+ Nova viagem'}
-            onPress={openNewTrip}
-            testID={isEmpty ? 'my-trips-empty-create' : 'my-trips-new-trip'}
-          />
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   )
