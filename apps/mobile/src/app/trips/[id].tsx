@@ -195,6 +195,11 @@ export default function TripRoute() {
         pathname: '/trips/[id]/address-card',
         params: { id: tripId, placeId },
       })
+    const openHere = (dayIndex: number) =>
+      router.push({
+        pathname: '/trips/[id]/here',
+        params: { id: tripId, dayIndex: String(dayIndex) },
+      })
     if (section === 'hoje') {
       return (
         <TodayScreen
@@ -204,6 +209,7 @@ export default function TripRoute() {
           endDate={endDate}
           onOpenPhotos={openPhotos}
           onShowAddress={openAddressCard}
+          onHere={openHere}
         />
       )
     }
@@ -309,9 +315,11 @@ export default function TripRoute() {
             backLabel={displayName ? `Minhas viagens · ${displayName}` : 'Minhas viagens'}
             onBack={() => (router.canGoBack() ? router.back() : router.replace('/'))}
             title={
-              section === 'grupo' && memberCount !== null
-                ? `Grupo · ${memberCount}`
-                : SECTION_TITLES[section]
+              section === 'hoje'
+                ? undefined
+                : section === 'grupo' && memberCount !== null
+                  ? `Grupo · ${memberCount}`
+                  : SECTION_TITLES[section]
             }
           />
           {section === 'roteiro' && canSeeReadyToTravel && trip ? (

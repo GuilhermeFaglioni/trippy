@@ -23,6 +23,8 @@ export type PlaceRowProps = {
   actions?: PlaceRowActions
   /** Roteiro: alça de reordenar (só organizadores). Segurar a linha inicia o arraste. */
   onDragStart?: () => void
+  /** Tela Hoje, dia completo: selo "Fui" no lugar das ações. */
+  trailingLabel?: string
   /** Toque na linha abre o lugar. */
   onPress?: () => void
   locale?: string
@@ -34,6 +36,7 @@ export function PlaceRow({
   name,
   done = false,
   actions,
+  trailingLabel,
   onDragStart,
   onPress,
   locale,
@@ -98,18 +101,30 @@ export function PlaceRow({
           <IconButton
             icon="check"
             accessibilityLabel="Eu fui"
+            testID={testID ? `${testID}-eu-fui` : undefined}
             pressed={actions.visited}
             onPress={actions.onToggleVisited}
           />
           <IconButton
             icon="star"
             accessibilityLabel="Favorito"
+            testID={testID ? `${testID}-favorito` : undefined}
             tone="favorite"
             pressed={actions.favorite}
             onPress={actions.onToggleFavorite}
           />
-          <IconButton icon="camera" accessibilityLabel="Foto" onPress={actions.onPhoto} />
+          <IconButton
+            icon="camera"
+            accessibilityLabel="Foto"
+            testID={testID ? `${testID}-foto` : undefined}
+            onPress={actions.onPhoto}
+          />
         </View>
+      ) : null}
+      {trailingLabel ? (
+        <Text variant="chip" color={colors.forestInk}>
+          {trailingLabel}
+        </Text>
       ) : null}
       {onDragStart ? (
         <Pressable
