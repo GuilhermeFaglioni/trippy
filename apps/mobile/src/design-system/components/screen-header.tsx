@@ -9,7 +9,8 @@ export type ScreenHeaderProps = {
   backLabel?: string
   onBack?: () => void
   /** `title-l` de 32px, até 2 linhas. */
-  title: string
+  /** Sem título quando a própria tela o desenha (Hoje: "Dia 3 de 12" vem depois do aviso offline). */
+  title?: string
   locale?: string
   testID?: string
 }
@@ -44,15 +45,17 @@ export function ScreenHeader({ backLabel, onBack, title, locale, testID }: Scree
           </Text>
         </Pressable>
       ) : null}
-      <Text
-        variant="titleL"
-        color={colors.ink}
-        locale={locale}
-        numberOfLines={2}
-        accessibilityRole="header"
-      >
-        {title}
-      </Text>
+      {title ? (
+        <Text
+          variant="titleL"
+          color={colors.ink}
+          locale={locale}
+          numberOfLines={2}
+          accessibilityRole="header"
+        >
+          {title}
+        </Text>
+      ) : null}
     </View>
   )
 }
