@@ -470,12 +470,14 @@ export function ItineraryScreen({
             <Text variant="body" color={theme.colors.inkMuted}>
               Quer adicionar algum lugar?
             </Text>
-            <DsButton
-              label="Escolher em Lugares"
-              variant="secondary"
-              onPress={() => onOpenPlaces?.()}
-              testID={`roteiro-dia-${day.dayIndex}-escolher`}
-            />
+            <View style={{ alignSelf: 'center', marginTop: 6 }}>
+              <DsButton
+                label="Escolher em Lugares"
+                variant="secondary"
+                onPress={() => onOpenPlaces?.()}
+                testID={`roteiro-dia-${day.dayIndex}-escolher`}
+              />
+            </View>
           </View>
         ) : (
           <ReorderableList
@@ -500,10 +502,10 @@ export function ItineraryScreen({
             )}
           />
         )}
-        {canEdit && stops.length > 0 ? (
+        {canEdit ? (
           <DashedButton
             label="+ Adicionar lugar ao dia"
-            inset={40}
+            inset={stops.length > 0 ? 40 : 0}
             onPress={() => (unscheduled.length > 0 ? setAdding(day.dayIndex) : onOpenPlaces?.())}
             testID={`roteiro-dia-${day.dayIndex}-adicionar`}
           />
@@ -520,7 +522,7 @@ export function ItineraryScreen({
             const count = currentByDay.get(day.dayIndex)!.length
             return {
               key: `dia-${day.dayIndex}`,
-              label: `Dia ${day.dayIndex + 1} · ${day.short} · ${count === 1 ? '1 lugar' : `${count} lugares`}`,
+              label: `Dia ${day.dayIndex + 1} · ${day.short} · ${count === 0 ? 'dia livre' : count === 1 ? '1 lugar' : `${count} lugares`}`,
             }
           }),
         { key: 'sem-dia', label: 'Tirar do roteiro (fica sem dia)' },
