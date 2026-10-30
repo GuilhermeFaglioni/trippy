@@ -52,7 +52,7 @@ export function PlaceResult({
       style={{
         alignItems: 'center',
         backgroundColor: colors.surface,
-        borderColor: selected ? colors.terracotta : colors.hairline,
+        borderColor: selected ? colors.terracotta : compact ? colors.lineStrong : colors.hairline,
         borderRadius: radius.radiusMd,
         borderWidth: selected ? 2 : 1,
         flexDirection: 'row',
