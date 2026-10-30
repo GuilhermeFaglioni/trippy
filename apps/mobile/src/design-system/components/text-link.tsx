@@ -9,6 +9,8 @@ export type TextLinkProps = {
   accessibilityLabel?: string
   /** Texto sem a altura de 44px (dentro de um card); o alvo de toque continua com `hitSlop`. */
   compact?: boolean
+  /** `onHighlight`: mostarda sobre o card de destaque (forest). */
+  tone?: 'default' | 'onHighlight'
   testID?: string
 }
 
@@ -18,6 +20,7 @@ export function TextLink({
   onPress,
   accessibilityLabel,
   compact = false,
+  tone = 'default',
   testID,
 }: TextLinkProps) {
   const { colors, spacing } = useTheme()
@@ -33,7 +36,7 @@ export function TextLink({
     >
       <Text
         variant="count"
-        color={colors.terracottaText}
+        color={tone === 'onHighlight' ? colors.mustard : colors.terracottaText}
         style={{ textDecorationLine: 'underline' }}
       >
         {label}

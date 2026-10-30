@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Animated, Easing, Modal, Pressable, View } from 'react-native'
+import {
+  Animated,
+  Easing,
+  Modal,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 
 import { useTheme } from '../theme-provider'
 import { Icon } from './icon'
@@ -27,6 +35,7 @@ const SHEET_OFFSET = 320
 export function DaySheet({ visible, title, options, onSelect, onClose, testID }: DaySheetProps) {
   const { colors, radius, spacing, duration, easing } = useTheme()
   const reducedMotion = useReducedMotion()
+  const { height: windowHeight } = useWindowDimensions()
   const progress = useRef(new Animated.Value(0)).current
   const [mounted, setMounted] = useState(visible)
 
@@ -104,36 +113,45 @@ export function DaySheet({ visible, title, options, onSelect, onClose, testID }:
             <Icon name="x" color={colors.ink} size={20} />
           </Pressable>
         </View>
-        {options.map((option) => (
-          <Pressable
-            key={option.key}
-            accessibilityRole="button"
-            accessibilityLabel={option.label}
-            accessibilityState={{ selected: option.selected === true }}
-            onPress={() => onSelect(option.key)}
-            style={({ pressed }) => ({
-              alignItems: 'center',
-              backgroundColor: option.selected ? colors.ink : pressed ? colors.sand : 'transparent',
-              borderColor: option.selected ? colors.ink : colors.lineStrong,
-              borderRadius: radius.radiusSm,
-              borderWidth: 1,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              minHeight: 52,
-              paddingHorizontal: spacing.space4,
-              paddingVertical: spacing.space2,
-            })}
-          >
-            <Text
-              variant={option.selected ? 'bodyStrong' : 'body'}
-              color={option.selected ? colors.ground : colors.ink}
-              style={{ flex: 1 }}
+        <ScrollView
+          style={{ maxHeight: windowHeight * 0.55 }}
+          contentContainerStyle={{ gap: spacing.space2 }}
+        >
+          {options.map((option) => (
+            <Pressable
+              key={option.key}
+              accessibilityRole="button"
+              accessibilityLabel={option.label}
+              accessibilityState={{ selected: option.selected === true }}
+              onPress={() => onSelect(option.key)}
+              style={({ pressed }) => ({
+                alignItems: 'center',
+                backgroundColor: option.selected
+                  ? colors.ink
+                  : pressed
+                    ? colors.sand
+                    : 'transparent',
+                borderColor: option.selected ? colors.ink : colors.lineStrong,
+                borderRadius: radius.radiusSm,
+                borderWidth: 1,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                minHeight: 52,
+                paddingHorizontal: spacing.space4,
+                paddingVertical: spacing.space2,
+              })}
             >
-              {option.label}
-            </Text>
-            {option.selected ? <Icon name="check" color={colors.ground} size={20} /> : null}
-          </Pressable>
-        ))}
+              <Text
+                variant={option.selected ? 'bodyStrong' : 'body'}
+                color={option.selected ? colors.ground : colors.ink}
+                style={{ flex: 1 }}
+              >
+                {option.label}
+              </Text>
+              {option.selected ? <Icon name="check" color={colors.ground} size={20} /> : null}
+            </Pressable>
+          ))}
+        </ScrollView>
       </Animated.View>
     </Modal>
   )

@@ -112,13 +112,29 @@ async function renderScreen(client: SyncClient) {
 describe('tela Roteiro', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('ordena os lugares por dia e envia a lista completa ao subir um lugar', async () => {
+  it('mostra o dia com lugares e troca de dia pelo seletor', async () => {
+    const screen = await renderScreen(createClient())
+
+    expect(await screen.findByTestId('roteiro-dia-0')).toHaveTextContent(/Dia 1 · dom 14\/mar/u)
+    expect(screen.getByTestId('roteiro-lugar-cafe-do-porto')).toBeOnTheScreen()
+    expect(screen.queryByTestId('roteiro-dia-1')).toBeNull()
+    expect(screen.getByText('1 lugar do grupo ainda está sem dia.')).toBeOnTheScreen()
+
+    await fireEvent.press(screen.getByTestId('seletor-dia-1'))
+    expect(screen.getByTestId('roteiro-dia-livre-1')).toBeOnTheScreen()
+    await fireEvent.press(screen.getByTestId('seletor-dia-todos'))
+    expect(screen.getByTestId('roteiro-dia-0')).toBeOnTheScreen()
+    expect(screen.getByTestId('roteiro-dia-1')).toBeOnTheScreen()
+  })
+
+  it('reordena pela ação de acessibilidade enviando a lista completa do dia', async () => {
     const client = createClient()
     const screen = await renderScreen(client)
+    await screen.findByTestId('roteiro-lugar-museu-do-mar')
 
-    expect(await screen.findByTestId('roteiro-dia-0')).toBeOnTheScreen()
-    expect(screen.getByTestId('roteiro-dia-1')).toHaveTextContent(/Dia 2 · 15\/03\/2027/u)
-    await fireEvent.press(screen.getByTestId('roteiro-lugar-museu-do-mar-subir'))
+    await fireEvent(screen.getByLabelText('2. Museu do Mar'), 'accessibilityAction', {
+      nativeEvent: { actionName: 'moveUp' },
+    })
 
     await waitFor(() =>
       expect(client.arrangeItinerary).toHaveBeenCalledWith('trip-1', [
@@ -127,27 +143,24 @@ describe('tela Roteiro', () => {
     )
   })
 
-  it('coloca lugar sem dia no dia escolhido com a lista completa do dia', async () => {
+  it('adiciona um lugar sem dia ao dia pela folha', async () => {
     const client = createClient()
     const screen = await renderScreen(client)
-    await screen.findByTestId('roteiro-lugar-parque-da-cidade-dia')
-
-    await fireEvent.changeText(screen.getByTestId('roteiro-lugar-parque-da-cidade-dia'), '2')
-    await fireEvent.press(screen.getByTestId('roteiro-lugar-parque-da-cidade-por-no-dia'))
+    await fireEvent.press(await screen.findByTestId('roteiro-dia-0-adicionar'))
+    await fireEvent.press(await screen.findByLabelText('Parque da Cidade'))
 
     await waitFor(() =>
       expect(client.arrangeItinerary).toHaveBeenCalledWith('trip-1', [
-        { dayIndex: 1, placeIds: ['place-3'] },
+        { dayIndex: 0, placeIds: ['place-1', 'place-2', 'place-3'] },
       ]),
     )
   })
 
-  it('tira lugar do dia enviando a lista restante completa', async () => {
+  it('tira o lugar do roteiro pela folha de dias', async () => {
     const client = createClient()
     const screen = await renderScreen(client)
-    await screen.findByTestId('roteiro-lugar-cafe-do-porto-tirar-do-dia')
-
-    await fireEvent.press(screen.getByTestId('roteiro-lugar-cafe-do-porto-tirar-do-dia'))
+    await fireEvent.press(await screen.findByTestId('roteiro-lugar-cafe-do-porto-mover-dia'))
+    await fireEvent.press(await screen.findByLabelText('Tirar do roteiro (fica sem dia)'))
 
     await waitFor(() =>
       expect(client.arrangeItinerary).toHaveBeenCalledWith('trip-1', [
@@ -165,9 +178,8 @@ describe('tela Roteiro', () => {
       ],
     })
     const screen = await renderScreen(client)
-    await screen.findByTestId('roteiro-lugar-cafe-do-porto-mover-dia')
-
-    await fireEvent.press(screen.getByTestId('roteiro-lugar-cafe-do-porto-mover-dia'))
+    await fireEvent.press(await screen.findByTestId('roteiro-lugar-cafe-do-porto-mover-dia'))
+    await fireEvent.press(await screen.findByLabelText(/^Dia 2 · seg 15\/mar · 1 lugar$/u))
 
     await waitFor(() =>
       expect(client.arrangeItinerary).toHaveBeenCalledWith('trip-1', [
@@ -181,8 +193,8 @@ describe('tela Roteiro', () => {
     const screen = await renderScreen(createClient({ role: 'member' }))
 
     expect(await screen.findByTestId('roteiro-somente-leitura')).toBeOnTheScreen()
-    expect(screen.queryByTestId('roteiro-lugar-museu-do-mar-subir')).toBeNull()
-    expect(screen.queryByTestId('roteiro-lugar-parque-da-cidade-por-no-dia')).toBeNull()
+    expect(screen.queryByTestId('roteiro-lugar-museu-do-mar-mover-dia')).toBeNull()
+    expect(screen.queryByTestId('roteiro-dia-0-adicionar')).toBeNull()
   })
 
   it('mostra a diferença do rascunho e permite descartar ou reaplicar', async () => {

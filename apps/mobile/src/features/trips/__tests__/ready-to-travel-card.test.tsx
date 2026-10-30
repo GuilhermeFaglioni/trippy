@@ -138,15 +138,14 @@ describe('card Pronto para viajar', () => {
   it('mostra pendências de endereço, recomendação para China e aberturas', async () => {
     const screen = await renderCard(createClient())
 
-    expect(await screen.findByTestId('pronto-viajar-card')).toHaveTextContent(/Pronto para viajar/u)
-    expect(screen.getByTestId('pronto-viajar-card')).toHaveTextContent(
-      /1 lugar sem endereço no idioma local/u,
+    expect(await screen.findByTestId('pronto-viajar-card')).toHaveTextContent(
+      /Pronto para viajar\? Faltam 6 dias/u,
     )
     expect(screen.getByTestId('pronto-viajar-card')).toHaveTextContent(
-      /Cadastre os endereços locais antes de embarcar: na China o mapa e a busca podem falhar./u,
+      /1 lugar sem endereço em chinês · 1 de 2 pessoas já abriram a viagem no celular/u,
     )
     expect(screen.getByTestId('pronto-viajar-card')).toHaveTextContent(
-      /1 de 2 pessoas já abriram a viagem/u,
+      /Lembrar quem falta pelo WhatsApp/u,
     )
     expect(screen.getByTestId('pronto-viajar-avisar')).toBeOnTheScreen()
   })

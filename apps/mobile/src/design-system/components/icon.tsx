@@ -25,6 +25,12 @@ const AddressCard = createLucideIcon('AddressCard', [
   ['path', { d: 'M7 10h6M7 14h10', key: 'lines' }],
 ])
 
+/** Calendário com seta: mover o lugar para outro dia. */
+const CalendarMove = createLucideIcon('CalendarMove', [
+  ['rect', { x: '3', y: '5', width: '18', height: '16', rx: '2', key: 'frame' }],
+  ['path', { d: 'M3 10h18M8 3v4M16 3v4M10 15h6M14 13l2 2-2 2', key: 'detalhes' }],
+])
+
 /** Três pontos das opções da linha (tela do grupo), preenchidos. */
 const More = createLucideIcon('More', [
   ['circle', { cx: '5', cy: '12', r: '1.8', key: 'a' }],
@@ -56,6 +62,7 @@ export const iconSet = {
   search: Search,
   x: X,
   'address-card': AddressCard,
+  'calendar-move': CalendarMove,
   more: More,
   'video-camera': VideoCamera,
 } as const satisfies Record<string, LucideIcon>
