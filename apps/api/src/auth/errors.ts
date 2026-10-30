@@ -16,5 +16,6 @@ export function handleApiError(error: Error, context: Context) {
   if (error instanceof AuthHttpError) {
     return context.json({ error: error.code, message: error.message }, error.status)
   }
+  console.error('[api] erro não tratado:', error)
   return context.json({ error: 'internal_error', message: 'Erro interno do servidor.' }, 500)
 }

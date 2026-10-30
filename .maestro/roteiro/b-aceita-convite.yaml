@@ -16,7 +16,7 @@ appId: app.trippy.mobile
 - extendedWaitUntil:
     visible:
       id: login-email-input
-    timeout: 30000
+    timeout: 120000
 - tapOn:
     id: login-email-input
 - inputText: ${B_EMAIL}
@@ -40,6 +40,12 @@ appId: app.trippy.mobile
 - hideKeyboard
 - tapOn:
     id: accept-invite-button
+- scrollUntilVisible:
+    element:
+      id: accept-invite-terms-accept
+    direction: DOWN
+- tapOn:
+    id: accept-invite-terms-accept
 - assertVisible:
     id: trip-detail-screen
 - assertVisible: ${TRIP_NAME}

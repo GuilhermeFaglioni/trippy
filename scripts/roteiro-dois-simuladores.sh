@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export MAESTRO_DRIVER_STARTUP_TIMEOUT="${MAESTRO_DRIVER_STARTUP_TIMEOUT:-300000}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -9,6 +10,7 @@ if (( $# != 0 && $# != 2 )); then
   exit 2
 fi
 
+CREATED_SIMS=()
 if (( $# == 2 )); then
   UDID_A="$1"
   UDID_B="$2"
@@ -16,7 +18,9 @@ else
   SIM_RUNTIME="${SIM_RUNTIME:-com.apple.CoreSimulator.SimRuntime.iOS-18-4}"
   SIM_TYPE="${SIM_TYPE:-com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro}"
   UDID_A="$(xcrun simctl create "Trippy Roteiro A $(date +%s)" "$SIM_TYPE" "$SIM_RUNTIME")"
+  CREATED_SIMS+=("$UDID_A")
   UDID_B="$(xcrun simctl create "Trippy Roteiro B $(date +%s)" "$SIM_TYPE" "$SIM_RUNTIME")"
+  CREATED_SIMS+=("$UDID_B")
 fi
 
 TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/trippy-roteiro-simuladores.XXXXXX")"
@@ -28,20 +32,46 @@ log() {
   printf '[roteiro-dois-simuladores] %s\n' "$*"
 }
 
+# Mata o processo e todos os descendentes (o `kill` do subshell não alcança o node).
+kill_tree() {
+  local pid="$1"
+  local child
+  for child in $(pgrep -P "$pid" 2>/dev/null || true); do
+    kill_tree "$child"
+  done
+  kill "$pid" >/dev/null 2>&1 || true
+}
+
+kill_port() {
+  local pid
+  for pid in $(lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null || true); do
+    kill_tree "$pid"
+  done
+}
+
 cleanup() {
-  if [[ -n "$METRO_PID" ]]; then
-    kill "$METRO_PID" >/dev/null 2>&1 || true
-    wait "$METRO_PID" >/dev/null 2>&1 || true
+  local status=$?
+  set +e
+  trap - EXIT
+  [[ -n "$METRO_PID" ]] && kill_tree "$METRO_PID"
+  [[ -n "$API_PID" ]] && kill_tree "$API_PID"
+  [[ -n "${METRO_PORT:-}" ]] && kill_port "$METRO_PORT"
+  [[ -n "${API_PORT:-}" ]] && kill_port "$API_PORT"
+  if [[ -n "${CREATED_DATABASE:-}" ]]; then
+    docker exec trippy-postgres-1 psql -X -q -U trippy -d postgres \
+      -c "DROP DATABASE IF EXISTS $CREATED_DATABASE WITH (FORCE)" >/dev/null 2>&1
   fi
-  if [[ -n "$API_PID" ]]; then
-    kill "$API_PID" >/dev/null 2>&1 || true
-    wait "$API_PID" >/dev/null 2>&1 || true
-  fi
+  local udid
+  for udid in ${CREATED_SIMS[@]+"${CREATED_SIMS[@]}"}; do
+    xcrun simctl shutdown "$udid" >/dev/null 2>&1
+    xcrun simctl delete "$udid" >/dev/null 2>&1
+  done
   if [[ "${ROTEIRO_KEEP_TEMP:-0}" == 1 ]]; then
     log "Artefatos preservados em $TMP_DIR"
   else
     rm -rf "$TMP_DIR"
   fi
+  exit "$status"
 }
 trap cleanup EXIT
 
@@ -134,11 +164,18 @@ try {
 NODE
 }
 
-DATABASE_NAME="${TRIPPY_DATABASE_NAME:-$(node --env-file-if-exists=.env --input-type=module -e 'process.stdout.write(new URL(process.env.DATABASE_URL).pathname.slice(1))')}"
-if [[ ! "$DATABASE_NAME" =~ ^[A-Za-z0-9_]+$ ]]; then
-  printf 'Nome de banco inválido em DATABASE_URL.\n' >&2
+# Banco descartável por execução: o banco de dev compartilhado pode estar atrás (ou divergente)
+# das migrations desta branch, o que faz /sync/* responder 500.
+DATABASE_NAME="trippy_roteiro_$(date +%s)_$$"
+DEV_DATABASE_URL="$(node --env-file-if-exists=.env --input-type=module -e 'process.stdout.write(process.env.DATABASE_URL ?? "")')"
+if [[ -z "$DEV_DATABASE_URL" ]]; then
+  printf 'DATABASE_URL ausente (.env).\n' >&2
   exit 1
 fi
+docker exec trippy-postgres-1 psql -X -q -U trippy -d postgres -c "CREATE DATABASE $DATABASE_NAME"
+CREATED_DATABASE="$DATABASE_NAME"
+export DATABASE_URL="$(node --input-type=module -e 'const u = new URL(process.argv[1]); u.pathname = "/" + process.argv[2]; process.stdout.write(u.toString())' "$DEV_DATABASE_URL" "$DATABASE_NAME")"
+pnpm --filter @trippy/db migrate >"$TMP_DIR/migrate.log" 2>&1 || { cat "$TMP_DIR/migrate.log" >&2; exit 1; }
 
 log "Simulador A: $UDID_A"
 log "Simulador B: $UDID_B"
@@ -180,22 +217,27 @@ METRO_PID=$!
 wait_for_http "http://localhost:$METRO_PORT/status" "$METRO_PID" "$TMP_DIR/metro.log"
 
 mkdir -p "$BUILD_DIR"
-log 'Compilando development build iOS único para os dois Simulators.'
-if ! (
-  cd "$ROOT_DIR/apps/mobile"
-  EXPO_PUBLIC_API_URL="$API_URL" ./node_modules/.bin/expo run:ios \
-    --device generic --no-bundler --output "$BUILD_DIR"
-) >"$TMP_DIR/build.log" 2>&1; then
-  cat "$TMP_DIR/build.log" >&2
-  exit 1
+APP_PATH="${ROTEIRO_APP_PATH:-}"
+if [[ -n "$APP_PATH" ]]; then
+  log "Reaproveitando build existente (ROTEIRO_APP_PATH)."
+else
+  log 'Compilando development build iOS único para os dois Simulators.'
+  if ! (
+    cd "$ROOT_DIR/apps/mobile"
+    EXPO_PUBLIC_API_URL="$API_URL" ./node_modules/.bin/expo run:ios \
+      --device generic --no-bundler --output "$BUILD_DIR"
+  ) >"$TMP_DIR/build.log" 2>&1; then
+    cat "$TMP_DIR/build.log" >&2
+    exit 1
+  fi
+  APP_PATH="$(find "$BUILD_DIR" -maxdepth 5 -type d -name '*.app' -print -quit)"
+  if [[ -z "$APP_PATH" ]]; then
+    cat "$TMP_DIR/build.log" >&2
+    printf 'Expo não produziu um bundle .app em %s\n' "$BUILD_DIR" >&2
+    exit 1
+  fi
+  log "Build: $APP_PATH"
 fi
-APP_PATH="$(find "$BUILD_DIR" -maxdepth 5 -type d -name '*.app' -print -quit)"
-if [[ -z "$APP_PATH" ]]; then
-  cat "$TMP_DIR/build.log" >&2
-  printf 'Expo não produziu um bundle .app em %s\n' "$BUILD_DIR" >&2
-  exit 1
-fi
-log "Build: $APP_PATH"
 xcrun simctl uninstall "$UDID_A" app.trippy.mobile >/dev/null 2>&1 || true
 xcrun simctl uninstall "$UDID_B" app.trippy.mobile >/dev/null 2>&1 || true
 xcrun simctl install "$UDID_A" "$APP_PATH"
@@ -255,7 +297,7 @@ log 'A e B ativam Simular sem internet e reordenam o mesmo dia de formas diferen
 run_maestro "$UDID_A" a-offline-reordena.yaml \
   -e "TRIP_ID=$TRIP_ID" -e "PLACE_2_SLUG=$PLACE_2_SLUG"
 run_maestro "$UDID_B" b-offline-reordena.yaml \
-  -e "TRIP_ID=$TRIP_ID" -e "PLACE_3_SLUG=$PLACE_3_SLUG"
+  -e "TRIP_ID=$TRIP_ID" -e "B_USER_ID=$B_USER_ID" -e "PLACE_3_SLUG=$PLACE_3_SLUG"
 CONTAINER_B="$(xcrun simctl get_app_container "$UDID_B" app.trippy.mobile data)"
 DB_B="$(find "$CONTAINER_B" -type f -name "trippy-$B_USER_ID.db" -print -quit)"
 if [[ -z "$DB_B" ]]; then

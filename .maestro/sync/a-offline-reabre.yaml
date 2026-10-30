@@ -15,12 +15,17 @@ appId: app.trippy.mobile
     text: Abrir
     optional: true
 - assertVisible:
-    id: trip-detail-screen
-- tapOn:
-    id: add-place-name
-- inputText: ${PLACE_NAME}
+    id: viagem-abas
 - tapOn:
     id: add-place-button
+- tapOn:
+    id: place-search-query
+- inputText: ${PLACE_NAME}
+- hideKeyboard
+- tapOn:
+    id: save-typed-place
+- assertVisible:
+    id: viagem-abas
 - assertVisible:
     id: place-${PLACE_SLUG}
 - tapOn:
@@ -37,7 +42,7 @@ appId: app.trippy.mobile
     text: Abrir
     optional: true
 - assertVisible:
-    id: trip-detail-screen
+    id: viagem-abas
 - assertVisible:
     id: place-${PLACE_SLUG}
 - assertVisible: Eu fui ✓

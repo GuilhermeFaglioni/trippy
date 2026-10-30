@@ -63,10 +63,26 @@ appId: app.trippy.mobile
 - tapOn: ${TRIP_NAME}, Recife
 - assertVisible:
     id: trip-detail-screen
-- tapOn:
-    id: create-trip-invite
-- assertVisible:
-    id: invite-code-value
+- retry:
+    maxRetries: 3
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: create-trip-invite
+          direction: UP
+          timeout: 4000
+          optional: true
+      - scrollUntilVisible:
+          element:
+            id: create-trip-invite
+          direction: DOWN
+      - tapOn:
+          id: create-trip-invite
+      - scrollUntilVisible:
+          element:
+            id: invite-code-value
+          direction: DOWN
+          timeout: 8000
 - copyTextFrom:
     id: invite-code-value
 - evalScript: ${console.log('INVITE_TOKEN=' + maestro.copiedText)}

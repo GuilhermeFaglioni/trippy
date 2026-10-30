@@ -15,6 +15,7 @@ import { MembersScreen } from '../../features/members/members-screen'
 import { useSync } from '../../features/sync/sync-provider'
 import { TripPlacesScreen } from '../../features/places/trip-places-screen'
 import { ReadyToTravelCard } from '../../features/trips/ready-to-travel-card'
+import { loadTripSummary, saveTripSummary } from '../../features/trips/trip-summary-cache'
 import { TodayScreen } from '../../features/today/today-screen'
 import {
   useTripsClient,
@@ -153,7 +154,7 @@ export default function TripRoute() {
   const [notSentCount, setNotSentCount] = useState(0)
   const [section, setSection] = useState<TripSection>('lugares')
   const [trip, setTrip] = useState<TripSummary | null>(null)
-  const [sectionChosen, setSectionChosen] = useState(false)
+  const sectionChosenRef = useRef(false)
   const [confirmingEnd, setConfirmingEnd] = useState(false)
   const [locallyEnded, setLocallyEnded] = useState(false)
   const openedTripRef = useRef<string | null>(null)
@@ -193,9 +194,16 @@ export default function TripRoute() {
         if (!active) return
         const found = trips.find((candidate) => candidate.id === tripId) ?? null
         setTrip(found)
-        if (found && !sectionChosen) setSection(initialSection(found.phase))
+        if (found) void saveTripSummary(found)
+        if (found && !sectionChosenRef.current) setSection(initialSection(found.phase))
       })
-      .catch(() => undefined)
+      .catch(async () => {
+        // Sem rede: usa o último resumo visto online (datas do Roteiro, fase, papel).
+        const cached = await loadTripSummary(tripId)
+        if (!active || cached === null) return
+        setTrip(cached)
+        if (!sectionChosenRef.current) setSection(initialSection(cached.phase))
+      })
     return () => {
       active = false
     }
@@ -365,7 +373,7 @@ export default function TripRoute() {
           active={section}
           showToday={phase === 'traveling'}
           onChange={(next) => {
-            setSectionChosen(true)
+            sectionChosenRef.current = true
             setSection(next)
           }}
         />

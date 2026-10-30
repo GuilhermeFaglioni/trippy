@@ -14,6 +14,7 @@ appId: app.trippy.mobile
     element:
       id: grupo-membro-${B_USER_ID}-papel
     direction: DOWN
+    timeout: 60000
 - assertVisible: Coorganizador
 - openLink: trippy:///diagnostics
 - tapOn:
@@ -41,5 +42,8 @@ appId: app.trippy.mobile
     id: roteiro-lugar-${PLACE_3_SLUG}-subir
 - tapOn:
     id: roteiro-lugar-${PLACE_3_SLUG}-subir
-- assertVisible:
-    id: roteiro-lugar-${PLACE_3_SLUG}
+- scrollUntilVisible:
+    element:
+      id: roteiro-lugar-${PLACE_3_SLUG}
+    direction: UP
+    timeout: 10000

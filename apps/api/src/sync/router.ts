@@ -81,6 +81,7 @@ export function createSyncRouter(
     }
     const response = validatePushResponse({ results })
     if (!response.success) {
+      console.error('[sync] resposta de push inválida', JSON.stringify(response.issues))
       return context.json({ error: 'internal_error', message: 'Erro interno do servidor.' }, 500)
     }
     return context.json(response.value)
@@ -119,6 +120,7 @@ export function createSyncRouter(
     }
     const validResponse = validatePullResponse(response)
     if (!validResponse.success) {
+      console.error('[sync] resposta de pull inválida', JSON.stringify(validResponse.issues))
       return context.json({ error: 'internal_error', message: 'Erro interno do servidor.' }, 500)
     }
     return context.json(validResponse.value)
