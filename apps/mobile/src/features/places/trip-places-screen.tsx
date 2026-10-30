@@ -1,36 +1,46 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Platform, ScrollView, Share, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { ActivityIndicator, ScrollView, Share, View } from 'react-native'
 import { useRouter } from 'expo-router'
 
-import { canRemovePlace } from '@trippy/domain'
-import type { LivePlace, SyncClientStatus } from '@trippy/sync'
-import { Button, Card, Notice } from '../../components'
+import { canEditItinerary } from '@trippy/domain'
+import type { ItineraryDay, LiveMember, LivePlace } from '@trippy/sync'
 import {
-  createTypographyTokens,
-  normalizeFontPlatform,
-  TypographyText,
+  Button,
+  DaySheet,
+  EmptyState,
+  FilterChip,
+  Notice,
+  PlaceListRow,
+  Text,
   useTheme,
 } from '../../design-system'
-import { useSession } from '../auth/session-provider'
 import { createInviteClient, getInviteErrorMessage } from '../invites/invite-client'
+import { useSession } from '../auth/session-provider'
 import { useSync } from '../sync/sync-provider'
 import type { TripRole } from '../trips/trips-client'
-import { PlaceCard } from './place-card'
-
-const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
+import {
+  comparePlacesByInterest,
+  createTripDays,
+  filterCounts,
+  placeByline,
+  placeStatusLabel,
+  placeStatusTone,
+  type PlaceFilter,
+} from './places-list-model'
 
 type TripPlacesScreenProps = {
   tripId: string
   tripName: string
   role: TripRole
-  onShowAddress?: (placeId: string) => void
+  /** Datas da viagem (AAAA-MM-DD): definem os dias da folha "escolher dia". */
+  startDate?: string
+  endDate?: string
 }
 
 function toTestSlug(value: string): string {
   const slug = value
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
@@ -49,69 +59,57 @@ function createTestIdByPlace(places: LivePlace[]): Map<string, string> {
   )
 }
 
-function comparePlacesByInterest(a: LivePlace, b: LivePlace): number {
-  if (a.wantCount !== b.wantCount) return b.wantCount - a.wantCount
-  const createdDiff = Date.parse(a.createdAt) - Date.parse(b.createdAt)
-  if (createdDiff !== 0) return createdDiff
-  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+function dayPlaceIds(places: readonly LivePlace[], dayIndex: number, skipId?: string): string[] {
+  return places
+    .filter((place) => place.dayIndex === dayIndex && place.id !== skipId)
+    .sort(
+      (left, right) =>
+        (left.position ?? Number.MAX_SAFE_INTEGER) - (right.position ?? Number.MAX_SAFE_INTEGER),
+    )
+    .map((place) => place.id)
 }
 
-function syncTime(lastSyncedAt: string | null): string {
-  if (lastSyncedAt === null) return 'Ainda não sincronizado'
-  const timestamp = new Date(lastSyncedAt)
-  if (Number.isNaN(timestamp.getTime())) return 'Ainda não sincronizado'
-  return `Sincronizado às ${timestamp.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  })}`
-}
-
-function SyncFooter({ status }: { status: SyncClientStatus }) {
-  const theme = useTheme()
-  const lastError =
-    'lastError' in status && typeof status.lastError === 'string' ? status.lastError : null
-  return (
-    <View testID="trip-sync-status" style={{ gap: theme.spacing.space2 }}>
-      <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-        {syncTime(status.lastSyncedAt)}
-      </TypographyText>
-      <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-        {`${status.pending} pendentes`}
-      </TypographyText>
-      {status.notSent > 0 ? (
-        <Notice
-          testID="trip-sync-not-sent"
-          tone="warning"
-          message={`${status.notSent} operações não enviadas.`}
-        />
-      ) : null}
-      {lastError ? (
-        <Notice
-          testID="trip-sync-error"
-          tone="warning"
-          message={`Os dados continuam neste aparelho. ${lastError}`}
-        />
-      ) : null}
-    </View>
-  )
-}
-
-export function TripPlacesScreen({ tripId, tripName, role, onShowAddress }: TripPlacesScreenProps) {
+export function TripPlacesScreen({
+  tripId,
+  tripName,
+  role,
+  startDate = '',
+  endDate = '',
+}: TripPlacesScreenProps) {
   const theme = useTheme()
   const router = useRouter()
   const { session, request } = useSession()
-  const { client, status, ready, error: syncError } = useSync()
+  const { client, ready } = useSync()
   const inviteClient = useMemo(() => createInviteClient(request), [request])
   const [places, setPlaces] = useState<LivePlace[]>([])
+  const [members, setMembers] = useState<LiveMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [busyPlaceId, setBusyPlaceId] = useState<string | null>(null)
   const [isCreatingInvite, setIsCreatingInvite] = useState(false)
   const [screenError, setScreenError] = useState<string | null>(null)
   const [inviteCode, setInviteCode] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<PlaceFilter>('all')
+  const [sheetPlaceId, setSheetPlaceId] = useState<string | null>(null)
+
+  const userId = session?.user.id ?? null
+  const canArrange = canEditItinerary(role)
+  const canInvite = role === 'organizer' || role === 'coorganizer'
+  const days = useMemo(() => createTripDays(startDate, endDate), [startDate, endDate])
   const testIds = useMemo(() => createTestIdByPlace(places), [places])
-  const sortedPlaces = useMemo(() => [...places].sort(comparePlacesByInterest), [places])
+
+  const rows = useMemo(
+    () =>
+      [...places].sort(comparePlacesByInterest).map((place, index) => ({
+        place,
+        tone: placeStatusTone(place, days.length, userId),
+        thumbTone: ((index % 4) + 1) as 1 | 2 | 3 | 4,
+      })),
+    [days.length, places, userId],
+  )
+  const counts = useMemo(() => filterCounts(rows.map((row) => row.tone)), [rows])
+  const visibleRows = rows.filter((row) => filter === 'all' || row.tone === (filter as string))
+  const sheetPlace = places.find((place) => place.id === sheetPlaceId) ?? null
 
   const loadPlaces = useCallback(
     async (showLoading = false) => {
@@ -125,7 +123,12 @@ export function TripPlacesScreen({ tripId, tripName, role, onShowAddress }: Trip
       if (showLoading) setIsLoading(true)
       setScreenError(null)
       try {
-        setPlaces(await client.listPlaces(tripId))
+        const [nextPlaces, nextMembers] = await Promise.all([
+          client.listPlaces(tripId),
+          client.listMembers(tripId),
+        ])
+        setPlaces(nextPlaces)
+        setMembers(nextMembers)
       } catch (loadError) {
         setScreenError(
           loadError instanceof Error
@@ -144,28 +147,6 @@ export function TripPlacesScreen({ tripId, tripName, role, onShowAddress }: Trip
     if (client === null) return
     return client.subscribe(() => void loadPlaces())
   }, [client, loadPlaces])
-
-  const toggleVisit = useCallback(
-    async (place: LivePlace) => {
-      if (client === null) return
-      setBusyPlaceId(place.id)
-      setScreenError(null)
-      try {
-        if (place.visitedByMe) await client.unmarkVisit(tripId, place.id)
-        else await client.markVisit(tripId, place.id)
-        await loadPlaces()
-      } catch (writeError) {
-        setScreenError(
-          writeError instanceof Error
-            ? writeError.message
-            : 'Não foi possível salvar sua presença neste lugar.',
-        )
-      } finally {
-        setBusyPlaceId(null)
-      }
-    },
-    [client, loadPlaces, tripId],
-  )
 
   const toggleWant = useCallback(
     async (place: LivePlace) => {
@@ -189,23 +170,38 @@ export function TripPlacesScreen({ tripId, tripName, role, onShowAddress }: Trip
     [client, loadPlaces, tripId],
   )
 
-  const removePlace = useCallback(
-    async (placeId: string) => {
-      if (client === null) return
-      setBusyPlaceId(placeId)
+  const chooseDay = useCallback(
+    async (place: LivePlace, key: string) => {
+      setSheetPlaceId(null)
+      if (client === null || !canArrange) return
+      const target = key === 'none' ? null : Number(key)
+      if (target === place.dayIndex) return
+      const changed: ItineraryDay[] = []
+      if (place.dayIndex !== null) {
+        changed.push({
+          dayIndex: place.dayIndex,
+          placeIds: dayPlaceIds(places, place.dayIndex, place.id),
+        })
+      }
+      if (target !== null) {
+        changed.push({ dayIndex: target, placeIds: [...dayPlaceIds(places, target), place.id] })
+      }
+      setBusyPlaceId(place.id)
       setScreenError(null)
       try {
-        await client.removePlace(tripId, placeId)
+        await client.arrangeItinerary(tripId, changed)
         await loadPlaces()
-      } catch (writeError) {
+      } catch (arrangeError) {
         setScreenError(
-          writeError instanceof Error ? writeError.message : 'Não foi possível remover o lugar.',
+          arrangeError instanceof Error
+            ? arrangeError.message
+            : 'Não foi possível alterar o dia do lugar.',
         )
       } finally {
         setBusyPlaceId(null)
       }
     },
-    [client, loadPlaces, tripId],
+    [canArrange, client, loadPlaces, places, tripId],
   )
 
   const createInvite = useCallback(async () => {
@@ -225,137 +221,191 @@ export function TripPlacesScreen({ tripId, tripName, role, onShowAddress }: Trip
     await Share.share({ message: `Entre em ${tripName} com este código: ${inviteCode}` })
   }, [inviteCode, tripName])
 
-  const canInvite = role === 'organizer' || role === 'coorganizer'
+  const openAddPlace = () =>
+    router.push({
+      pathname: '/trips/[id]/add-place',
+      params: { id: tripId, tripName, role },
+    })
 
-  return (
-    <SafeAreaView
-      testID="trip-detail-screen"
-      style={{ flex: 1, backgroundColor: theme.colors.ground }}
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          gap: theme.spacing.space4,
-          padding: theme.spacing.space5,
+  const notices = (
+    <>
+      {!ready || isLoading ? (
+        <View accessibilityRole="progressbar" testID="trip-places-loading">
+          <ActivityIndicator color={theme.colors.forest} />
+        </View>
+      ) : null}
+      {screenError ? (
+        <Notice testID="trip-places-error" tone="change" segments={[screenError]} />
+      ) : null}
+    </>
+  )
+
+  if (!isLoading && places.length === 0) {
+    return (
+      <View
+        testID="trip-detail-screen"
+        style={{
+          flex: 1,
+          gap: 14,
+          paddingBottom: theme.spacing.space5,
+          paddingHorizontal: theme.spacing.space5,
         }}
-        keyboardShouldPersistTaps="handled"
       >
-        {!ready ? (
-          <View accessibilityRole="progressbar" testID="trip-sync-loading">
-            <ActivityIndicator color={theme.colors.forest} />
-          </View>
-        ) : null}
-        {syncError ? (
-          <Notice
-            testID="trip-sync-unavailable"
-            tone="warning"
-            title="Sincronização local indisponível."
-            message={syncError}
+        {notices}
+        <View style={{ alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+          <EmptyState
+            testID="places-empty"
+            icon="map-pin"
+            title="Nenhum lugar ainda"
+            message="Adicione o primeiro lugar ou convide o grupo para sugerir."
           />
-        ) : null}
-        {screenError ? (
-          <Notice testID="trip-places-error" tone="danger" message={screenError} />
-        ) : null}
-
-        <Card testID="add-place-card">
-          <Button
-            label="Adicionar lugar"
-            onPress={() =>
-              router.push({
-                pathname: '/trips/[id]/add-place',
-                params: { id: tripId, tripName, role },
-              })
-            }
-            disabled={client === null}
-            testID="add-place-button"
-          />
-        </Card>
-
-        {isLoading ? (
-          <View accessibilityRole="progressbar" testID="trip-places-loading">
-            <ActivityIndicator color={theme.colors.forest} />
-          </View>
-        ) : places.length === 0 ? (
-          <Notice testID="places-empty" message="Adicione o primeiro lugar ou convide o grupo." />
-        ) : (
-          <View style={{ gap: theme.spacing.space3 }}>
-            {sortedPlaces.map((place) => {
-              const canRemove =
-                session !== null &&
-                canRemovePlace({ role, userId: session.user.id, suggestedBy: place.suggestedBy })
-              const testSlug = testIds.get(place.id) ?? toTestSlug(place.name)
-              if (client === null) return null
-              return (
-                <PlaceCard
-                  key={place.id}
-                  place={place}
-                  tripId={tripId}
-                  currentUserId={session?.user.id ?? null}
-                  role={role}
-                  syncClient={client}
-                  testSlug={testSlug}
-                  busy={busyPlaceId === place.id}
-                  onToggleVisit={() => void toggleVisit(place)}
-                  onToggleWant={() => void toggleWant(place)}
-                  onRemove={canRemove ? () => void removePlace(place.id) : undefined}
-                  onOpen={() =>
-                    router.push({
-                      pathname: '/trips/[id]/places/[placeId]',
-                      params: { id: tripId, placeId: place.id },
-                    })
-                  }
-                  onRefresh={() => loadPlaces()}
-                  onShowAddress={onShowAddress}
-                />
-              )
-            })}
-          </View>
-        )}
-
+        </View>
+        <Button
+          label="Adicionar lugar"
+          onPress={openAddPlace}
+          disabled={client === null}
+          testID="add-place-button"
+        />
         {canInvite ? (
-          <Card testID="trip-invite-card">
-            <View style={{ gap: theme.spacing.space3 }}>
+          <View style={{ gap: theme.spacing.space3 }}>
+            {inviteError ? (
+              <Notice testID="trip-invite-error" tone="change" segments={[inviteError]} />
+            ) : null}
+            {inviteCode ? (
+              <View testID="invite-code" style={{ gap: theme.spacing.space2 }}>
+                <Text variant="fieldHelp" color={theme.colors.inkMuted}>
+                  Código do convite
+                </Text>
+                <Text
+                  variant="titleM"
+                  color={theme.colors.ink}
+                  selectable
+                  testID="invite-code-value"
+                >
+                  {inviteCode}
+                </Text>
+                <Button
+                  label="Compartilhar código"
+                  onPress={() => void shareInvite()}
+                  variant="secondary"
+                  block
+                  testID="share-trip-invite"
+                />
+              </View>
+            ) : (
               <Button
                 label="Convidar pessoas"
                 onPress={() => void createInvite()}
+                variant="secondary"
+                block
                 loading={isCreatingInvite}
                 testID="create-trip-invite"
               />
-              {inviteError ? (
-                <Notice testID="trip-invite-error" tone="danger" message={inviteError} />
-              ) : null}
-              {inviteCode ? (
-                <View style={{ gap: theme.spacing.space2 }}>
-                  <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-                    Código do convite
-                  </TypographyText>
-                  <View testID="invite-code">
-                    <TypographyText
-                      family="sans"
-                      selectable
-                      testID="invite-code-value"
-                      style={[typography.titleM, { color: theme.colors.ink }]}
-                    >
-                      {inviteCode}
-                    </TypographyText>
-                  </View>
-                  <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-                    Toque e segure o código para copiar ou compartilhe com o grupo.
-                  </TypographyText>
-                  <Button
-                    label="Compartilhar código"
-                    onPress={() => void shareInvite()}
-                    variant="secondary"
-                    testID="share-trip-invite"
-                  />
-                </View>
-              ) : null}
-            </View>
-          </Card>
+            )}
+          </View>
         ) : null}
+      </View>
+    )
+  }
 
-        <SyncFooter status={status} />
+  return (
+    <View testID="trip-detail-screen" style={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={{
+          gap: theme.spacing.space3,
+          paddingBottom: 96,
+          paddingHorizontal: theme.spacing.space5,
+        }}
+      >
+        {notices}
+        <View style={{ flexDirection: 'row', gap: theme.spacing.space2 }}>
+          <FilterChip
+            testID="places-filter-all"
+            label={`Todos ${counts.all}`}
+            selected={filter === 'all'}
+            onPress={() => setFilter('all')}
+          />
+          <FilterChip
+            testID="places-filter-suggested"
+            label={`Sugeridos ${counts.suggested}`}
+            selected={filter === 'suggested'}
+            onPress={() => setFilter('suggested')}
+          />
+          <FilterChip
+            testID="places-filter-none"
+            label={`Sem dia ${counts.none}`}
+            selected={filter === 'none'}
+            onPress={() => setFilter('none')}
+          />
+        </View>
+        <View style={{ flexDirection: 'row', gap: theme.spacing.space1 }}>
+          <Text variant="notice" color={theme.colors.inkMuted}>
+            Ordenado por
+          </Text>
+          <Text variant="filterSelected" color={theme.colors.ink}>
+            mais "quero ir"
+          </Text>
+        </View>
+        {visibleRows.map(({ place, tone, thumbTone }) => {
+          const slug = testIds.get(place.id) ?? toTestSlug(place.name)
+          return (
+            <PlaceListRow
+              key={place.id}
+              testID={`place-${slug}`}
+              name={place.name}
+              byline={placeByline(place, userId, members)}
+              thumbTone={thumbTone}
+              status={{
+                tone,
+                label: placeStatusLabel(tone, place, canArrange),
+                onPress:
+                  canArrange && days.length > 0 ? () => setSheetPlaceId(place.id) : undefined,
+              }}
+              want={{
+                count: place.wantCount,
+                marked: place.wantedByMe,
+                disabled: busyPlaceId === place.id,
+                onToggle: () => void toggleWant(place),
+              }}
+              onPress={() =>
+                router.push({
+                  pathname: '/trips/[id]/places/[placeId]',
+                  params: { id: tripId, placeId: place.id },
+                })
+              }
+            />
+          )
+        })}
       </ScrollView>
-    </SafeAreaView>
+      <View
+        pointerEvents="box-none"
+        style={{ bottom: theme.spacing.space5, position: 'absolute', right: theme.spacing.space5 }}
+      >
+        <Button
+          label="+ Lugar"
+          variant="fab"
+          onPress={openAddPlace}
+          disabled={client === null}
+          testID="add-place-button"
+        />
+      </View>
+      <DaySheet
+        visible={sheetPlace !== null}
+        title="Escolher dia"
+        options={[
+          ...days.map((day) => ({
+            key: String(day.dayIndex),
+            label: day.label,
+            selected: sheetPlace?.dayIndex === day.dayIndex,
+          })),
+          ...(sheetPlace?.dayIndex != null
+            ? [{ key: 'none', label: 'Sem dia', selected: false }]
+            : []),
+        ]}
+        onSelect={(key) => sheetPlace && void chooseDay(sheetPlace, key)}
+        onClose={() => setSheetPlaceId(null)}
+        testID="places-day-sheet"
+      />
+    </View>
   )
 }

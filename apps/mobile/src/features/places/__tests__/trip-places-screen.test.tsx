@@ -139,12 +139,18 @@ function renderScreen(client: SyncClient, role: 'organizer' | 'coorganizer' | 'm
   )
   return render(
     <DesignSystemProvider>
-      <TripPlacesScreen tripId="trip-1" tripName="Fim de semana" role={role} />
+      <TripPlacesScreen
+        tripId="trip-1"
+        tripName="Fim de semana"
+        role={role}
+        startDate="2026-11-01"
+        endDate="2026-11-03"
+      />
     </DesignSystemProvider>,
   )
 }
 
-describe('tela da viagem e lugares locais', () => {
+describe('tela Lugares', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockRequest.mockResolvedValue(
@@ -152,31 +158,48 @@ describe('tela da viagem e lugares locais', () => {
     )
   })
 
-  it('lista SQLite, abre Adicionar lugar, alterna Eu fui e mostra status honesto', async () => {
-    const fake = createClient()
-    const screen = await renderScreen(fake.client)
+  it('lista compacta ordenada por quero ir, filtros com contagem e toque abre o lugar', async () => {
+    const fake = createClient([
+      createPlace({ id: 'p1', name: 'Praça da Sé', wantCount: 1, suggestedBy: 'outra' }),
+      createPlace({ id: 'p2', name: 'Café do Porto', wantCount: 3, dayIndex: 1 }),
+      createPlace({ id: 'p3', name: 'Museu', wantCount: 2 }),
+    ])
+    const screen = await renderScreen(fake.client, 'organizer')
 
     expect(await screen.findByTestId('place-cafe-do-porto')).toBeOnTheScreen()
-    expect(screen.getByTestId('trip-sync-status')).toHaveTextContent(/Sincronizado às/)
-    expect(screen.getByTestId('trip-sync-status')).toHaveTextContent(/1 pendentes/)
-    expect(screen.getByTestId('trip-sync-not-sent')).toHaveTextContent(/1 operações não enviadas/)
+    const order = screen
+      .getAllByTestId(/^place-[a-z-]+$/)
+      .map((node) => String(node.props.testID))
+      .filter((id) => !/-(status|want)$/.test(id))
+    expect(order).toEqual(['place-cafe-do-porto', 'place-museu', 'place-praca-da-se'])
+    expect(screen.getByText('No dia 2 · trocar')).toBeOnTheScreen()
+    expect(screen.getByText('Sem dia · escolher dia')).toBeOnTheScreen()
+    expect(screen.getByText('Sugerido · escolher dia')).toBeOnTheScreen()
+    expect(screen.getByText('Todos 3')).toBeOnTheScreen()
+
+    await fireEvent.press(screen.getByTestId('places-filter-suggested'))
+    expect(screen.queryByTestId('place-museu')).toBeNull()
+    expect(screen.getByTestId('place-praca-da-se')).toBeOnTheScreen()
+
+    await fireEvent.press(screen.getByLabelText('Praça da Sé. Sugerido por outra pessoa'))
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/trips/[id]/places/[placeId]',
+      params: { id: 'trip-1', placeId: 'p1' },
+    })
+  })
+
+  it('alterna o quero ir e abre Adicionar lugar pelo botão flutuante', async () => {
+    const fake = createClient([createPlace({ wantCount: 2 })])
+    const screen = await renderScreen(fake.client)
+
+    await fireEvent.press(await screen.findByTestId('place-cafe-do-porto-want'))
+    await waitFor(() => expect(fake.client.wantPlace).toHaveBeenCalledWith('trip-1', 'place-1'))
 
     await fireEvent.press(screen.getByTestId('add-place-button'))
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/trips/[id]/add-place',
       params: { id: 'trip-1', tripName: 'Fim de semana', role: 'member' },
     })
-
-    await fireEvent.press(screen.getByTestId('place-visit-cafe-do-porto'))
-    await waitFor(() => expect(fake.client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1'))
-    await waitFor(() =>
-      expect(screen.getByTestId('place-visit-cafe-do-porto')).toHaveTextContent('Eu fui ✓'),
-    )
-    await fireEvent.press(screen.getByTestId('place-visit-cafe-do-porto'))
-    await waitFor(() => expect(fake.client.unmarkVisit).toHaveBeenCalledWith('trip-1', 'place-1'))
-    await waitFor(() =>
-      expect(screen.getByTestId('place-visit-cafe-do-porto')).toHaveTextContent('Eu fui'),
-    )
   })
 
   it('sync em segundo plano atualiza a lista no lugar, sem voltar a carregamento', async () => {
@@ -196,71 +219,41 @@ describe('tela da viagem e lugares locais', () => {
 
     await act(async () => release([createPlace(), createPlace({ id: 'place-9', name: 'Museu' })]))
     expect(await screen.findByTestId('place-museu')).toBeOnTheScreen()
-    expect(screen.queryByTestId('trip-places-loading')).not.toBeOnTheScreen()
   })
 
-  it('ordena por quero ir (mais antigo em empate) e alterna a reação', async () => {
-    const fake = createClient([
-      createPlace({
-        id: 'place-praca',
-        name: 'Praça da Sé',
-        wantCount: 1,
-        wantedByMe: true,
-        createdAt: '2026-10-20T12:00:00.000Z',
-      }),
-      createPlace({
-        id: 'place-cafe',
-        name: 'Café do Porto',
-        wantCount: 3,
-        createdAt: '2026-10-21T12:00:00.000Z',
-      }),
-      createPlace({
-        id: 'place-museu',
-        name: 'Museu Antigo',
-        wantCount: 1,
-        createdAt: '2026-10-19T12:00:00.000Z',
-      }),
-    ])
-    const screen = await renderScreen(fake.client)
-
-    await screen.findByTestId('place-cafe-do-porto')
-    const wantButtonIds = screen
-      .getAllByTestId(/^place-want-/)
-      .map((node) => String(node.props.testID))
-      .filter((id) => !id.endsWith('-focus-ring'))
-    expect(wantButtonIds).toEqual([
-      'place-want-cafe-do-porto',
-      'place-want-museu-antigo',
-      'place-want-praca-da-se',
-    ])
-
-    await fireEvent.press(screen.getByTestId('place-want-cafe-do-porto'))
-    await waitFor(() => expect(fake.client.wantPlace).toHaveBeenCalledWith('trip-1', 'place-cafe'))
-    await fireEvent.press(screen.getByTestId('place-want-praca-da-se'))
-    await waitFor(() =>
-      expect(fake.client.unwantPlace).toHaveBeenCalledWith('trip-1', 'place-praca'),
-    )
-  })
-
-  it('permite remover para quem sugeriu e convidar organizadores, mostrando código', async () => {
-    const fake = createClient([createPlace({ suggestedBy: 'member-2', name: 'Praça da Sé' })])
+  it('vazio: convida organizador a adicionar e convidar, e mostra o código', async () => {
+    const fake = createClient([])
     const screen = await renderScreen(fake.client, 'organizer')
 
-    expect(await screen.findByTestId('place-praca-da-se')).toBeOnTheScreen()
-    expect(screen.getByTestId('place-remove-praca-da-se')).toBeOnTheScreen()
+    expect(await screen.findByText('Nenhum lugar ainda')).toBeOnTheScreen()
     await fireEvent.press(screen.getByTestId('create-trip-invite'))
-
-    expect(await screen.findByTestId('invite-code')).toHaveTextContent('convite-abc')
-    expect(screen.getByTestId('invite-code-value').props.selectable).toBe(true)
-    expect(screen.getByTestId('share-trip-invite')).toBeOnTheScreen()
+    expect(await screen.findByTestId('invite-code-value')).toHaveTextContent('convite-abc')
     expect(mockRequest).toHaveBeenCalledWith('/trips/trip-1/invites', { method: 'POST' })
   })
 
-  it('não oferece remoção de lugar sugerido por outra pessoa a um membro', async () => {
-    const fake = createClient([createPlace({ suggestedBy: 'member-2', name: 'Praça da Sé' })])
+  it('vazio: membro não vê Convidar pessoas', async () => {
+    const fake = createClient([])
     const screen = await renderScreen(fake.client, 'member')
 
-    expect(await screen.findByTestId('place-praca-da-se')).toBeOnTheScreen()
-    expect(screen.queryByTestId('place-remove-praca-da-se')).toBeNull()
+    expect(await screen.findByText('Nenhum lugar ainda')).toBeOnTheScreen()
+    expect(screen.getByTestId('add-place-button')).toBeOnTheScreen()
+    expect(screen.queryByTestId('create-trip-invite')).toBeNull()
+  })
+
+  it('organizador escolhe o dia pela folha; membro só vê o status', async () => {
+    const fake = createClient([createPlace()])
+    const organizer = await renderScreen(fake.client, 'organizer')
+    await fireEvent.press(await organizer.findByTestId('place-cafe-do-porto-status'))
+    await fireEvent.press(await organizer.findByLabelText('Dia 2 · 02/11/2026'))
+    await waitFor(() =>
+      expect(fake.client.arrangeItinerary).toHaveBeenCalledWith('trip-1', [
+        { dayIndex: 1, placeIds: ['place-1'] },
+      ]),
+    )
+    organizer.unmount()
+
+    const member = await renderScreen(fake.client, 'member')
+    expect(await member.findByText('Sem dia')).toBeOnTheScreen()
+    expect(member.queryByText(/escolher dia/)).toBeNull()
   })
 })
