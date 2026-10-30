@@ -29,3 +29,18 @@ export { TabBar, tripTabs, type TabBarItem, type TabBarProps } from './tab-bar'
 export { TextButton, type TextButtonProps } from './text-button'
 export { TextField, type TextFieldProps } from './text-field'
 export { Text, textStyles, type TextProps, type TextVariant } from './text'
+export {
+  DashedButton,
+  DayPicker,
+  StopCard,
+  STOP_ROW_HEIGHT,
+  type DashedButtonProps,
+  type DayPickerItem,
+  type DayPickerProps,
+  type StopCardProps,
+} from './itinerary-parts'
+export {
+  ReorderableList,
+  type ReorderableDrag,
+  type ReorderableListProps,
+} from './reorderable-list'

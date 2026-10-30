@@ -3,25 +3,40 @@ import { ActivityIndicator, Platform, ScrollView, View } from 'react-native'
 
 import { canEditItinerary } from '@trippy/domain'
 import type { ItineraryDay, ItineraryDraft, LivePlace } from '@trippy/sync'
-import { Button, Card, Notice, TextField } from '../../components'
+import { Button, Card, Notice } from '../../components'
 import {
   createTypographyTokens,
   normalizeFontPlatform,
   TypographyText,
   useTheme,
 } from '../../design-system'
+import {
+  Button as DsButton,
+  DashedButton,
+  DaySheet,
+  DayPicker,
+  Notice as DsNotice,
+  ReorderableList,
+  STOP_ROW_HEIGHT,
+  StopCard,
+  Text,
+} from '../../design-system/components'
 import { useSession } from '../auth/session-provider'
 import { useSync } from '../sync/sync-provider'
 
-/** TestIDs Maestro: roteiro-dia-<índice>, roteiro-lugar-<slug>-<ação>, conflito-roteiro. */
+/** TestIDs Maestro: roteiro-dia-<índice>, roteiro-lugar-<slug>(-mover-dia), seletor-dia-<índice>, conflito-roteiro. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
-type TripDay = { dayIndex: number; date: string; label: string }
+type TripDay = { dayIndex: number; date: string; label: string; short: string }
 
 type ItineraryScreenProps = {
   tripId: string
   startDate: string
   endDate: string
+  /** "Escolher em Lugares" e "Adicionar lugar ao dia" sem lugares soltos levam à aba Lugares. */
+  onOpenPlaces?: () => void
+  /** Abre o detalhe do lugar. */
+  onOpenPlace?: (placeId: string) => void
 }
 
 function parseIsoDate(value: string): Date | null {
@@ -35,6 +50,14 @@ function formatDate(value: string): string {
   return year && month && day ? `${day}/${month}/${year}` : value
 }
 
+const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
+const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+/** "qua 14/out", como no título do dia. */
+function formatShort(date: Date): string {
+  return `${WEEKDAYS[date.getUTCDay()]} ${date.getUTCDate()}/${MONTHS[date.getUTCMonth()]}`
+}
+
 function createTripDays(startDate: string, endDate: string): TripDay[] {
   const start = parseIsoDate(startDate)
   const end = parseIsoDate(endDate)
@@ -44,7 +67,7 @@ function createTripDays(startDate: string, endDate: string): TripDay[] {
   const current = new Date(start)
   while (current <= end && days.length <= 365) {
     const date = current.toISOString().slice(0, 10)
-    days.push({ dayIndex: days.length, date, label: formatDate(date) })
+    days.push({ dayIndex: days.length, date, label: formatDate(date), short: formatShort(current) })
     current.setUTCDate(current.getUTCDate() + 1)
   }
   return days
@@ -228,7 +251,23 @@ function ItineraryConflict({
   )
 }
 
-export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenProps) {
+type MoveTarget = { place: LivePlace; dayIndex: number }
+
+function stopMeta(place: LivePlace): string {
+  const parts: string[] = []
+  if (place.wantCount > 0)
+    parts.push(place.wantCount === 1 ? '1 quer ir' : `${place.wantCount} querem ir`)
+  if (place.localAddressStatus === 'missing') parts.push('Sem endereço em chinês')
+  return parts.length > 0 ? parts.join(' · ') : (place.address ?? 'Sem detalhes ainda')
+}
+
+export function ItineraryScreen({
+  tripId,
+  startDate,
+  endDate,
+  onOpenPlaces,
+  onOpenPlace,
+}: ItineraryScreenProps) {
   const theme = useTheme()
   const { session } = useSession()
   const { client } = useSync()
@@ -238,8 +277,11 @@ export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenP
     Awaited<ReturnType<NonNullable<typeof client>['listMembers']>>
   >([])
   const [drafts, setDrafts] = useState<ItineraryDraft[]>([])
-  const [dayInputs, setDayInputs] = useState<Record<string, string>>({})
-  const [moveDayInputs, setMoveDayInputs] = useState<Record<string, string>>({})
+  const [selected, setSelected] = useState<number | 'all' | null>(null)
+  const [moving, setMoving] = useState<MoveTarget | null>(null)
+  const [adding, setAdding] = useState<number | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const [optimistic, setOptimistic] = useState<Map<number, string[]>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -291,6 +333,7 @@ export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenP
       if (client === null || !canEdit) return
       setBusy(true)
       setError(null)
+      setOptimistic(new Map(changedDays.map((day) => [day.dayIndex, day.placeIds])))
       try {
         await client.arrangeItinerary(tripId, changedDays)
         await loadData()
@@ -301,90 +344,54 @@ export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenP
             : 'Não foi possível alterar o roteiro.',
         )
       } finally {
+        setOptimistic(new Map())
         setBusy(false)
       }
     },
     [canEdit, client, loadData, tripId],
   )
 
-  const moveInDay = useCallback(
-    (dayIndex: number, placeIndex: number, direction: -1 | 1) => {
-      const dayPlaces = placesForDay(places, dayIndex, days.length)
-      const targetIndex = placeIndex + direction
-      if (targetIndex < 0 || targetIndex >= dayPlaces.length) return
-      const next = [...dayPlaces]
-      ;[next[placeIndex], next[targetIndex]] = [next[targetIndex]!, next[placeIndex]!]
+  const dayPlaces = useCallback(
+    (dayIndex: number): LivePlace[] => {
+      const current = placesForDay(places, dayIndex, days.length)
+      const order = optimistic.get(dayIndex)
+      if (!order) return current
+      const byId = new Map(current.map((place) => [place.id, place]))
+      const ordered = order.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []))
+      return ordered.length === current.length ? ordered : current
+    },
+    [days.length, optimistic, places],
+  )
+
+  const reorderDay = useCallback(
+    (dayIndex: number, next: LivePlace[]) => {
       void arrange([{ dayIndex, placeIds: next.map((place) => place.id) }])
+    },
+    [arrange],
+  )
+
+  const moveToDay = useCallback(
+    (target: MoveTarget, destination: number | 'none') => {
+      const { place, dayIndex: sourceDay } = target
+      const rest = placesForDay(places, sourceDay, days.length)
+        .filter((candidate) => candidate.id !== place.id)
+        .map((candidate) => candidate.id)
+      const source = { dayIndex: sourceDay, placeIds: rest }
+      if (destination === 'none') return void arrange([source])
+      const targetIds = placesForDay(places, destination, days.length).map(
+        (candidate) => candidate.id,
+      )
+      void arrange([source, { dayIndex: destination, placeIds: [...targetIds, place.id] }])
     },
     [arrange, days.length, places],
   )
 
   const addToDay = useCallback(
-    (place: LivePlace) => {
-      const value = dayInputs[place.id] ?? '1'
-      const dayIndex = Number(value) - 1
-      if (!Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex >= days.length) {
-        setError(`Informe um dia entre 1 e ${days.length}.`)
-        return
-      }
-      const targetPlaces = placesForDay(places, dayIndex, days.length)
-      void arrange([
-        { dayIndex, placeIds: [...targetPlaces.map((candidate) => candidate.id), place.id] },
-      ])
-    },
-    [arrange, dayInputs, days.length, places],
-  )
-
-  const removeFromDay = useCallback(
-    (place: LivePlace) => {
-      const dayIndex = placeDayIndex(place, days.length)
-      if (dayIndex === null) return
-      const dayPlaces = placesForDay(places, dayIndex, days.length)
-      void arrange([
-        {
-          dayIndex,
-          placeIds: dayPlaces
-            .filter((candidate) => candidate.id !== place.id)
-            .map((candidate) => candidate.id),
-        },
-      ])
+    (dayIndex: number, placeId: string) => {
+      const ids = placesForDay(places, dayIndex, days.length).map((candidate) => candidate.id)
+      void arrange([{ dayIndex, placeIds: [...ids, placeId] }])
     },
     [arrange, days.length, places],
-  )
-
-  const moveToDay = useCallback(
-    (place: LivePlace) => {
-      const sourceDay = placeDayIndex(place, days.length)
-      const targetDay = Number(moveDayInputs[place.id] ?? (sourceDay === 0 ? '2' : '1')) - 1
-      if (
-        sourceDay === null ||
-        !Number.isInteger(targetDay) ||
-        targetDay < 0 ||
-        targetDay >= days.length
-      ) {
-        setError(`Informe um dia entre 1 e ${days.length}.`)
-        return
-      }
-      if (targetDay === sourceDay) {
-        setError('Escolha um dia diferente do atual.')
-        return
-      }
-      const sourcePlaces = placesForDay(places, sourceDay, days.length)
-      const targetPlaces = placesForDay(places, targetDay, days.length)
-      void arrange([
-        {
-          dayIndex: sourceDay,
-          placeIds: sourcePlaces
-            .filter((candidate) => candidate.id !== place.id)
-            .map((candidate) => candidate.id),
-        },
-        {
-          dayIndex: targetDay,
-          placeIds: [...targetPlaces.map((candidate) => candidate.id), place.id],
-        },
-      ])
-    },
-    [arrange, days.length, moveDayInputs, places],
   )
 
   const handleDraft = useCallback(
@@ -422,9 +429,108 @@ export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenP
   )
   const unscheduled = places.filter((place) => placeDayIndex(place, days.length) === null)
 
+  // Sem escolha, abre no primeiro dia que já tem lugares.
+  const activeDay: number | 'all' =
+    selected ?? days.find((day) => currentByDay.get(day.dayIndex)!.length > 0)?.dayIndex ?? 0
+  const visibleDays = activeDay === 'all' ? days : days.filter((day) => day.dayIndex === activeDay)
+
+  const renderDay = (day: TripDay) => {
+    const stops = dayPlaces(day.dayIndex)
+    const title = `Dia ${day.dayIndex + 1} · ${day.short}`
+
+    return (
+      <View key={day.dayIndex} testID={`roteiro-dia-${day.dayIndex}`} style={{ gap: 12 }}>
+        <Text variant="titleM" color={theme.colors.ink} accessibilityRole="header">
+          {title}
+        </Text>
+        {stops.length === 0 ? (
+          <View
+            testID={`roteiro-dia-livre-${day.dayIndex}`}
+            style={{
+              alignItems: 'center',
+              backgroundColor: theme.colors.surface,
+              borderRadius: theme.radius.radiusLg,
+              gap: 10,
+              marginTop: 12,
+              paddingHorizontal: 20,
+              paddingVertical: 28,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: theme.colors.mustard,
+                borderRadius: theme.radius.radiusPill,
+                height: 64,
+                width: 64,
+              }}
+            />
+            <Text variant="titleM" color={theme.colors.ink}>
+              Dia livre
+            </Text>
+            <Text variant="body" color={theme.colors.inkMuted}>
+              Quer adicionar algum lugar?
+            </Text>
+            <DsButton
+              label="Escolher em Lugares"
+              variant="secondary"
+              onPress={() => onOpenPlaces?.()}
+              testID={`roteiro-dia-${day.dayIndex}-escolher`}
+            />
+          </View>
+        ) : (
+          <ReorderableList
+            items={stops}
+            keyOf={(place) => place.id}
+            rowHeight={STOP_ROW_HEIGHT}
+            enabled={canEdit && !busy}
+            onReorder={(next) => reorderDay(day.dayIndex, next)}
+            onDragChange={setDragging}
+            renderItem={(place, drag) => (
+              <StopCard
+                testID={`roteiro-lugar-${testSlug(place.name)}`}
+                number={drag.index + 1}
+                name={place.name}
+                meta={stopMeta(place)}
+                last={drag.index === stops.length - 1}
+                editable={canEdit}
+                drag={drag}
+                onPress={onOpenPlace ? () => onOpenPlace(place.id) : undefined}
+                onMoveDay={() => setMoving({ place, dayIndex: day.dayIndex })}
+              />
+            )}
+          />
+        )}
+        {canEdit && stops.length > 0 ? (
+          <DashedButton
+            label="+ Adicionar lugar ao dia"
+            inset={40}
+            onPress={() => (unscheduled.length > 0 ? setAdding(day.dayIndex) : onOpenPlaces?.())}
+            testID={`roteiro-dia-${day.dayIndex}-adicionar`}
+          />
+        ) : null}
+      </View>
+    )
+  }
+
+  const moveOptions = moving
+    ? [
+        ...days
+          .filter((day) => day.dayIndex !== moving.dayIndex)
+          .map((day) => {
+            const count = currentByDay.get(day.dayIndex)!.length
+            return {
+              key: `dia-${day.dayIndex}`,
+              label: `Dia ${day.dayIndex + 1} · ${day.short} · ${count === 1 ? '1 lugar' : `${count} lugares`}`,
+            }
+          }),
+        { key: 'sem-dia', label: 'Tirar do roteiro (fica sem dia)' },
+      ]
+    : []
+
   return (
     <ScrollView
       testID="tela-roteiro"
+      scrollEnabled={!dragging}
       contentContainerStyle={{ gap: theme.spacing.space4, padding: theme.spacing.space5 }}
       keyboardShouldPersistTaps="handled"
     >
@@ -446,6 +552,16 @@ export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenP
         />
       ) : null}
 
+      {!canEdit && !isLoading ? (
+        <DsNotice
+          testID="roteiro-somente-leitura"
+          tone="offline"
+          segments={[
+            'Só o organizador e os coorganizadores mudam o roteiro. Sugira lugares na aba Lugares.',
+          ]}
+        />
+      ) : null}
+
       {drafts.map((draft) => (
         <ItineraryConflict
           key={draft.opId}
@@ -460,159 +576,57 @@ export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenP
         />
       ))}
 
-      {days.map((day) => {
-        const dayPlaces = placesForDay(places, day.dayIndex, days.length)
-        return (
-          <Card key={day.dayIndex} testID={`roteiro-dia-${day.dayIndex}`}>
-            <View style={{ gap: theme.spacing.space3 }}>
-              <TypographyText
-                family="display"
-                style={[typography.titleM, { color: theme.colors.ink }]}
-              >
-                {`Dia ${day.dayIndex + 1} · ${day.label}`}
-              </TypographyText>
-              {dayPlaces.length === 0 ? (
-                <Notice message="Dia livre. Quer adicionar algum lugar?" />
-              ) : (
-                dayPlaces.map((place, index) => {
-                  const slug = testSlug(place.name)
-                  return (
-                    <View
-                      key={place.id}
-                      testID={`roteiro-lugar-${slug}`}
-                      style={{
-                        gap: theme.spacing.space2,
-                        borderTopColor: theme.colors.line,
-                        borderTopWidth: index === 0 ? 0 : 1,
-                        paddingTop: index === 0 ? 0 : theme.spacing.space3,
-                      }}
-                    >
-                      <TypographyText
-                        family="sans"
-                        style={[typography.bodyStrong, { color: theme.colors.ink }]}
-                      >
-                        {`${index + 1}. ${place.name}`}
-                      </TypographyText>
-                      {canEdit ? (
-                        <View style={{ gap: theme.spacing.space2 }}>
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              flexWrap: 'wrap',
-                              gap: theme.spacing.space2,
-                            }}
-                          >
-                            <Button
-                              label="Subir"
-                              variant="secondary"
-                              disabled={busy || index === 0}
-                              onPress={() => moveInDay(day.dayIndex, index, -1)}
-                              testID={`roteiro-lugar-${slug}-subir`}
-                            />
-                            <Button
-                              label="Descer"
-                              variant="secondary"
-                              disabled={busy || index === dayPlaces.length - 1}
-                              onPress={() => moveInDay(day.dayIndex, index, 1)}
-                              testID={`roteiro-lugar-${slug}-descer`}
-                            />
-                            <Button
-                              label="Tirar do dia"
-                              variant="secondary"
-                              disabled={busy}
-                              onPress={() => removeFromDay(place)}
-                              testID={`roteiro-lugar-${slug}-tirar-do-dia`}
-                            />
-                          </View>
-                          {days.length > 1 ? (
-                            <View style={{ gap: theme.spacing.space2 }}>
-                              <TextField
-                                label={`Mover ${place.name} para o dia`}
-                                value={
-                                  moveDayInputs[place.id] ?? String(day.dayIndex === 0 ? 2 : 1)
-                                }
-                                onChangeText={(value) =>
-                                  setMoveDayInputs((current) => ({ ...current, [place.id]: value }))
-                                }
-                                keyboardType="number-pad"
-                                accessibilityHint={`Escolha um dia entre 1 e ${days.length}, diferente do atual.`}
-                                testID={`roteiro-lugar-${slug}-dia-destino`}
-                              />
-                              <Button
-                                label={`Mover para o dia ${moveDayInputs[place.id] ?? (day.dayIndex === 0 ? '2' : '1')}`}
-                                variant="secondary"
-                                disabled={busy}
-                                onPress={() => moveToDay(place)}
-                                testID={`roteiro-lugar-${slug}-mover-dia`}
-                              />
-                            </View>
-                          ) : null}
-                        </View>
-                      ) : null}
-                    </View>
-                  )
-                })
-              )}
-            </View>
-          </Card>
-        )
-      })}
-
-      <View style={{ gap: theme.spacing.space3 }}>
-        <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
-          Lugares sem dia
-        </TypographyText>
-        {unscheduled.length === 0 ? (
-          <Notice
-            testID="roteiro-sem-lugares-sem-dia"
-            message="Todos os lugares já estão em um dia do roteiro."
-          />
-        ) : (
-          unscheduled.map((place) => {
-            const slug = testSlug(place.name)
-            const selectedDay = dayInputs[place.id] ?? '1'
-            return (
-              <Card key={place.id} testID={`roteiro-sem-dia-${slug}`}>
-                <View style={{ gap: theme.spacing.space3 }}>
-                  <TypographyText
-                    family="sans"
-                    style={[typography.bodyStrong, { color: theme.colors.ink }]}
-                  >
-                    {place.name}
-                  </TypographyText>
-                  {canEdit ? (
-                    <>
-                      <TextField
-                        label={`Dia de destino para ${place.name}`}
-                        value={selectedDay}
-                        onChangeText={(value) =>
-                          setDayInputs((current) => ({ ...current, [place.id]: value }))
-                        }
-                        keyboardType="number-pad"
-                        accessibilityHint={`Escolha um número entre 1 e ${days.length}.`}
-                        testID={`roteiro-lugar-${slug}-dia`}
-                      />
-                      <Button
-                        label={`Pôr no dia ${selectedDay || 'N'}`}
-                        disabled={busy || days.length === 0}
-                        onPress={() => addToDay(place)}
-                        testID={`roteiro-lugar-${slug}-por-no-dia`}
-                      />
-                    </>
-                  ) : null}
-                </View>
-              </Card>
-            )
-          })
-        )}
-      </View>
-
-      {!canEdit && !isLoading ? (
-        <Notice
-          testID="roteiro-somente-leitura"
-          message="Você pode consultar o roteiro. Só organizador e coorganizadores podem alterá-lo."
+      {days.length > 0 ? (
+        <DayPicker
+          testID="seletor-dia"
+          days={days.map((day) => ({ key: String(day.dayIndex), number: day.dayIndex + 1 }))}
+          selectedKey={activeDay === 'all' ? null : String(activeDay)}
+          allLabel={`Todos os ${days.length} dias`}
+          allSelected={activeDay === 'all'}
+          onSelect={(key) => setSelected(Number(key))}
+          onSelectAll={() => setSelected('all')}
         />
       ) : null}
+
+      {visibleDays.map(renderDay)}
+
+      {unscheduled.length > 0 && days.length > 0 ? (
+        <Text
+          testID="roteiro-lugares-sem-dia"
+          variant="placeAddress"
+          color={theme.colors.inkMuted}
+          style={{ textAlign: 'center' }}
+        >
+          {unscheduled.length === 1
+            ? '1 lugar do grupo ainda está sem dia.'
+            : `${unscheduled.length} lugares do grupo ainda estão sem dia.`}
+        </Text>
+      ) : null}
+
+      <DaySheet
+        visible={moving !== null}
+        title={moving ? `Mover "${moving.place.name}" para` : ''}
+        options={moveOptions}
+        onClose={() => setMoving(null)}
+        onSelect={(key) => {
+          const target = moving
+          setMoving(null)
+          if (target) moveToDay(target, key === 'sem-dia' ? 'none' : Number(key.slice(4)))
+        }}
+        testID="roteiro-folha-dias"
+      />
+      <DaySheet
+        visible={adding !== null}
+        title={adding === null ? '' : `Adicionar ao Dia ${adding + 1}`}
+        options={unscheduled.map((place) => ({ key: place.id, label: place.name }))}
+        onClose={() => setAdding(null)}
+        onSelect={(key) => {
+          const dayIndex = adding
+          setAdding(null)
+          if (dayIndex !== null) addToDay(dayIndex, key)
+        }}
+        testID="roteiro-folha-adicionar"
+      />
     </ScrollView>
   )
 }

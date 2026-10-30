@@ -208,7 +208,23 @@ export default function TripRoute() {
       )
     }
     if (section === 'roteiro') {
-      return <ItineraryScreen tripId={tripId} startDate={startDate} endDate={endDate} />
+      return (
+        <ItineraryScreen
+          tripId={tripId}
+          startDate={startDate}
+          endDate={endDate}
+          onOpenPlaces={() => {
+            sectionChosenRef.current = true
+            setSection('lugares')
+          }}
+          onOpenPlace={(placeId) =>
+            router.push({
+              pathname: '/trips/[id]/places/[placeId]',
+              params: { id: tripId, placeId },
+            })
+          }
+        />
+      )
     }
     if (section === 'memorias') return <TripMemoriesScreen onSendPhotos={openPhotos} />
     if (section === 'grupo') {
