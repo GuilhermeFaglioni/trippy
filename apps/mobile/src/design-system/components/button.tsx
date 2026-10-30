@@ -12,12 +12,7 @@ import { Text } from './text'
 /** `outlineInverse`: contorno claro sobre fundo forest (login). */
 /** `forest`: ação principal sobre fundo branco em tela cheia (cartão para mostrar). */
 export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'fab'
-  | 'inverse'
-  | 'outlineInverse'
-  | 'forest'
+  'primary' | 'secondary' | 'fab' | 'inverse' | 'outlineInverse' | 'forest'
 
 export type ButtonProps = {
   label: string
@@ -120,11 +115,11 @@ export function Button({
                   ? touching
                     ? derivePressedColor(colors.forest)
                     : colors.forest
-                : variant === 'inverse'
-                  ? touching
-                    ? derivePressedColor(colors.onForest)
-                    : colors.onForest
-                  : terracotta
+                  : variant === 'inverse'
+                    ? touching
+                      ? derivePressedColor(colors.onForest)
+                      : colors.onForest
+                    : terracotta
           const bordered = (variant === 'secondary' || variant === 'outlineInverse') && !disabled
 
           return {
