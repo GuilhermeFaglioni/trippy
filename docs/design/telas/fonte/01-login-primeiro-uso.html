@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Login</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+</style>
+<style>body{margin:0}a{color:#C2410C}a:hover{color:#9A3412}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #1F4D3F; color: #F5F1EA; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; padding: 72px 24px 40px; gap: 24px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 14px"><svg width="56" height="56" sc-camel-view-box="0 0 96 96" role="img" aria-label="Trippy"><rect width="96" height="96" rx="24" fill="#F5F1EA"></rect><path d="M48 80s-20-17-20-36a20 20 0 0 1 40 0c0 19-20 36-20 36z" fill="#1F4D3F"></path><circle cx="48" cy="44" r="9" fill="#E9B872"></circle><rect x="58" y="16" width="22" height="10" rx="5" fill="#C2410C"></rect></svg><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px">trippy</span></div>
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px">
+<div style="display: flex; gap: 8px">
+<div style="width: 96px; height: 128px; border-radius: 20px; background: #E9B872; transform: rotate(-6deg)"></div>
+<div style="width: 96px; height: 128px; border-radius: 20px; background: #C2410C; transform: rotate(3deg) translateY(16px)"></div>
+<div style="width: 96px; height: 128px; border-radius: 20px; background: #F5F1EA; transform: rotate(-2deg)"></div>
+</div>
+<h1 style="margin: 32px 0 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; line-height: 1.05; letter-spacing: -1px">A viagem do grupo, num lugar só.</h1>
+<p style="margin: 0; font-size: 16px; line-height: 1.5; color: #CFE0D8">Sugestões, roteiro, fotos e o recap no final.</p>
+</div>
+<sc-if value="{{fromInvite}}">
+<div style="background: #F5F1EA; color: #1B1F1D; border-radius: 16px; padding: 14px 16px; font-size: 14px; line-height: 1.4">Você foi convidado para <strong>Viagem China</strong>. Depois do cadastro, você cai direto nela.</div>
+</sc-if>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<button style="height: 54px; border: 0; border-radius: 16px; background: #F5F1EA; color: #1B1F1D; font: 700 16px 'DM Sans', sans-serif">Continuar com Apple</button>
+<button style="height: 54px; border: 1px solid #5E8C7D; border-radius: 16px; background: transparent; color: #F5F1EA; font: 700 16px 'DM Sans', sans-serif">Continuar com Google</button>
+<button style="height: 44px; border: 0; background: transparent; color: #CFE0D8; font: 500 15px 'DM Sans', sans-serif">Entrar com e-mail</button>
+<p style="margin: 0; font-size: 12px; line-height: 1.4; color: #CFE0D8; text-align: center">Vai para a China? Google não funciona lá sem VPN. Prefira Apple ou e-mail, para conseguir entrar durante a viagem.</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;fromInvite&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+renderVals() { return { fromInvite: this.props.fromInvite ?? true }; }
+}
+</script>
+
+
+</body></html>

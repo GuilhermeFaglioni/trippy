@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Estamos aqui</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+</style>
+<style>body{margin:0}a{color:#C2410C}a:hover{color:#9A3412}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F1EA; color: #1B1F1D; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; padding: 56px 20px 32px; gap: 16px; overflow: hidden">
+<button style="align-self: flex-start; height: 44px; border: 0; background: transparent; font: 500 16px 'DM Sans', sans-serif; color: #1B1F1D; padding: 0">Cancelar</button>
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: -0.8px">Estamos aqui</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.45; color: #5E6660">Registre um lugar fora do roteiro. Ele entra no dia de hoje como visitado.</p>
+<sc-if value="{{noGps}}">
+<div style="background: #FBE3D6; color: #1B1F1D; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 700; font-size: 15px; color: #9A3412">Sem localização</div>
+<div style="font-size: 14px; line-height: 1.45">O app não tem permissão de localização ou o GPS está sem sinal. Digite o nome do lugar abaixo; dá para completar o endereço depois.</div>
+<button style="align-self: flex-start; min-height: 44px; padding: 0 14px; border: 1px solid #8C8378; border-radius: 12px; background: #FFFFFF; color: #1B1F1D; font: 700 14px 'DM Sans', sans-serif">Permitir localização</button>
+</div>
+</sc-if>
+<sc-if value="{{hasGps}}">
+<div style="background: #FFFFFF; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 13px; font-weight: 700; color: #5E6660; text-transform: uppercase; letter-spacing: 0.8px">Perto de você</div>
+<button style="text-align: left; min-height: 56px; border: 2px solid #C2410C; border-radius: 14px; background: #FFFFFF; padding: 10px 12px; font-family: 'DM Sans', sans-serif; color: #1B1F1D"><strong style="display: block; font-size: 15px">Café Sumerian 苏美尔咖啡</strong><span style="font-size: 13px; color: #5E6660">a 40 m · pelo GPS do celular</span></button>
+<button style="text-align: left; min-height: 56px; border: 1px solid #8C8378; border-radius: 14px; background: #FFFFFF; padding: 10px 12px; font-family: 'DM Sans', sans-serif; color: #1B1F1D"><strong style="display: block; font-size: 15px">Parque Jing'an</strong><span style="font-size: 13px; color: #5E6660">a 210 m</span></button>
+<div style="font-size: 12px; color: #5E6660">Se a busca de lugares falhar (comum na China), aparece só "Onde você está agora", sem nome; você digita o nome abaixo.</div>
+</div>
+</sc-if>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="nm" style="font-size: 14px; font-weight: 700">Ou digite um nome</label>
+<input id="nm" placeholder="Ex.: barraca de bolinho na esquina" style="height: 52px; border: 1px solid #8C8378; border-radius: 12px; background: #FFFFFF; padding: 0 16px; font: 500 16px 'DM Sans', sans-serif; color: #1B1F1D">
+</div>
+<div style="background: #EFE7DB; border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.45">{{note}}</div>
+<div style="flex: 1"></div>
+<button style="height: 56px; border: 0; border-radius: 18px; background: #C2410C; color: #FFFFFF; font: 700 16px 'DM Sans', sans-serif">Registrar e marcar "Eu fui"</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;gps&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic { renderVals() { const g = this.props.gps ?? true; return { hasGps: g, noGps: !g, note: g ? 'Na China a busca de lugares pode não funcionar. O app guarda a sua localização aproximada e o nome que você digitar; o endereço pode ser completado depois.' : 'Sem localização, o lugar fica registrado só com o nome que você digitar. O organizador pode completar o endereço depois.' }; } }
+</script>
+
+
+</body></html>

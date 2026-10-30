@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Lugares</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+</style>
+<style>body{margin:0}a{color:#C2410C}a:hover{color:#9A3412}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F1EA; color: #1B1F1D; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden; position: relative">
+<div style="padding: 52px 20px 12px; display: flex; flex-direction: column; gap: 10px">
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; color: #5E6660; text-decoration: none">‹ Minhas viagens · Viagem China</a>
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 32px; letter-spacing: -0.8px">Lugares</h1>
+<div style="display: flex; gap: 8px">
+<button aria-pressed="true" style="height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: #1B1F1D; color: #F5F1EA; font: 700 13px 'DM Sans', sans-serif">Todos 14</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 14px; border: 1px solid #8C8378; border-radius: 999px; background: transparent; color: #1B1F1D; font: 500 13px 'DM Sans', sans-serif">Sugeridos 6</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 14px; border: 1px solid #8C8378; border-radius: 999px; background: transparent; color: #1B1F1D; font: 500 13px 'DM Sans', sans-serif">Sem dia 2</button>
+</div>
+<div style="font-size: 13px; color: #5E6660">Ordenado por <strong style="color: #1B1F1D">mais "quero ir"</strong></div>
+</div>
+<div style="flex: 1; min-height: 0; overflow: hidden; padding: 0 20px 96px; display: flex; flex-direction: column; gap: 10px">
+<sc-for each="{{places}}" as="p">
+<div style="background: #FFFFFF; border-radius: 18px; padding: 12px; display: flex; gap: 12px; align-items: flex-start">
+<div style="width: 52px; height: 52px; border-radius: 12px; background: {{p.color}}; flex-shrink: 0"></div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+<div style="font-weight: 700; font-size: 15px">{{p.name}}</div>
+<div style="font-size: 13px; color: #5E6660; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{p.by}}</div>
+<button style="align-self: flex-start; min-height: 32px; border: 0; font: 700 12px 'DM Sans', sans-serif; padding: 3px 10px; border-radius: 999px; background: {{p.statusBg}}; color: {{p.statusFg}}">{{p.status}}</button>
+</div>
+<button aria-label="Quero ir, {{p.want}}" aria-pressed="{{p.on}}" style="min-width: 52px; height: 52px; border-radius: 12px; border: {{p.wantBorder}}; background: {{p.wantBg}}; color: {{p.wantFg}}; font: 700 13px 'DM Sans', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="{{p.fill}}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6C19 16.5 12 21 12 21z"></path></svg>{{p.want}}</button>
+</div>
+</sc-for>
+</div>
+<button style="position: absolute; right: 20px; bottom: 104px; height: 56px; padding: 0 22px; border: 0; border-radius: 18px; background: #C2410C; color: #FFFFFF; font: 700 16px 'DM Sans', sans-serif; box-shadow: 0 8px 20px rgba(194,65,12,0.3)">+ Lugar</button>
+<nav style="height: 84px; flex-shrink: 0; background: #FFFFFF; border-top: 1px solid #E6DDD0; display: flex; padding: 8px 8px 20px; box-sizing: border-box">
+<a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #5E6660; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M10 6h11M10 12h11M10 18h11M4 6h1M4 12h1M4 18h1"></path></svg>Roteiro</a>
+<a href="#" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: #C2410C; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"></path><circle cx="12" cy="10" r="2"></circle></svg>Lugares</a>
+<a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #5E6660; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-8 8"></path></svg>Memórias</a>
+<a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #5E6660; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="3"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20c0-3.5 3-5.5 6-5.5s6 2 6 5.5M15 15c3 0 6 1.5 6 4.5"></path></svg>Grupo</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+renderVals() {
+const day = { statusBg: '#DCEBE4', statusFg: '#1F4D3F' };
+const sug = { statusBg: '#FBE3D6', statusFg: '#9A3412' };
+const none = { statusBg: '#EFE7DB', statusFg: '#5E6660' };
+const on = { on: 'true', wantBg: '#C2410C', wantFg: '#FFFFFF', wantBorder: '0', fill: 'currentColor' };
+const off = { on: 'false', wantBg: '#FFFFFF', wantFg: '#1B1F1D', wantBorder: '1px solid #8C8378', fill: 'none' };
+return { places: [
+{ name: 'The Bund ao anoitecer', by: 'Ana · "vi num vídeo, a vista é incrível"', status: 'No dia 5 · trocar', color: '#B9C8BF', want: 5, ...day, ...on },
+{ name: 'Muralha em Mutianyu', by: 'Sugerido por você', status: 'No dia 2 · trocar', color: '#D8C3A0', want: 5, ...day, ...on },
+{ name: 'Yu Garden', by: 'Sugerido por Pedro', status: 'Sugerido · escolher dia', color: '#A8B3AD', want: 3, ...sug, ...off },
+{ name: 'Mercado noturno Wangfujing', by: 'Sugerido por Lu', status: 'Sem dia · escolher dia', color: '#CBBBA6', want: 2, ...none, ...off }
+] };
+}
+}
+</script>
+
+
+</body></html>

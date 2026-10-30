@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Recap avaliados</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+</style>
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F1EA; color: #1B1F1D; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; padding: 52px 24px 36px; gap: 18px; overflow: hidden">
+<div style="display: flex; gap: 4px">
+<span style="flex: 1; height: 3px; border-radius: 2px; background: #1B1F1D"></span><span style="flex: 1; height: 3px; border-radius: 2px; background: #1B1F1D"></span><span style="flex: 1; height: 3px; border-radius: 2px; background: #1B1F1D"></span><span style="flex: 1; height: 3px; border-radius: 2px; background: #1B1F1D"></span><span style="flex: 1; height: 3px; border-radius: 2px; background: #DDD3C5"></span><span style="flex: 1; height: 3px; border-radius: 2px; background: #DDD3C5"></span>
+</div>
+<div style="font-size: 18px; font-weight: 500">Os mais bem avaliados</div>
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -1.5px">O pódio da viagem</h1>
+<div style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px">
+<sc-for each="{{top}}" as="t">
+<div style="display: flex; align-items: center; gap: 14px; background: {{t.bg}}; color: {{t.fg}}; border-radius: 22px; padding: 16px">
+<span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; width: 36px">{{t.n}}</span>
+<div style="flex: 1">
+<div style="font-weight: 700; font-size: 17px">{{t.name}}</div>
+<div style="font-size: 13px; opacity: 0.9">{{t.meta}}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="font-size: 12px; color: #5E6660">Só entram lugares com 2 avaliações ou mais.</div>
+<button style="height: 54px; border: 0; border-radius: 18px; background: #1B1F1D; color: #F5F1EA; font: 700 15px 'DM Sans', sans-serif">Próxima</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic { renderVals() { return { top: [
+{ n: 1, name: 'Muralha em Mutianyu', meta: 'média 4,8 · 5 avaliações', bg: '#C2410C', fg: '#FFFFFF' },
+{ n: 2, name: 'The Bund ao anoitecer', meta: 'média 4,6 · 6 avaliações', bg: '#1F4D3F', fg: '#F5F1EA' },
+{ n: 3, name: 'Hutongs de Gulou', meta: 'média 4,3 · 3 avaliações', bg: '#FFFFFF', fg: '#1B1F1D' }
+] }; } }
+</script>
+
+
+</body></html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>Hoje</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+/* latin-ext */
+
+/* latin */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* cyrillic */
+
+/* vietnamese */
+
+/* latin-ext */
+
+/* latin */
+
+</style>
+<style>body{margin:0}a{color:#C2410C}a:hover{color:#9A3412}</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F1EA; color: #1B1F1D; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; overflow: hidden">
+<div style="flex: 1; min-height: 0; overflow: hidden; padding: 48px 20px 24px; display: flex; flex-direction: column; gap: 10px">
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; color: #5E6660; text-decoration: none">‹ Minhas viagens · Viagem China</a>
+<sc-if value="{{offline}}">
+<div style="display: flex; align-items: center; gap: 8px; background: #EFE7DB; border-radius: 14px; padding: 8px 12px; font-size: 13px">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01M3 3l18 18"></path></svg>
+<span>Sem internet · atualizado às 9h · <strong>3 fotos e 2 registros</strong> esperando envio</span>
+</div>
+</sc-if>
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -0.8px">Dia 3 de 12: Xangai</h1>
+<div style="background: #1F4D3F; color: #F5F1EA; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #E9B872">Próximo lugar</div>
+<div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 22px">Yu Garden</div>
+<div style="font-family: 'Noto Sans SC', sans-serif; font-size: 14px; color: #CFE0D8">豫园 · 安仁街218号</div>
+<button style="height: 48px; border: 0; border-radius: 12px; background: #F5F1EA; color: #1B1F1D; font: 700 15px 'DM Sans', sans-serif">Mostrar endereço</button>
+</div>
+<div style="background: #FBE3D6; border-radius: 14px; padding: 8px 14px; font-size: 13px; color: #9A3412"><strong>O que mudou:</strong> Ana moveu "Templo Jing'an" para amanhã.</div>
+<sc-for each="{{stops}}" as="s">
+<div style="background: #FFFFFF; border-radius: 18px; padding: 8px 8px 8px 12px; display: flex; align-items: center; gap: 6px">
+<span style="width: 26px; height: 26px; border-radius: 13px; background: {{s.dotBg}}; color: {{s.dotFg}}; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0">{{s.n}}</span>
+<div style="flex: 1; min-width: 0; font-weight: 700; font-size: 15px">{{s.name}}</div>
+<button aria-label="Eu fui" aria-pressed="{{s.went}}" style="width: 44px; height: 44px; border-radius: 12px; border: {{s.wentBorder}}; background: {{s.wentBg}}; color: {{s.wentFg}}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{s.wentStroke}}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></button>
+<button aria-label="Favorito" aria-pressed="{{s.fav}}" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #8C8378; background: #FFFFFF; color: {{s.favFg}}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="{{s.favFill}}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"></path></svg></button>
+<button aria-label="Adicionar foto" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #8C8378; background: #FFFFFF; color: #1B1F1D; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></button>
+</div>
+</sc-for>
+</div>
+<nav style="height: 84px; flex-shrink: 0; background: #FFFFFF; border-top: 1px solid #E6DDD0; display: flex; padding: 8px 8px 20px; box-sizing: border-box">
+<a href="#" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: #C2410C; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>Hoje</a>
+<a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #5E6660; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M10 6h11M10 12h11M10 18h11M4 6h1M4 12h1M4 18h1"></path></svg>Roteiro</a>
+<a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #5E6660; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"></path><circle cx="12" cy="10" r="2"></circle></svg>Lugares</a>
+<a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #5E6660; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-8 8"></path></svg>Memórias</a>
+<a href="#" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #5E6660; text-decoration: none"><svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="3"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20c0-3.5 3-5.5 6-5.5s6 2 6 5.5M15 15c3 0 6 1.5 6 4.5"></path></svg>Grupo</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;offline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true},&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+renderVals() {
+const done = { dotBg: '#1F4D3F', dotFg: '#F5F1EA', went: 'true', wentBg: '#1F4D3F', wentFg: '#F5F1EA', wentBorder: '0', wentStroke: '2.8' };
+const todo = { dotBg: '#EFE7DB', dotFg: '#1B1F1D', went: 'false', wentBg: '#FFFFFF', wentFg: '#1B1F1D', wentBorder: '1px solid #8C8378', wentStroke: '2' };
+const fav = { fav: 'true', favFg: '#C2410C', favFill: 'currentColor' };
+const nofav = { fav: 'false', favFg: '#1B1F1D', favFill: 'none' };
+return {
+offline: this.props.offline ?? true,
+stops: [
+{ n: 1, name: 'Nanjing Road', ...done, ...fav },
+{ n: 2, name: 'Yu Garden', ...todo, ...nofav },
+{ n: 3, name: 'The Bund ao anoitecer', ...todo, ...nofav }
+]
+};
+}
+}
+</script>
+
+
+</body></html>
