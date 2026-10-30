@@ -230,7 +230,8 @@ export default function TripRoute() {
         tripId={tripId}
         tripName={displayName}
         role={role}
-        onShowAddress={openAddressCard}
+        startDate={startDate}
+        endDate={endDate}
       />
     )
   }, [displayName, endDate, role, router, section, startDate, timezone, tripId])
