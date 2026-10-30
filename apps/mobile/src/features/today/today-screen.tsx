@@ -1,16 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Platform, ScrollView, View } from 'react-native'
 
 import type { LivePlace } from '@trippy/sync'
-import { Button, Card, Notice } from '../../components'
-import {
-  createTypographyTokens,
-  normalizeFontPlatform,
-  TypographyText,
-  useTheme,
-} from '../../design-system'
+import type { NoticeSegment } from '../../design-system'
+import { addressCardState } from '../places/address-card-model'
 import { useSync } from '../sync/sync-provider'
-import { HereCard } from './here-card'
+import { useNetworkOffline } from '../sync/use-network-gate'
 import {
   computeTodayState,
   isDayDone,
@@ -19,9 +13,9 @@ import {
   recentChanges,
   staleness,
 } from './today-model'
+import { TodayView, type TodayNextPlace } from './today-view'
 
-/** TestIDs Maestro: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-estamos-aqui (cartão Estamos aqui, só durante a viagem; painel: hoje-aqui-*), hoje-lugar-<slug>, hoje-eu-fui-<slug>, hoje-o-que-mudou. */
-const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
+/** TestIDs Maestro: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-estamos-aqui (botão que abre a tela Estamos aqui, só durante a viagem), hoje-lugar-<slug> (e -eu-fui, -favorito, -foto), hoje-o-que-mudou. */
 
 type TodayScreenProps = {
   tripId: string
@@ -30,6 +24,7 @@ type TodayScreenProps = {
   endDate: string
   onOpenPhotos?: () => void
   onShowAddress?: (placeId: string) => void
+  onHere: (dayIndex: number) => void
 }
 
 function testSlug(value: string): string {
@@ -53,8 +48,9 @@ export function TodayScreen({
   endDate,
   onOpenPhotos,
   onShowAddress,
+  onHere,
 }: TodayScreenProps) {
-  const theme = useTheme()
+  const isOffline = useNetworkOffline()
   const { client, status } = useSync()
   const [places, setPlaces] = useState<LivePlace[]>([])
   const [busyPlaceId, setBusyPlaceId] = useState<string | null>(null)
@@ -131,139 +127,83 @@ export function TodayScreen({
   const stale = staleness(status.lastSyncedAt, status.notSent, timezone)
   const needsAttention = status.lastSyncedAt === null || status.notSent > 0
   const changes = recentChanges(places, now)
+  const allVisited = isDayDone(dayPlaces)
 
-  let dayLabel: string
+  let title: string
   if (todayState.kind === 'during') {
-    dayLabel = `Dia ${todayState.dayNumber} de ${todayState.totalDays}`
+    title = `Dia ${todayState.dayNumber} de ${todayState.totalDays}`
   } else if (todayState.kind === 'before') {
     const { daysUntil } = todayState
-    dayLabel = `A viagem começa em ${daysUntil} ${daysUntil === 1 ? 'dia' : 'dias'}`
+    title = `A viagem começa em ${daysUntil} ${daysUntil === 1 ? 'dia' : 'dias'}`
   } else {
-    dayLabel = 'A viagem terminou'
+    title = 'A viagem terminou'
   }
 
-  let nextLabel: string
-  if (todayState.kind !== 'during') {
-    nextLabel = ''
-  } else if (dayPlaces.length === 0) {
-    nextLabel = 'Nenhum lugar no roteiro de hoje'
-  } else if (isDayDone(dayPlaces)) {
-    nextLabel = 'Todos os lugares de hoje foram visitados'
-  } else {
-    nextLabel = next ? displayName(next) : ''
+  let offlineNotice: NoticeSegment[] | null = null
+  if (isOffline || needsAttention) {
+    const updated = stale.lastUpdateLabel.replace(/^Roteiro /u, '')
+    offlineNotice = [`${isOffline ? 'Sem internet · ' : ''}${updated}`]
+    if (status.notSent > 0) {
+      offlineNotice.push(
+        ' · ',
+        { strong: `${status.notSent} ${status.notSent === 1 ? 'registro' : 'registros'}` },
+        ' esperando envio',
+      )
+    }
+  }
+
+  let tomorrow: string | null = null
+  if (todayState.kind === 'during' && todayState.dayNumber < todayState.totalDays) {
+    const first = placesOfDay(places, todayState.dayIndex + 1)[0]
+    if (first) {
+      tomorrow = `Amanhã: Dia ${todayState.dayNumber + 1}, começando por ${displayName(first)}.`
+    }
   }
 
   return (
-    <ScrollView
-      testID="tela-hoje"
-      contentContainerStyle={{ gap: theme.spacing.space4, padding: theme.spacing.space5 }}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Notice
-        testID="hoje-banner-desatualizacao"
-        tone={needsAttention ? 'warning' : 'neutral'}
-        message={[`${stale.lastUpdateLabel}.`, stale.notSentLabel ? `${stale.notSentLabel}.` : null]
-          .filter(Boolean)
-          .join(' ')}
-      />
-
-      {error ? <Notice testID="hoje-erro" tone="danger" message={error} /> : null}
-
-      <Card testID="hoje-dia">
-        <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
-          {dayLabel}
-        </TypographyText>
-      </Card>
-
-      {todayState.kind === 'during' ? (
-        <Card>
-          <View style={{ gap: theme.spacing.space2 }}>
-            <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-              Próximo lugar
-            </TypographyText>
-            <TypographyText
-              family="display"
-              testID="hoje-proximo-lugar"
-              style={[typography.titleS, { color: theme.colors.ink }]}
-            >
-              {nextLabel}
-            </TypographyText>
-          </View>
-        </Card>
-      ) : null}
-
-      {todayState.kind === 'during' ? (
-        <HereCard tripId={tripId} dayIndex={todayState.dayIndex} />
-      ) : null}
-
-      {todayState.kind === 'during'
-        ? dayPlaces.map((place) => {
-            const slug = testSlug(displayName(place))
-            const busy = busyPlaceId === place.id
-            return (
-              <Card key={place.id} testID={`hoje-lugar-${slug}`}>
-                <View style={{ gap: theme.spacing.space3 }}>
-                  <TypographyText family="sans" style={{ color: theme.colors.ink }}>
-                    {displayName(place)}
-                  </TypographyText>
-                  <View
-                    style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.space2 }}
-                  >
-                    <Button
-                      label={place.visitedByMe ? 'Eu fui ✓' : 'Eu fui'}
-                      variant="secondary"
-                      selected={place.visitedByMe}
-                      loading={busy}
-                      onPress={() => void toggleVisit(place)}
-                      testID={`hoje-eu-fui-${slug}`}
-                    />
-                    <Button
-                      label={place.favoriteByMe ? 'Favorito ✓' : 'Favorito'}
-                      variant="secondary"
-                      selected={place.favoriteByMe}
-                      loading={busy}
-                      onPress={() => void toggleFavorite(place)}
-                      testID={`hoje-favorito-${slug}`}
-                    />
-                    <Button
-                      label="Foto"
-                      variant="secondary"
-                      onPress={() => onOpenPhotos?.()}
-                      testID={`hoje-foto-${slug}`}
-                    />
-                    {onShowAddress ? (
-                      <Button
-                        label="Mostrar endereço"
-                        variant="secondary"
-                        onPress={() => onShowAddress(place.id)}
-                        testID={`hoje-mostrar-endereco-${slug}`}
-                      />
-                    ) : null}
-                  </View>
-                </View>
-              </Card>
-            )
-          })
-        : null}
-
-      <Card testID="hoje-o-que-mudou">
-        <View style={{ gap: theme.spacing.space2 }}>
-          <TypographyText family="display" style={[typography.titleS, { color: theme.colors.ink }]}>
-            O que mudou
-          </TypographyText>
-          {changes.length === 0 ? (
-            <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-              Nenhuma alteração recebida
-            </TypographyText>
-          ) : (
-            changes.map((place) => (
-              <TypographyText key={place.id} family="sans" style={{ color: theme.colors.ink }}>
-                {`Novo lugar: ${displayName(place)}`}
-              </TypographyText>
-            ))
-          )}
-        </View>
-      </Card>
-    </ScrollView>
+    <TodayView
+      offlineNotice={offlineNotice}
+      error={error}
+      title={title}
+      phase={todayState.kind === 'during' ? 'during' : todayState.kind}
+      rows={dayPlaces.map((place, index) => ({
+        id: place.id,
+        slug: testSlug(displayName(place)),
+        number: index + 1,
+        name: displayName(place),
+        visited: place.visitedByMe,
+        favorite: place.favoriteByMe,
+      }))}
+      next={next ? nextView(next) : null}
+      allVisited={allVisited}
+      tomorrow={tomorrow}
+      changes={changes.map((place) => [
+        { strong: 'O que mudou:' },
+        ` Novo lugar: ${displayName(place)}.`,
+      ])}
+      busyPlaceId={busyPlaceId}
+      onToggleVisit={(placeId) => {
+        const place = places.find((candidate) => candidate.id === placeId)
+        if (place) void toggleVisit(place)
+      }}
+      onToggleFavorite={(placeId) => {
+        const place = places.find((candidate) => candidate.id === placeId)
+        if (place) void toggleFavorite(place)
+      }}
+      onPhoto={() => onOpenPhotos?.()}
+      onShowAddress={onShowAddress}
+      onHere={() => onHere(todayState.kind === 'during' ? todayState.dayIndex : 0)}
+    />
   )
+}
+
+function nextView(place: LivePlace): TodayNextPlace {
+  const card = addressCardState(place)
+  const name = displayName(place)
+  const localName = card.kind === 'empty' ? card.name : card.name
+  const parts = [
+    localName !== place.name ? localName : null,
+    card.kind === 'empty' ? null : card.address,
+  ].filter((part): part is string => part !== null && part !== '')
+  return { id: place.id, name, localLine: parts.length > 0 ? parts.join(' · ') : null }
 }

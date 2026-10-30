@@ -6,6 +6,8 @@ import * as sessionProvider from '../../auth/session-provider'
 import { SyncProvider } from '../../sync/sync-provider'
 import { TodayScreen } from '../today-screen'
 
+jest.mock('../../sync/use-network-gate', () => ({ useNetworkOffline: () => false }))
+
 const DAY_MS = 86_400_000
 
 function isoDayOffset(offset: number): string {
@@ -62,6 +64,7 @@ async function renderToday(
   startDate: string,
   endDate: string,
   onShowAddress?: (placeId: string) => void,
+  onHere: (dayIndex: number) => void = jest.fn(),
 ) {
   return await render(
     <DesignSystemProvider>
@@ -73,6 +76,7 @@ async function renderToday(
           endDate={endDate}
           onOpenPhotos={jest.fn()}
           onShowAddress={onShowAddress}
+          onHere={onHere}
         />
       </SyncProvider>
     </DesignSystemProvider>,
@@ -94,7 +98,7 @@ describe('tela Hoje', () => {
     expect(await screen.findByTestId('hoje-dia')).toHaveTextContent(/Dia 2 de 3/u)
     expect(screen.getByTestId('hoje-proximo-lugar')).toHaveTextContent('Mercado Central')
 
-    await fireEvent.press(screen.getByTestId('hoje-eu-fui-mercado-central'))
+    await fireEvent.press(screen.getByTestId('hoje-lugar-mercado-central-eu-fui'))
     // Pessoa local: o wrapper de escrita repassa o userId ausente como undefined.
     await waitFor(() =>
       expect(client.markVisit).toHaveBeenCalledWith('trip-1', 'place-1', undefined),
@@ -108,30 +112,43 @@ describe('tela Hoje', () => {
     ])
     const screen = await renderToday(client, start, end)
 
-    expect(await screen.findByTestId('hoje-favorito-mercado-central')).toHaveTextContent('Favorito')
-    expect(screen.getByTestId('hoje-favorito-feira-livre')).toHaveTextContent('Favorito ✓')
-
-    await fireEvent.press(screen.getByTestId('hoje-favorito-mercado-central'))
+    await fireEvent.press(await screen.findByTestId('hoje-lugar-mercado-central-favorito'))
     await waitFor(() => expect(client.setFavorite).toHaveBeenCalledWith('trip-1', 'place-1', true))
 
-    await fireEvent.press(screen.getByTestId('hoje-favorito-feira-livre'))
+    await fireEvent.press(screen.getByTestId('hoje-lugar-feira-livre-favorito'))
     await waitFor(() => expect(client.setFavorite).toHaveBeenCalledWith('trip-1', 'place-2', false))
   })
 
-  it('mostra o botão Mostrar endereço em cada lugar do dia', async () => {
+  it('mostra Mostrar endereço no card do próximo lugar', async () => {
     const onShowAddress = jest.fn()
     const client = createClient([place({ id: 'place-1', name: 'Mercado Central' })])
     const screen = await renderToday(client, start, end, onShowAddress)
 
-    await fireEvent.press(await screen.findByTestId('hoje-mostrar-endereco-mercado-central'))
+    await fireEvent.press(await screen.findByTestId('hoje-mostrar-endereco'))
     expect(onShowAddress).toHaveBeenCalledWith('place-1')
+  })
+
+  it('com tudo visitado mostra Dia completo e o aviso do dia seguinte', async () => {
+    const client = createClient([
+      place({ id: 'place-1', name: 'Mercado Central', visitedByMe: true }),
+      place({ id: 'place-2', name: 'Parque', dayIndex: 2, position: 0 }),
+    ])
+    const screen = await renderToday(client, start, end)
+
+    expect(await screen.findByTestId('hoje-dia-completo')).toHaveTextContent(
+      /Você marcou os 1 lugares de hoje/u,
+    )
+    expect(screen.getByTestId('hoje-dia-completo')).toHaveTextContent(
+      /Amanhã: Dia 3, começando por Parque/u,
+    )
+    expect(screen.queryByTestId('hoje-proximo-lugar')).toBeNull()
   })
 
   it('mostra alterações não enviadas no banner de desatualização', async () => {
     const screen = await renderToday(createClient([], 2), start, end)
 
     expect(await screen.findByTestId('hoje-banner-desatualizacao')).toHaveTextContent(
-      /2 registros não enviados/u,
+      /2 registros.*esperando envio/u,
     )
   })
 
@@ -144,12 +161,14 @@ describe('tela Hoje', () => {
     expect(screen.queryByTestId('hoje-lugar-mercado-central')).toBeNull()
   })
 
-  it('mostra o cartão Estamos aqui durante a viagem', async () => {
-    const screen = await renderToday(createClient([]), start, end)
-    expect(await screen.findByTestId('hoje-estamos-aqui')).toBeOnTheScreen()
+  it('abre Estamos aqui com o índice do dia durante a viagem', async () => {
+    const onHere = jest.fn()
+    const screen = await renderToday(createClient([]), start, end, undefined, onHere)
+    await fireEvent.press(await screen.findByTestId('hoje-estamos-aqui'))
+    expect(onHere).toHaveBeenCalledWith(1)
   })
 
-  it('não mostra o cartão Estamos aqui antes da viagem', async () => {
+  it('não mostra Estamos aqui antes da viagem', async () => {
     const screen = await renderToday(createClient([]), isoDayOffset(2), isoDayOffset(4))
     expect(await screen.findByTestId('hoje-dia')).toBeOnTheScreen()
     expect(screen.queryByTestId('hoje-estamos-aqui')).toBeNull()

@@ -11,6 +11,10 @@ export type PlaceResultProps = {
   address?: string | null
   localAddress?: string | null
   selected?: boolean
+  /** Sem miniatura nem check: só nome e linha de apoio (Estamos aqui). */
+  compact?: boolean
+  /** Linha de apoio no lugar do endereço ("a 40 m · pelo GPS do celular"). */
+  detail?: string | null
   onPress: () => void
   disabled?: boolean
   locale?: string
@@ -24,6 +28,8 @@ export function PlaceResult({
   address,
   localAddress,
   selected = false,
+  compact = false,
+  detail,
   onPress,
   disabled = false,
   locale,
@@ -55,18 +61,25 @@ export function PlaceResult({
         padding: selected ? 13 : 14,
       }}
     >
-      <View
-        style={{
-          backgroundColor: selected ? colors.photo3 : colors.sand,
-          borderRadius: radius.radiusSm,
-          height: 44,
-          width: 44,
-        }}
-      />
+      {compact ? null : (
+        <View
+          style={{
+            backgroundColor: selected ? colors.photo3 : colors.sand,
+            borderRadius: radius.radiusSm,
+            height: 44,
+            width: 44,
+          }}
+        />
+      )}
       <View style={{ flex: 1, gap: 2, minWidth: 0 }}>
         <Text variant="placeName" color={colors.ink} locale={locale} numberOfLines={2}>
           {showLocalName ? `${name} ${localName}` : name}
         </Text>
+        {detail ? (
+          <Text variant="placeAddress" color={colors.inkMuted} locale={locale} numberOfLines={2}>
+            {detail}
+          </Text>
+        ) : null}
         {address ? (
           <Text variant="placeAddress" color={colors.inkMuted} locale={locale} numberOfLines={2}>
             {address}
@@ -78,7 +91,7 @@ export function PlaceResult({
           </Text>
         ) : null}
       </View>
-      {selected ? (
+      {selected && !compact ? (
         <Icon name="check" color={colors.terracotta} size={20} strokeWidth={2.4} />
       ) : null}
     </Pressable>

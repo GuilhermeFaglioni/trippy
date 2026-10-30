@@ -62,3 +62,27 @@ export function Notice({ tone, segments, testID }: NoticeProps) {
     </View>
   )
 }
+
+/** Nota de apoio em sand, sem ícone nem alerta (Estamos aqui: "Na China a busca pode não funcionar"). */
+export function InfoNote({ children, testID }: { children: string; testID?: string }) {
+  const { colors, radius } = useTheme()
+
+  return (
+    <View
+      testID={testID}
+      style={{
+        backgroundColor: colors.sand,
+        borderRadius: radius.radiusSm,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+      }}
+    >
+      <NativeText
+        {...TEXT_SCALING_PROPS}
+        style={[textStyles.notice, { color: colors.ink, lineHeight: 19 }]}
+      >
+        {children}
+      </NativeText>
+    </View>
+  )
+}
