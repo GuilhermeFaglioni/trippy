@@ -59,7 +59,9 @@ appId: app.trippy.mobile
 - assertVisible:
     id: place-candidate-0
 - tapOn:
-    id: save-candidate-0
+    id: place-candidate-0
+- tapOn:
+    id: place-submit
 - assertVisible:
     id: trip-detail-screen
 - assertVisible: Powered by Geoapify

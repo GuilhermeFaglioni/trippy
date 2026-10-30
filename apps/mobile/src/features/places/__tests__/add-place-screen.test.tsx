@@ -16,6 +16,7 @@ jest.mock('../../sync/use-network-gate', () => ({ useNetworkOffline: () => mockO
 
 const status: SyncClientStatus = { lastSyncedAt: null, pending: 0, notSent: 0 }
 const client = {
+  setPlaceNote: jest.fn().mockResolvedValue(undefined),
   addPlace: jest.fn().mockResolvedValue('manual-place'),
   addPlaceFromCandidate: jest.fn().mockResolvedValue('candidate-place'),
   removePlace: jest.fn(),
@@ -142,15 +143,14 @@ describe('tela Adicionar lugar', () => {
   })
 
   it('faz a segunda tentativa e salva candidato obtido pela busca', async () => {
-    const first = candidate('Museu Histórico', 'history')
     const second = candidate('Museu Histórico · Places', 'history-places')
     mockRequest
-      .mockResolvedValueOnce(jsonResponse({ candidates: [first] }))
+      .mockResolvedValueOnce(jsonResponse({ candidates: [] }))
       .mockResolvedValueOnce(jsonResponse({ candidates: [second] }))
     const rendered = await renderScreen()
 
     await fireEvent.changeText(rendered.getByTestId('place-search-query'), 'Museu Histórico')
-    expect(await rendered.findByText('Museu Histórico')).toBeOnTheScreen()
+    expect(await rendered.findByTestId('place-search-empty')).toBeOnTheScreen()
     await fireEvent.press(rendered.getByTestId('place-search-secondary'))
     expect(await rendered.findByText('Museu Histórico · Places')).toBeOnTheScreen()
     expect(mockRequest).toHaveBeenNthCalledWith(
@@ -158,13 +158,16 @@ describe('tela Adicionar lugar', () => {
       '/trips/trip-1/places/search?q=Museu%20Hist%C3%B3rico&attempt=secondary',
     )
 
-    await fireEvent.press(rendered.getByTestId('save-candidate-0'))
+    await fireEvent.press(rendered.getByTestId('place-candidate-0'))
+    await fireEvent.press(rendered.getByTestId('place-submit'))
     await waitFor(() => expect(client.addPlaceFromCandidate).toHaveBeenCalledWith('trip-1', second))
     expect(mockBack).toHaveBeenCalledTimes(1)
-    expect(rendered.getByTestId('candidate-attribution-0')).toHaveTextContent(
+    expect(rendered.getByTestId('place-search-attribution')).toHaveTextContent(
       /© OpenStreetMap contributors/,
     )
-    expect(rendered.getByTestId('candidate-attribution-0')).toHaveTextContent(/Powered by Geoapify/)
+    expect(rendered.getByTestId('place-search-attribution')).toHaveTextContent(
+      /Powered by Geoapify/,
+    )
   })
 
   it('mostra nome e endereço locais do candidato com os valores principais', async () => {
@@ -183,9 +186,11 @@ describe('tela Adicionar lugar', () => {
 
     await fireEvent.changeText(rendered.getByTestId('place-search-query'), 'Tokyo Museum')
 
-    expect(await rendered.findByTestId('candidate-local-name-0')).toHaveTextContent('東京博物館')
+    expect(await rendered.findByTestId('place-candidate-0')).toHaveTextContent(
+      /Tokyo Museum.*東京博物館/,
+    )
     expect(rendered.getByText('Rua da Sé, 1')).toBeOnTheScreen()
-    expect(rendered.getByTestId('candidate-local-address-0')).toHaveTextContent('東京都千代田区')
+    expect(rendered.getByTestId('place-candidate-0')).toHaveTextContent(/東京都千代田区/)
   })
 
   it('offline mantiene o salvamento do nome digitado', async () => {
@@ -196,7 +201,7 @@ describe('tela Adicionar lugar', () => {
     expect(await rendered.findByTestId('place-search-offline')).toHaveTextContent(
       /A busca precisa de internet\./,
     )
-    await fireEvent.press(rendered.getByTestId('save-typed-place'))
+    await fireEvent.press(rendered.getByTestId('place-submit'))
 
     await waitFor(() => expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Restaurante'))
     expect(mockRequest).not.toHaveBeenCalled()
@@ -219,8 +224,9 @@ describe('tela Adicionar lugar', () => {
     )
 
     expect(await rendered.findByTestId('place-search-offline')).toBeOnTheScreen()
-    expect(rendered.getByTestId('save-candidate-0')).toBeOnTheScreen()
-    await fireEvent.press(rendered.getByTestId('save-candidate-0'))
+    expect(rendered.getByTestId('place-candidate-0')).toBeOnTheScreen()
+    await fireEvent.press(rendered.getByTestId('place-candidate-0'))
+    await fireEvent.press(rendered.getByTestId('place-submit'))
 
     await waitFor(() => expect(client.addPlaceFromCandidate).toHaveBeenCalledWith('trip-1', found))
     expect(mockBack).toHaveBeenCalledTimes(1)
@@ -238,9 +244,58 @@ describe('tela Adicionar lugar', () => {
     await fireEvent.changeText(rendered.getByTestId('place-search-query'), 'Museu')
     expect(await rendered.findByTestId('place-search-error')).toHaveTextContent(message)
     expect(rendered.queryByTestId('place-search-secondary')).toBeNull()
-    await fireEvent.press(rendered.getByTestId('save-typed-place'))
+    await fireEvent.press(rendered.getByTestId('place-submit'))
 
     await waitFor(() => expect(client.addPlace).toHaveBeenCalledWith('trip-1', 'Museu'))
     expect(mockBack).toHaveBeenCalledTimes(1)
+  })
+
+  it('o botão só habilita depois de tocar no resultado e salva com nome e endereço, sem pedir de novo', async () => {
+    const found = {
+      ...candidate('Yu Garden', 'yu'),
+      localName: '豫园',
+      address: '218 Anren St, Huangpu',
+    }
+    mockRequest.mockResolvedValue(jsonResponse({ candidates: [found] }))
+    const rendered = await renderScreen()
+
+    await fireEvent.changeText(rendered.getByTestId('place-search-query'), 'yu garden')
+    await rendered.findByTestId('place-candidate-0')
+    expect(rendered.getByTestId('place-submit')).toBeDisabled()
+
+    await fireEvent.press(rendered.getByTestId('place-candidate-0'))
+    expect(rendered.getByTestId('place-submit')).toBeEnabled()
+    await fireEvent.press(rendered.getByTestId('place-submit'))
+
+    await waitFor(() => expect(client.addPlaceFromCandidate).toHaveBeenCalledWith('trip-1', found))
+    expect(client.addPlace).not.toHaveBeenCalled()
+    expect(client.setPlaceNote).not.toHaveBeenCalled()
+    expect(mockBack).toHaveBeenCalledTimes(1)
+  })
+
+  it('salva o comentário opcional como nota do lugar', async () => {
+    const found = candidate('Yu Garden', 'yu')
+    mockRequest.mockResolvedValue(jsonResponse({ candidates: [found] }))
+    const rendered = await renderScreen()
+
+    await fireEvent.changeText(rendered.getByTestId('place-search-query'), 'yu garden')
+    await fireEvent.press(await rendered.findByTestId('place-candidate-0'))
+    await fireEvent.changeText(rendered.getByTestId('place-comment'), '  Vale muito a pena  ')
+    await fireEvent.press(rendered.getByTestId('place-submit'))
+
+    await waitFor(() =>
+      expect(client.setPlaceNote).toHaveBeenCalledWith(
+        'trip-1',
+        'candidate-place',
+        'Vale muito a pena',
+      ),
+    )
+  })
+
+  it('Cancelar volta sem salvar', async () => {
+    const rendered = await renderScreen()
+    await fireEvent.press(rendered.getByTestId('add-place-cancel'))
+    expect(mockBack).toHaveBeenCalledTimes(1)
+    expect(client.addPlace).not.toHaveBeenCalled()
   })
 })

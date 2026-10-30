@@ -29,6 +29,7 @@ const componentTextStyles = {
   fieldInput: sans(16, '500', 20),
   fieldHelp: sans(13, '400', 18),
   placeName: sans(15, '700', 20),
+  placeAddress: sans(13, '400', 18),
   tab: sans(11, '500', 14),
   tabCurrent: sans(11, '700', 14),
   backLink: sans(14, '400', 20),

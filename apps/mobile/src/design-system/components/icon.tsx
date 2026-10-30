@@ -8,6 +8,7 @@ import {
   MapPin,
   Plus,
   Camera,
+  Search,
   Star,
   Sun,
   Users,
@@ -30,6 +31,7 @@ export const iconSet = {
   'grip-vertical': GripVertical,
   'chevron-left': ChevronLeft,
   plus: Plus,
+  search: Search,
   x: X,
 } as const satisfies Record<string, LucideIcon>
 
