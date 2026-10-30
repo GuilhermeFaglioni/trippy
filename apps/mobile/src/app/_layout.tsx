@@ -17,6 +17,7 @@ function SessionNavigator() {
         <Stack.Screen name="trips/new" />
         <Stack.Screen name="trips/[id]" />
         <Stack.Screen name="trips/[id]/photos" />
+        <Stack.Screen name="trips/[id]/settings" />
         <Stack.Screen
           name="trips/[id]/address-card"
           options={{ presentation: 'fullScreenModal', headerShown: false }}

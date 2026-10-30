@@ -428,15 +428,6 @@ export function ItineraryScreen({ tripId, startDate, endDate }: ItineraryScreenP
       contentContainerStyle={{ gap: theme.spacing.space4, padding: theme.spacing.space5 }}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={{ gap: theme.spacing.space2 }}>
-        <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
-          Roteiro
-        </TypographyText>
-        <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-          Dias e lugares na ordem planejada.
-        </TypographyText>
-      </View>
-
       {error ? <Notice testID="roteiro-erro" tone="danger" message={error} /> : null}
       {isLoading ? (
         <View

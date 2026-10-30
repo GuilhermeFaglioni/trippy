@@ -24,7 +24,6 @@ type TripPlacesScreenProps = {
   tripId: string
   tripName: string
   role: TripRole
-  onOpenPhotos?: () => void
   onShowAddress?: (placeId: string) => void
 }
 
@@ -98,13 +97,7 @@ function SyncFooter({ status }: { status: SyncClientStatus }) {
   )
 }
 
-export function TripPlacesScreen({
-  tripId,
-  tripName,
-  role,
-  onOpenPhotos,
-  onShowAddress,
-}: TripPlacesScreenProps) {
+export function TripPlacesScreen({ tripId, tripName, role, onShowAddress }: TripPlacesScreenProps) {
   const theme = useTheme()
   const router = useRouter()
   const { session, request } = useSession()
@@ -247,24 +240,6 @@ export function TripPlacesScreen({
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ gap: theme.spacing.space2 }}>
-          <TypographyText family="display" style={[typography.titleL, { color: theme.colors.ink }]}>
-            {tripName || 'Viagem'}
-          </TypographyText>
-          <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-            Lugares
-          </TypographyText>
-        </View>
-
-        {onOpenPhotos ? (
-          <Button
-            label="Fotos da viagem"
-            onPress={onOpenPhotos}
-            testID="trip-open-photos"
-            variant="secondary"
-          />
-        ) : null}
-
         {!ready ? (
           <View accessibilityRole="progressbar" testID="trip-sync-loading">
             <ActivityIndicator color={theme.colors.forest} />
