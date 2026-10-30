@@ -1,14 +1,22 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+
 import type { LivePlace, SyncClient, SyncClientStatus } from '@trippy/sync'
 import { DesignSystemProvider } from '../../../design-system'
 import * as syncProvider from '../../sync/sync-provider'
 import { AddressCardScreen } from '../address-card-screen'
 
 const mockKeepAwake = jest.fn()
+jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn().mockResolvedValue(true) }))
 jest.mock('expo-keep-awake', () => ({
   useKeepAwake: (...args: unknown[]) => mockKeepAwake(...args),
 }))
+
+const safeArea = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+}
 
 const status: SyncClientStatus = { lastSyncedAt: null, pending: 0, notSent: 0 }
 
@@ -68,9 +76,11 @@ async function renderCard(
       }) as unknown as ReturnType<typeof syncProvider.useSync>,
   )
   const screen = await render(
-    <DesignSystemProvider>
-      <AddressCardScreen tripId="trip-1" placeId="place-1" {...handlers} />
-    </DesignSystemProvider>,
+    <SafeAreaProvider initialMetrics={safeArea}>
+      <DesignSystemProvider>
+        <AddressCardScreen tripId="trip-1" placeId="place-1" {...handlers} />
+      </DesignSystemProvider>
+    </SafeAreaProvider>,
   )
   return { screen, handlers, client }
 }

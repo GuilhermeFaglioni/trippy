@@ -9,7 +9,8 @@ import { toNativeShadow } from './shadow'
 import { Text } from './text'
 
 /** `inverse`: botão claro (`on-forest`, texto escuro) sobre o card de destaque nos dois temas. */
-export type ButtonVariant = 'primary' | 'secondary' | 'fab' | 'inverse'
+/** `forest`: ação principal sobre fundo branco em tela cheia (cartão para mostrar). */
+export type ButtonVariant = 'primary' | 'secondary' | 'fab' | 'inverse' | 'forest'
 
 export type ButtonProps = {
   label: string
@@ -19,6 +20,8 @@ export type ButtonProps = {
   icon?: IconName
   /** Secundário alternável (`aria-pressed`): marcado vira forest. */
   pressed?: boolean
+  /** `favorite`: marcado mantém o fundo e pinta rótulo e estrela de terracotta (Favoritar). */
+  tone?: 'default' | 'favorite'
   disabled?: boolean
   loading?: boolean
   /** Largura total. Padrão: só o principal. */
@@ -35,9 +38,10 @@ export function Button({
   variant = 'primary',
   icon,
   pressed,
+  tone = 'default',
   disabled = false,
   loading = false,
-  block = variant === 'primary' || variant === 'inverse',
+  block = variant === 'primary' || variant === 'inverse' || variant === 'forest',
   accessibilityLabel,
   accessibilityHint,
   locale,
@@ -48,18 +52,24 @@ export function Button({
   const isDisabled = disabled || loading
   const isToggle = variant === 'secondary' && pressed !== undefined
   const isMarked = isToggle && pressed === true
+  const isFavoriteMarked = isMarked && tone === 'favorite'
+  const isFilledMarked = isMarked && !isFavoriteMarked
   const borderRadius =
     variant === 'secondary' || variant === 'inverse' ? radius.radiusSm : radius.radiusMd
 
   const foreground = disabled
     ? colors.inkMuted
     : variant === 'secondary'
-      ? isMarked
+      ? isFilledMarked
         ? colors.onForest
-        : colors.ink
+        : isFavoriteMarked
+          ? colors.terracottaText
+          : colors.ink
       : variant === 'inverse'
         ? colors.onMustard
-        : colors.onTerracotta
+        : variant === 'forest'
+          ? colors.onForest
+          : colors.onTerracotta
 
   return (
     <View style={{ alignSelf: block ? 'stretch' : 'flex-start' }}>
@@ -83,22 +93,26 @@ export function Button({
           const backgroundColor = disabled
             ? colors.sand
             : variant === 'secondary'
-              ? isMarked
+              ? isFilledMarked
                 ? colors.forest
                 : touching
                   ? colors.sand
                   : colors.surface
-              : variant === 'inverse'
+              : variant === 'forest'
                 ? touching
-                  ? derivePressedColor(colors.onForest)
-                  : colors.onForest
-                : terracotta
+                  ? derivePressedColor(colors.forest)
+                  : colors.forest
+                : variant === 'inverse'
+                  ? touching
+                    ? derivePressedColor(colors.onForest)
+                    : colors.onForest
+                  : terracotta
           const bordered = variant === 'secondary' && !disabled
 
           return {
             alignItems: 'center',
             backgroundColor,
-            borderColor: isMarked ? colors.forest : colors.lineStrong,
+            borderColor: isFilledMarked ? colors.forest : colors.lineStrong,
             borderRadius,
             borderWidth: bordered ? 1 : 0,
             justifyContent: 'center',
@@ -119,7 +133,9 @@ export function Button({
             opacity: loading ? 0 : 1,
           }}
         >
-          {icon ? <Icon name={icon} color={foreground} size={20} /> : null}
+          {icon ? (
+            <Icon name={icon} color={foreground} size={20} filled={isFavoriteMarked} />
+          ) : null}
           <Text
             variant={
               variant === 'secondary' || variant === 'inverse' ? 'buttonSecondary' : 'button'

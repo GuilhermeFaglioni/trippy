@@ -21,7 +21,12 @@ export default function AddressCardRoute() {
       tripId={tripId}
       placeId={firstParam(params.placeId)}
       onClose={() => router.back()}
-      onComplete={() => router.replace({ pathname: '/trips/[id]', params: { id: tripId } })}
+      onComplete={() =>
+        router.replace({
+          pathname: '/trips/[id]/places/[placeId]',
+          params: { id: tripId, placeId: firstParam(params.placeId) },
+        })
+      }
     />
   )
 }

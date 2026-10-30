@@ -11,7 +11,6 @@ import {
 } from '../../design-system'
 import { usePlacesClient } from './places-client'
 import { PlaceAttribution } from './place-attribution'
-import { LocalDetailsEditor } from './local-details-editor'
 import { GoogleDetailsPanel } from './google-details-panel'
 
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
@@ -143,7 +142,6 @@ export function PlaceCard({
             />
           ) : null}
         </View>
-        <LocalDetailsEditor place={place} tripId={tripId} client={syncClient} onSaved={onRefresh} />
         <GoogleDetailsPanel
           place={place}
           tripId={tripId}
