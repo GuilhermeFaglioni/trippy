@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Platform, Share, View } from 'react-native'
+import { Share } from 'react-native'
 
 import { readyToTravel } from '@trippy/domain'
 import type { LiveMember, LivePlace } from '@trippy/sync'
-import { Button, Card, Notice } from '../../components'
-import {
-  createTypographyTokens,
-  normalizeFontPlatform,
-  TypographyText,
-  useTheme,
-} from '../../design-system'
+import { useTheme } from '../../design-system'
+import { HighlightCard, Text, TextLink } from '../../design-system/components'
 import { createInviteClient, getInviteErrorMessage } from '../invites/invite-client'
 import { getApiBaseUrl } from '../diagnostics/health-client'
 import { useSession } from '../auth/session-provider'
@@ -17,7 +12,6 @@ import { useSync } from '../sync/sync-provider'
 import type { TripSummary } from './trips-client'
 
 /** TestIDs Maestro: pronto-viajar-card, pronto-viajar-avisar. */
-const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
 type ReadyToTravelCardProps = {
   tripId: string
@@ -71,6 +65,7 @@ export function ReadyToTravelCard({ tripId, tripName, trip }: ReadyToTravelCardP
   })
 
   const avisar = useCallback(async () => {
+    if (isInviting) return
     setInviteError(null)
     setIsInviting(true)
     try {
@@ -84,54 +79,78 @@ export function ReadyToTravelCard({ tripId, tripName, trip }: ReadyToTravelCardP
     } finally {
       setIsInviting(false)
     }
-  }, [inviteClient, tripId, tripName])
+  }, [inviteClient, isInviting, tripId, tripName])
 
   if (!summary.visible) return null
 
   const membersNotOpened = summary.membersNotOpened.length
+  const days = summary.daysUntilStart
+  const title =
+    days === 0
+      ? 'Pronto para viajar? A viagem começa hoje'
+      : days === 1
+        ? 'Pronto para viajar? Falta 1 dia'
+        : `Pronto para viajar? Faltam ${days} dias`
+  const language = summary.recommendRegisterBeforeBoarding ? 'em chinês' : 'no idioma local'
+  const details = [
+    summary.placesWithoutLocalAddress > 0
+      ? `${summary.placesWithoutLocalAddress} ${
+          summary.placesWithoutLocalAddress === 1 ? 'lugar sem endereço' : 'lugares sem endereço'
+        } ${language}`
+      : null,
+    `${summary.membersOpened} de ${summary.membersTotal} pessoas já abriram a viagem no celular`,
+  ]
+    .filter((part) => part !== null)
+    .join(' · ')
 
   return (
-    <Card testID="pronto-viajar-card">
-      <View style={{ gap: theme.spacing.space3 }}>
-        <TypographyText family="display" style={[typography.titleM, { color: theme.colors.ink }]}>
-          Pronto para viajar
-        </TypographyText>
-
-        {summary.placesWithoutLocalAddress > 0 ? (
-          <TypographyText family="sans" style={{ color: theme.colors.ink }}>
-            {summary.placesWithoutLocalAddress === 1
-              ? '1 lugar sem endereço no idioma local'
-              : `${summary.placesWithoutLocalAddress} lugares sem endereço no idioma local`}
-          </TypographyText>
-        ) : null}
-
-        {summary.recommendRegisterBeforeBoarding ? (
-          <Notice
-            testID="pronto-viajar-china"
-            tone="warning"
-            message="Cadastre os endereços locais antes de embarcar: na China o mapa e a busca podem falhar."
-          />
-        ) : null}
-
-        <TypographyText family="sans" style={{ color: theme.colors.inkMuted }}>
-          {`${summary.membersOpened} de ${summary.membersTotal} pessoas já abriram a viagem`}
-        </TypographyText>
-
-        {membersNotOpened > 0 ? (
-          <Button
-            label="Avisar"
-            variant="secondary"
-            loading={isInviting}
-            disabled={isInviting}
+    <HighlightCard
+      testID="pronto-viajar-card"
+      style={{
+        borderRadius: theme.radius.radiusLg,
+        gap: 6,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+      }}
+    >
+      <Text variant="placeName" color={theme.colors.onForest} accessibilityRole="header">
+        {title}
+      </Text>
+      <Text
+        variant="notice"
+        color={theme.colors.onForest}
+        style={{ lineHeight: 19, opacity: 0.85 }}
+      >
+        {details}
+      </Text>
+      {membersNotOpened > 0 ? (
+        <>
+          <TextLink
+            label="Lembrar quem falta pelo WhatsApp"
+            tone="onHighlight"
             onPress={() => void avisar()}
             testID="pronto-viajar-avisar"
           />
-        ) : null}
-
-        {inviteError ? (
-          <Notice testID="pronto-viajar-erro" tone="danger" message={inviteError} />
-        ) : null}
-      </View>
-    </Card>
+          <Text
+            variant="notice"
+            color={theme.colors.onForest}
+            style={{ fontSize: 12, lineHeight: 16, opacity: 0.85 }}
+          >
+            Abre o WhatsApp com o link da viagem. Notificação do app não chega a quem ainda não
+            abriu a viagem.
+          </Text>
+        </>
+      ) : null}
+      {inviteError ? (
+        <Text
+          testID="pronto-viajar-erro"
+          variant="notice"
+          color={theme.colors.mustard}
+          accessibilityRole="alert"
+        >
+          {inviteError}
+        </Text>
+      ) : null}
+    </HighlightCard>
   )
 }

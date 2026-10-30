@@ -115,6 +115,7 @@ it('aparece na janela de 7 dias antes do início quando há pendência', () => {
     membersOpened: 1,
     membersTotal: 2,
     membersNotOpened: ['bruno'],
+    daysUntilStart: 7,
   })
 })
 

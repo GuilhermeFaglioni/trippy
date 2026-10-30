@@ -145,6 +145,8 @@ export interface ReadyToTravelSummary {
   membersOpened: number
   membersTotal: number
   membersNotOpened: string[]
+  /** Dias civis até o início da viagem (negativo depois que começou). */
+  daysUntilStart: number
 }
 
 function localDateInTimezone(timezone: string, now: Date): string {
@@ -198,5 +200,6 @@ export function readyToTravel(input: ReadyToTravelInput): ReadyToTravelSummary {
     membersOpened,
     membersTotal,
     membersNotOpened,
+    daysUntilStart,
   }
 }
