@@ -105,7 +105,7 @@ Barra inferior com as abas da viagem: Hoje (só em viagem), Roteiro, Lugares, Me
 
 ## Componentes
 
-Button, Card (comum e destaque), StatusChip, FilterChip, Avatar, Notice, TextField, PlaceRow e TabBar, como classes `tp-*` em `components/bundle.css`. Ainda sem implementação React Native.
+Button, Card (comum e destaque), StatusChip, FilterChip, Avatar, Notice, TextField, PlaceRow e TabBar, como classes `tp-*` em `components/bundle.css`. Implementados em React Native em `apps/mobile/src/design-system/components` (galeria de desenvolvimento em `/dev/design-system`).
 
 ## Em aberto
 
