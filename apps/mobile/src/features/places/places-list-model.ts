@@ -1,4 +1,5 @@
 import type { LiveMember, LivePlace } from '@trippy/sync'
+import { memberFirstName } from '../members/member-name'
 
 export type PlaceStatusTone = 'day' | 'suggested' | 'none'
 export type PlaceFilter = 'all' | 'suggested' | 'none'
@@ -47,7 +48,7 @@ export function filterCounts(tones: readonly PlaceStatusTone[]) {
   }
 }
 
-/** Não há nomes no sync: "você" e, para as outras pessoas, "Pessoa N" na ordem dos membros. */
+/** "você" ou o primeiro nome de quem sugeriu; sem nome no sync, "Pessoa N" na ordem dos membros. */
 export function suggesterLabel(
   suggestedBy: string,
   userId: string | null,
@@ -56,7 +57,8 @@ export function suggesterLabel(
   if (suggestedBy === userId) return 'você'
   const others = members.filter((member) => member.userId !== userId)
   const index = others.findIndex((member) => member.userId === suggestedBy)
-  return index === -1 ? 'outra pessoa' : `Pessoa ${index + 1}`
+  if (index === -1) return 'outra pessoa'
+  return memberFirstName(others[index]) ?? `Pessoa ${index + 1}`
 }
 
 export function placeByline(

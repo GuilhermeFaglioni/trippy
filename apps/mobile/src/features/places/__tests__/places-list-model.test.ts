@@ -31,6 +31,13 @@ describe('modelo da lista de lugares', () => {
     )
   })
 
+  it('usa o primeiro nome de quem sugeriu quando o sync traz o nome', () => {
+    const named = members.map((member) =>
+      member.userId === 'u3' ? { ...member, name: 'Lu Martins' } : member,
+    )
+    expect(placeByline(place({ suggestedBy: 'u3' }), 'u1', named)).toBe('Sugerido por Lu')
+  })
+
   it('gera os dias da viagem e ignora datas inválidas', () => {
     expect(createTripDays('2026-11-01', '2026-11-02').map((day) => day.label)).toEqual([
       'Dia 1 · 01/11/2026',

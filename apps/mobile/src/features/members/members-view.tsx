@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, View } from 'react-native'
 import { canRemoveMember, canSetMemberRole } from '@trippy/domain'
 import type { LiveMember } from '@trippy/sync'
 import { Notice } from '../../components'
+import { memberFallbackName, memberFirstName, memberFullName } from './member-name'
 import { useTheme } from '../../design-system'
 import {
   ActionSheet,
@@ -31,8 +32,12 @@ function memberName(
   names: Record<string, string> = {},
 ): string {
   if (member.userId === currentUserId) return 'Você'
-  if (names[member.userId]) return names[member.userId]
-  return `Participante ${member.userId.slice(-6)}`
+  return names[member.userId] ?? memberFirstName(member) ?? memberFallbackName(member.userId)
+}
+
+/** O avatar usa o nome inteiro (duas iniciais), mesmo quando a lista diz "Você". */
+function avatarName(member: LiveMember, names: Record<string, string>): string {
+  return names[member.userId] ?? memberFullName(member) ?? memberFallbackName(member.userId)
 }
 
 /** Cor do avatar fixa por pessoa: o mesmo userId sempre cai na mesma das quatro. */
@@ -49,7 +54,7 @@ function roleLabel(member: LiveMember): string {
 export type MembersViewProps = {
   members: LiveMember[]
   currentUserId: string | undefined
-  /** Nomes por userId, quando conhecidos; sem eles aparece "Participante" com o fim do id. */
+  /** Nomes por userId, que valem mais que o nome do sync (telas de desenvolvimento). */
   names?: Record<string, string>
   isLoading?: boolean
   busyUserId?: string | null
@@ -170,7 +175,7 @@ export function MembersView({
                   opacity: busyUserId === member.userId ? 0.5 : 1,
                 }}
               >
-                <Avatar name={name} color={avatarColor(member.userId)} />
+                <Avatar name={avatarName(member, names)} color={avatarColor(member.userId)} />
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text variant="placeName" color={theme.colors.ink} numberOfLines={1}>
                     {name}

@@ -20,6 +20,7 @@ import {
 } from '../../design-system'
 import { useSession } from '../auth/session-provider'
 import { useSync } from '../sync/sync-provider'
+import { memberFirstName } from '../members/member-name'
 import { LocalDetailsEditor } from './local-details-editor'
 
 const NOTE_MAX_LENGTH = 500
@@ -141,12 +142,16 @@ export function PlaceDetailScreen({
   const visitorIds = new Set(detail?.visitors.map((visitor) => visitor.userId) ?? [])
   const iWent = userId !== null && visitorIds.has(userId)
 
-  // Não há nomes no sync: a própria pessoa vira "Você" e as outras, "Pessoa N" na ordem da lista.
+  // A própria pessoa vira "Você"; as outras usam o primeiro nome, ou "Pessoa N" se faltar.
+  // O slug (testID) segue a ordem da lista, estável para o Maestro.
   const identify = (memberId: string): Identity => {
     if (memberId === userId) return { label: 'Você', slug: 'voce' }
     const index = others.findIndex((member) => member.userId === memberId)
     if (index === -1) return { label: 'Outra pessoa', slug: 'outra-pessoa' }
-    return { label: `Pessoa ${index + 1}`, slug: `pessoa-${index + 1}` }
+    return {
+      label: memberFirstName(others[index]) ?? `Pessoa ${index + 1}`,
+      slug: `pessoa-${index + 1}`,
+    }
   }
 
   const toggleVisit = (memberId: string, visited: boolean) => {

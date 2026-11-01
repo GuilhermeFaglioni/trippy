@@ -583,6 +583,7 @@ function validateMember(value: unknown): value is SyncMember {
     isTripRole(value.role) &&
     isDateTime(value.joinedAt) &&
     (value.openedAt === null || isDateTime(value.openedAt)) &&
+    (value.name === null || typeof value.name === 'string') &&
     isSyncSequence(value.seq) &&
     (value.deletedAt === null || isDateTime(value.deletedAt))
   )

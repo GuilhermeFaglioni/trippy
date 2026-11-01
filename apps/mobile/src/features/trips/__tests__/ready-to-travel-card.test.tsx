@@ -77,8 +77,15 @@ const members: LiveMember[] = [
     role: 'organizer',
     joinedAt: '2026-10-01T10:00:00Z',
     openedAt: '2026-10-02T10:00:00Z',
+    name: null,
   },
-  { userId: 'user-2', role: 'member', joinedAt: '2026-10-01T10:00:00Z', openedAt: null },
+  {
+    userId: 'user-2',
+    role: 'member',
+    joinedAt: '2026-10-01T10:00:00Z',
+    openedAt: null,
+    name: null,
+  },
 ]
 
 function createClient({
@@ -148,6 +155,25 @@ describe('card Pronto para viajar', () => {
       /Lembrar quem falta pelo WhatsApp/u,
     )
     expect(screen.getByTestId('pronto-viajar-avisar')).toBeOnTheScreen()
+  })
+
+  it('o link do WhatsApp cita pelo nome quem ainda não abriu', async () => {
+    const people = [
+      { ...members[0], name: 'Guilherme Faglioni' },
+      { ...members[1], name: 'Lu Martins' },
+      {
+        userId: 'user-3',
+        role: 'member' as const,
+        joinedAt: '2026-10-01T10:00:00Z',
+        openedAt: null,
+        name: 'Rafa',
+      },
+    ]
+    const screen = await renderCard(createClient({ people }))
+
+    expect(await screen.findByTestId('pronto-viajar-avisar')).toHaveTextContent(
+      'Lembrar Lu e Rafa pelo WhatsApp',
+    )
   })
 
   it('Avisar cria o convite e compartilha o link sem barra dupla', async () => {

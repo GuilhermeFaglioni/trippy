@@ -49,6 +49,8 @@ export interface LiveMember {
   role: Role
   joinedAt: string
   openedAt: string | null
+  /** Nome de exibição vindo do servidor; null quando a API não tem nome para o membro. */
+  name: string | null
 }
 
 export interface SyncClientStatus {

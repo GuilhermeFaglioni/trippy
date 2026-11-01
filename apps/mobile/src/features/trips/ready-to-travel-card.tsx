@@ -8,6 +8,7 @@ import { HighlightCard, Text, TextLink } from '../../design-system/components'
 import { createInviteClient, getInviteErrorMessage } from '../invites/invite-client'
 import { getApiBaseUrl } from '../diagnostics/health-client'
 import { useSession } from '../auth/session-provider'
+import { joinFirstNames } from '../members/member-name'
 import { useSync } from '../sync/sync-provider'
 import type { TripSummary } from './trips-client'
 
@@ -84,6 +85,9 @@ export function ReadyToTravelCard({ tripId, tripName, trip }: ReadyToTravelCardP
   if (!summary.visible) return null
 
   const membersNotOpened = summary.membersNotOpened.length
+  const missingNames = joinFirstNames(
+    members.filter((member) => summary.membersNotOpened.includes(member.userId)),
+  )
   const days = summary.daysUntilStart
   const title =
     days === 0
@@ -126,7 +130,7 @@ export function ReadyToTravelCard({ tripId, tripName, trip }: ReadyToTravelCardP
       {membersNotOpened > 0 ? (
         <>
           <TextLink
-            label="Lembrar quem falta pelo WhatsApp"
+            label={`Lembrar ${missingNames ?? 'quem falta'} pelo WhatsApp`}
             tone="onHighlight"
             onPress={() => void avisar()}
             testID="pronto-viajar-avisar"

@@ -175,13 +175,14 @@ function createPlace(
   }
 }
 
-function createMember(userId: UUID, seq: string): SyncMember {
+function createMember(userId: UUID, seq: string, name: string | null = null): SyncMember {
   return {
     tripId,
     userId,
     role: 'member',
     joinedAt: fixedTime,
     openedAt: null,
+    name,
     seq,
     deletedAt: null,
   }
@@ -952,6 +953,7 @@ describe('SyncClient', () => {
       role: 'coorganizer',
       joinedAt: fixedTime,
       openedAt: null,
+      name: null,
     })
 
     transport.rejectReason = 'invalid'
@@ -961,17 +963,40 @@ describe('SyncClient', () => {
       role: 'coorganizer',
       joinedAt: fixedTime,
       openedAt: null,
+      name: null,
     })
 
     await client.removeMember(tripId, userB)
     expect(await client.listMembers(tripId)).toEqual([
-      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null },
+      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null, name: null },
     ])
     await client.syncNow()
     expect(await client.listMembers(tripId)).toEqual([
-      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null },
+      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null, name: null },
     ])
     expect(client.getStatus()).toMatchObject({ pending: 2, notSent: 0 })
+  })
+
+  it('lista o nome de exibição do membro após pull e troca pelo nome novo no pull seguinte', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.seedMember({ ...createMember(userA, '1', 'Ana Lima'), role: 'organizer' })
+    transport.seedMember(createMember(userB, '2', 'Bruno'))
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    expect(await client.listMembers(tripId)).toEqual([
+      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null, name: 'Ana Lima' },
+      { userId: userB, role: 'member', joinedAt: fixedTime, openedAt: null, name: 'Bruno' },
+    ])
+
+    transport.seedMember(createMember(userB, '3', 'Bruno Costa'))
+    await client.syncNow()
+
+    expect(await client.listMembers(tripId)).toEqual([
+      { userId: userA, role: 'organizer', joinedAt: fixedTime, openedAt: null, name: 'Ana Lima' },
+      { userId: userB, role: 'member', joinedAt: fixedTime, openedAt: null, name: 'Bruno Costa' },
+    ])
   })
 
   it('sincroniza candidato, confirmação do Google e detalhes locais sem token no registro', async () => {
@@ -1797,6 +1822,7 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
         role: SyncMember['role']
         joined_at: string
         opened_at: string | null
+        name: string | null
         seq: string
         deleted_at: string | null
       }
@@ -1865,6 +1891,7 @@ async function readLocalState(database: NodeSqlDatabase, requestedTripId: UUID) 
       role: row.role,
       joinedAt: row.joined_at,
       openedAt: row.opened_at,
+      name: row.name,
       seq: String(row.seq),
       deletedAt: row.deleted_at,
     })),
