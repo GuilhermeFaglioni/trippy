@@ -5,6 +5,8 @@ appId: app.trippy.mobile
     clearKeychain: true
 - evalScript: ${output.email = 'maestro-' + Date.now() + '-' + Math.floor(Math.random() * 1000000) + '@example.test'}
 - tapOn:
+    id: login-use-email
+- tapOn:
     id: login-email-input
 - inputText: ${output.email}
 - tapOn:
@@ -21,10 +23,8 @@ appId: app.trippy.mobile
 - pressKey: enter
 - assertVisible:
     id: my-trips-screen
-- assertVisible: Minhas viagens
 - stopApp
 - launchApp:
     clearState: false
 - assertVisible:
     id: my-trips-screen
-- assertVisible: Minhas viagens

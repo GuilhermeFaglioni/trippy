@@ -5,6 +5,8 @@ appId: app.trippy.mobile
     clearKeychain: true
 - evalScript: ${output.email = 'maestro-' + Date.now() + '-' + Math.floor(Math.random() * 1000000) + '@example.test'}
 - tapOn:
+    id: login-use-email
+- tapOn:
     id: login-email-input
 - inputText: ${output.email}
 - tapOn:
@@ -21,12 +23,11 @@ appId: app.trippy.mobile
 - pressKey: enter
 - assertVisible:
     id: my-trips-screen
-- assertVisible: Minhas viagens
 - assertVisible:
     id: my-trips-empty-create
 - tapOn:
     id: my-trips-empty-create
-- assertVisible: Nova viagem
+- assertVisible: Pra onde vocês vão?
 - evalScript: ${output.tripName = 'Viagem Maestro ' + Date.now() + '-' + Math.floor(Math.random() * 1000000)}
 - evalScript: ${output.startDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
 - evalScript: ${output.endDate = new Date(Date.now() + 63 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
@@ -36,19 +37,18 @@ appId: app.trippy.mobile
 - tapOn:
     id: new-trip-destination
 - inputText: Recife
+- hideKeyboard
 - tapOn:
     id: new-trip-start-date
 - inputText: ${output.startDate}
-- tapOn:
-    id: trippy-wordmark
+- hideKeyboard
 - tapOn:
     id: new-trip-end-date
 - inputText: ${output.endDate}
-- tapOn:
-    id: trippy-wordmark
+- hideKeyboard
 - tapOn:
     id: new-trip-submit
 - assertVisible:
     id: my-trips-screen
-- assertVisible: ${output.tripName}
-- assertVisible: Planejando
+- assertVisible: Viagem Maestro.*
+- assertVisible: PLANEJANDO

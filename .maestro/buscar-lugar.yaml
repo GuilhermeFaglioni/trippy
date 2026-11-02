@@ -5,6 +5,8 @@ appId: app.trippy.mobile
     clearKeychain: true
 - evalScript: ${output.email = 'maestro-lugar-' + Date.now() + '-' + Math.floor(Math.random() * 1000000) + '@example.test'}
 - tapOn:
+    id: login-use-email
+- tapOn:
     id: login-email-input
 - inputText: ${output.email}
 - tapOn:
@@ -32,16 +34,15 @@ appId: app.trippy.mobile
 - tapOn:
     id: new-trip-destination
 - inputText: Rio de Janeiro
+- hideKeyboard
 - tapOn:
     id: new-trip-start-date
 - inputText: ${output.startDate}
-- tapOn:
-    id: trippy-wordmark
+- hideKeyboard
 - tapOn:
     id: new-trip-end-date
 - inputText: ${output.endDate}
-- tapOn:
-    id: trippy-wordmark
+- hideKeyboard
 - tapOn:
     id: new-trip-submit
 - assertVisible: ${output.tripName}
