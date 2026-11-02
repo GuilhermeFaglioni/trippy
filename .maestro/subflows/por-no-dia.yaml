@@ -1,0 +1,11 @@
+appId: app.trippy.mobile
+---
+# Na aba Roteiro, no dia ${N}: "+ Adicionar lugar ao dia" e escolhe o lugar na folha.
+- tapOn:
+    id: roteiro-dia-${DIA_INDICE}-adicionar
+- tapOn:
+    text: ${PLACE_NAME}
+- extendedWaitUntil:
+    visible:
+      id: roteiro-lugar-${PLACE_SLUG}
+    timeout: 15000

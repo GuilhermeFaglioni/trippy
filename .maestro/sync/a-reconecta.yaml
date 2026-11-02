@@ -2,19 +2,11 @@ appId: app.trippy.mobile
 ---
 - launchApp:
     stopApp: false
-- openLink: trippy:///diagnostics
+- runFlow:
+    file: ../subflows/alternar-offline.yaml
+- runFlow:
+    file: ../subflows/abrir-viagem.yaml
 - tapOn:
-    text: Abrir
-    optional: true
+    id: trip-tab-lugares
 - assertVisible:
-    id: simulate-offline-toggle
-- tapOn:
-    id: simulate-offline-toggle
-- openLink: trippy:///trips/${TRIP_ID}
-- tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: trip-detail-screen
-- assertVisible: ${PLACE_NAME}
-- assertVisible: 0 pendentes
+    id: place-${PLACE_SLUG}

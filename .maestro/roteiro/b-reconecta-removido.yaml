@@ -2,18 +2,14 @@ appId: app.trippy.mobile
 ---
 - launchApp:
     stopApp: false
-- openLink: trippy:///diagnostics
-- tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: simulate-offline-toggle
-- tapOn:
-    id: simulate-offline-toggle
+- runFlow:
+    file: ../subflows/alternar-offline.yaml
 - openLink: trippy:///trips/${TRIP_ID}
 - tapOn:
     text: Abrir
     optional: true
-- assertVisible:
-    id: viagem-removida
+- extendedWaitUntil:
+    visible:
+      id: viagem-removida
+    timeout: 60000
 - assertVisible: 1 alteração não enviada

@@ -295,7 +295,7 @@ assert_equal "$(psql_value "SELECT role FROM trip_members WHERE trip_id = '$TRIP
 
 log 'A e B ativam Simular sem internet e reordenam o mesmo dia de formas diferentes.'
 run_maestro "$UDID_A" a-offline-reordena.yaml \
-  -e "TRIP_ID=$TRIP_ID" -e "PLACE_2_SLUG=$PLACE_2_SLUG"
+  -e "TRIP_ID=$TRIP_ID" -e "PLACE_1_SLUG=$PLACE_1_SLUG"
 run_maestro "$UDID_B" b-offline-reordena.yaml \
   -e "TRIP_ID=$TRIP_ID" -e "B_USER_ID=$B_USER_ID" -e "PLACE_3_SLUG=$PLACE_3_SLUG"
 CONTAINER_B="$(xcrun simctl get_app_container "$UDID_B" app.trippy.mobile data)"
@@ -304,18 +304,18 @@ if [[ -z "$DB_B" ]]; then
   printf 'Banco SQLite B não encontrado no Simulator.\n' >&2
   exit 1
 fi
-assert_equal "$(sqlite_order "$DB_A")" "$PLACE_2|$PLACE_1|$PLACE_3" 'Rascunho local offline A'
+assert_equal "$(sqlite_order "$DB_A")" "$PLACE_2|$PLACE_3|$PLACE_1" 'Rascunho local offline A'
 assert_equal "$(sqlite_order "$DB_B")" "$PLACE_3|$PLACE_1|$PLACE_2" 'Rascunho local offline B'
 assert_equal "$(psql_value "SELECT itinerary_version FROM trips WHERE id = '$TRIP_ID'")" \
   '0' 'Versão do servidor enquanto ambos estão offline'
 
 log 'A reconecta; Postgres recebe a ordem A e avança uma versão.'
 run_maestro "$UDID_A" a-reconecta.yaml \
-  -e "TRIP_ID=$TRIP_ID" -e "PLACE_2_SLUG=$PLACE_2_SLUG"
+  -e "TRIP_ID=$TRIP_ID" -e "PLACE_1_SLUG=$PLACE_1_SLUG"
 assert_equal "$(psql_value "SELECT itinerary_version FROM trips WHERE id = '$TRIP_ID'")" \
   '1' 'Versão após sincronização A'
 assert_equal "$(psql_value "SELECT string_agg(name, '|' ORDER BY position) FROM places WHERE trip_id = '$TRIP_ID' AND day_index = 0 AND deleted_at IS NULL")" \
-  "$PLACE_2|$PLACE_1|$PLACE_3" 'Ordem vencedora A no Postgres'
+  "$PLACE_2|$PLACE_3|$PLACE_1" 'Ordem vencedora A no Postgres'
 
 log 'B reconecta; tela compara rascunho com roteiro atual e reaplica o rascunho.'
 run_maestro "$UDID_B" b-reconecta-reaplica.yaml \

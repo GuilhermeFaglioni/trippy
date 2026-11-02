@@ -1,0 +1,10 @@
+appId: app.trippy.mobile
+---
+- openLink: trippy:///diagnostics
+- tapOn:
+    text: Abrir
+    optional: true
+- assertVisible:
+    id: simulate-offline-toggle
+- tapOn:
+    id: simulate-offline-toggle

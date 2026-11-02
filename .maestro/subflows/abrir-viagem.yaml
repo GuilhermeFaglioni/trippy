@@ -1,0 +1,10 @@
+appId: app.trippy.mobile
+---
+- openLink: trippy:///trips/${TRIP_ID}
+- tapOn:
+    text: Abrir
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: trip-tab-lugares
+    timeout: 30000

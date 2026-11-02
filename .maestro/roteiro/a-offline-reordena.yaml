@@ -2,29 +2,21 @@ appId: app.trippy.mobile
 ---
 - launchApp:
     stopApp: false
-- openLink: trippy:///diagnostics
-- tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: simulate-offline-toggle
-- tapOn:
-    id: simulate-offline-toggle
-- openLink: trippy:///trips/${TRIP_ID}
-- tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: viagem-abas
+- runFlow:
+    file: ../subflows/alternar-offline.yaml
+- runFlow:
+    file: ../subflows/abrir-viagem.yaml
 - tapOn:
     id: trip-tab-roteiro
-- scrollUntilVisible:
-    element:
-      id: roteiro-lugar-${PLACE_2_SLUG}-subir
+- extendedWaitUntil:
+    visible:
+      id: roteiro-lugar-${PLACE_1_SLUG}
+    timeout: 30000
+# Segura o primeiro lugar e arrasta até o fim do dia (o excesso de arraste é limitado à última posição).
+- swipe:
+    from:
+      id: roteiro-lugar-${PLACE_1_SLUG}
     direction: DOWN
+    duration: 1500
 - assertVisible:
-    id: roteiro-lugar-${PLACE_2_SLUG}-subir
-- tapOn:
-    id: roteiro-lugar-${PLACE_2_SLUG}-subir
-- assertVisible:
-    id: roteiro-lugar-${PLACE_2_SLUG}
+    id: roteiro-lugar-${PLACE_1_SLUG}

@@ -1,0 +1,20 @@
+appId: app.trippy.mobile
+---
+# Na aba Lugares: "+ Lugar", digita o nome e sugere ao grupo (nome digitado, sem candidato do provedor).
+- tapOn:
+    id: add-place-button
+- tapOn:
+    id: place-search-query
+- inputText: ${PLACE_NAME}
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: place-submit
+      enabled: true
+    timeout: 30000
+- tapOn:
+    id: place-submit
+- extendedWaitUntil:
+    visible:
+      id: place-${PLACE_SLUG}
+    timeout: 15000

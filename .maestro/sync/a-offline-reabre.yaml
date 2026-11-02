@@ -2,48 +2,36 @@ appId: app.trippy.mobile
 ---
 - launchApp:
     stopApp: false
-- openLink: trippy:///diagnostics
+- runFlow:
+    file: ../subflows/alternar-offline.yaml
+- runFlow:
+    file: ../subflows/abrir-viagem.yaml
 - tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: simulate-offline-toggle
+    id: trip-tab-lugares
+- runFlow:
+    file: ../subflows/sugerir-lugar.yaml
+    env:
+      PLACE_NAME: ${PLACE_NAME}
+      PLACE_SLUG: ${PLACE_SLUG}
+# "Eu fui" na tela do lugar.
 - tapOn:
-    id: simulate-offline-toggle
-- openLink: trippy:///trips/${TRIP_ID}
-- tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: viagem-abas
-- tapOn:
-    id: add-place-button
-- tapOn:
-    id: place-search-query
-- inputText: ${PLACE_NAME}
-- hideKeyboard
-- tapOn:
-    id: save-typed-place
-- assertVisible:
-    id: viagem-abas
-- assertVisible:
     id: place-${PLACE_SLUG}
 - tapOn:
-    id: place-visit-${PLACE_SLUG}
-- assertVisible: Eu fui ✓
-- assertVisible: 2 pendentes
+    id: lugar-fui
+- assertVisible:
+    id: lugar-visita-voce
+- tapOn:
+    id: lugar-voltar
 - stopApp
 - launchApp:
     clearState: false
 - assertVisible:
     id: my-trips-screen
-- openLink: trippy:///trips/${TRIP_ID}
+- runFlow:
+    file: ../subflows/abrir-viagem.yaml
 - tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: viagem-abas
-- assertVisible:
+    id: trip-tab-lugares
+- tapOn:
     id: place-${PLACE_SLUG}
-- assertVisible: Eu fui ✓
-- assertVisible: 2 pendentes
+- assertVisible:
+    id: lugar-visita-voce

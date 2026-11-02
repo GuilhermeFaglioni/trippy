@@ -2,61 +2,44 @@ appId: app.trippy.mobile
 ---
 - launchApp:
     stopApp: false
-- openLink: trippy:///trips/${TRIP_ID}
+- runFlow:
+    file: ../subflows/abrir-viagem.yaml
 - tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: viagem-abas
-- tapOn:
-    id: add-place-button
-- tapOn:
-    id: place-search-query
-- inputText: ${PLACE_1}
-- hideKeyboard
-- tapOn:
-    id: save-typed-place
-- assertVisible:
-    id: viagem-abas
-- tapOn:
-    id: add-place-button
-- tapOn:
-    id: place-search-query
-- inputText: ${PLACE_2}
-- hideKeyboard
-- tapOn:
-    id: save-typed-place
-- assertVisible:
-    id: viagem-abas
-- tapOn:
-    id: add-place-button
-- tapOn:
-    id: place-search-query
-- inputText: ${PLACE_3}
-- hideKeyboard
-- tapOn:
-    id: save-typed-place
-- assertVisible:
-    id: viagem-abas
+    id: trip-tab-lugares
+- runFlow:
+    file: ../subflows/sugerir-lugar.yaml
+    env:
+      PLACE_NAME: ${PLACE_1}
+      PLACE_SLUG: ${PLACE_1_SLUG}
+- runFlow:
+    file: ../subflows/sugerir-lugar.yaml
+    env:
+      PLACE_NAME: ${PLACE_2}
+      PLACE_SLUG: ${PLACE_2_SLUG}
+- runFlow:
+    file: ../subflows/sugerir-lugar.yaml
+    env:
+      PLACE_NAME: ${PLACE_3}
+      PLACE_SLUG: ${PLACE_3_SLUG}
 - tapOn:
     id: trip-tab-roteiro
 - assertVisible:
     id: tela-roteiro
-- scrollUntilVisible:
-    element:
-      id: roteiro-lugar-${PLACE_1_SLUG}-por-no-dia
-    direction: DOWN
-- tapOn:
-    id: roteiro-lugar-${PLACE_1_SLUG}-por-no-dia
-- scrollUntilVisible:
-    element:
-      id: roteiro-lugar-${PLACE_2_SLUG}-por-no-dia
-    direction: DOWN
-- tapOn:
-    id: roteiro-lugar-${PLACE_2_SLUG}-por-no-dia
-- scrollUntilVisible:
-    element:
-      id: roteiro-lugar-${PLACE_3_SLUG}-por-no-dia
-    direction: DOWN
-- tapOn:
-    id: roteiro-lugar-${PLACE_3_SLUG}-por-no-dia
+- runFlow:
+    file: ../subflows/por-no-dia.yaml
+    env:
+      DIA_INDICE: '0'
+      PLACE_NAME: ${PLACE_1}
+      PLACE_SLUG: ${PLACE_1_SLUG}
+- runFlow:
+    file: ../subflows/por-no-dia.yaml
+    env:
+      DIA_INDICE: '0'
+      PLACE_NAME: ${PLACE_2}
+      PLACE_SLUG: ${PLACE_2_SLUG}
+- runFlow:
+    file: ../subflows/por-no-dia.yaml
+    env:
+      DIA_INDICE: '0'
+      PLACE_NAME: ${PLACE_3}
+      PLACE_SLUG: ${PLACE_3_SLUG}

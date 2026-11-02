@@ -2,22 +2,19 @@ appId: app.trippy.mobile
 ---
 - launchApp:
     stopApp: false
-- openLink: trippy:///trips/${TRIP_ID}
-- tapOn:
-    text: Abrir
-    optional: true
-- assertVisible:
-    id: viagem-abas
+- runFlow:
+    file: ../subflows/abrir-viagem.yaml
 - tapOn:
     id: trip-tab-grupo
-- scrollUntilVisible:
-    element:
-      id: grupo-membro-${B_USER_ID}-promover
-    direction: DOWN
-- assertVisible:
-    id: grupo-membro-${B_USER_ID}
+- extendedWaitUntil:
+    visible:
+      id: grupo-membro-${B_USER_ID}-opcoes
+    timeout: 60000
+- tapOn:
+    id: grupo-membro-${B_USER_ID}-opcoes
 - tapOn:
     id: grupo-membro-${B_USER_ID}-promover
-- assertVisible:
-    id: grupo-membro-${B_USER_ID}-papel
-- assertVisible: Coorganizador
+- extendedWaitUntil:
+    visible:
+      text: 'Coorganizador.*'
+    timeout: 15000
