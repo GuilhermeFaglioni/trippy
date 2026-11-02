@@ -3,7 +3,8 @@
     "chosenAt": "2026-10-21",
     "selectionRule": "Amostra estratificada definida antes de qualquer chamada à Geoapify ou ao Google: 15 casos por cidade chinesa (8 atrações, 4 hotéis, 3 restaurantes), 20 globais (6 atrações, 8 restaurantes e 6 hotéis) e 10 consultas de endereço. O recorte essencial desta amostra foi fixado antes dos resultados e inclui: Cidade Proibida, Mutianyu, Badaling, Templo do Céu, Palácio de Verão, Praça Tiananmen, Bund, Jardim Yu, Torre Pérola Oriental, Shanghai Tower e Nanjing Road. Os demais casos cobrem categorias, restaurantes menores, filiais e entradas. Nenhum caso foi reaproveitado por ter acertado em benchmark anterior.",
     "exclusionRule": "Só casos com verification.status=verified entram em measuredSample25. Casos sem coordenada independente ou com dependência OSM ficam como unverified, com motivo, e não entram nas métricas até nova verificação.",
-    "noProviderCallsBeforeCommit": true
+    "noProviderCallsBeforeCommit": true,
+    "addressReview": "Revisão da #47 (02/11/2026), só pesquisa na web e arquivos locais, sem chamada a Geoapify/Google: 2 dos 10 endereços (120 Broadway, NYC; 100 King Street West, Toronto) ganharam coordenada de edifício em fonte independente e passam a verified; os outros 8 seguem unverified com a lacuna registrada em cada caso. Casos medidos: 49 de 60."
   },
   "cases": [
     {
@@ -456,7 +457,7 @@
         "status": "unverified",
         "verifiedAt": "2026-10-21",
         "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial.",
-        "reason": "A página oficial confirma o endereço, mas o item independente não fornece coordenada citada; fica fora das métricas até confirmar ponto em mapa oficial."
+        "reason": "Mantido unverified por decisão registrada na #47 (25/10/2026), reconfirmado em 02/11/2026: o item Wikidata (Q16947066) não tem coordenada (P625) e a página oficial só confirma o endereço textual. Fica fora das métricas até haver ponto em mapa oficial."
       }
     },
     {
@@ -632,8 +633,8 @@
         },
         "conversion": null
       },
-      "toleranceMeters": 150,
-      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "toleranceMeters": 600,
+      "toleranceReason": "Revisada em 02/11/2026 (#47): o Bund é um calçadão ribeirinho extenso (cerca de 1,5 km ao longo da Zhongshan East 1st Road), sem entrada única. A referência Wikidata é um ponto representativo e o ponto devolvido pelo fornecedor ficou a 518 m dela na validação de 23/10/2026; 150 m reprovaria candidatos corretos do mesmo calçadão. 600 m cobre o trecho central e continua menor que a distância até a Nanjing Road.",
       "references": [
         {
           "url": "https://www.wikidata.org/wiki/Q125474",
@@ -1789,7 +1790,7 @@
       "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
       "references": [
         {
-          "url": "https://www.wikidata.org/wiki/Q27081583",
+          "url": "https://www.wikidata.org/wiki/Q746639",
           "type": "wikidata"
         },
         {
@@ -1800,7 +1801,7 @@
       "verification": {
         "status": "verified",
         "verifiedAt": "2026-10-21",
-        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial."
+        "criterion": "Identidade/local conferidos em fonte oficial ou autoridade de turismo; coordenada WGS-84 conferida em Wikidata/Wikipedia ou mapa oficial. Referência Wikidata atualizada em 02/11/2026 (#47) de Q27081583 (redirecionado) para Q746639 (Savoy Hotel; P625 = 51.509898, -0.120215, a cerca de 20 m do ponto da amostra)."
       }
     },
     {
@@ -1985,8 +1986,8 @@
         },
         "conversion": null
       },
-      "toleranceMeters": 250,
-      "toleranceReason": "Raio operacional para variação entre ponto representativo e entrada/candidato; identidade e endereço são conferidos em fonte independente.",
+      "toleranceMeters": 350,
+      "toleranceReason": "Revisada em 02/11/2026 (#47): o Fairmont Banff Springs é um resort extenso (edifício principal, campo de golfe e estacionamentos) e o ponto de referência fica no centro do complexo; o ponto devolvido pelo fornecedor ficou a 315 m dele na validação de 23/10/2026 (limite anterior: 250 m). 350 m cobre o complexo sem aceitar a cidade de Banff.",
       "references": [
         {
           "url": "https://www.wikidata.org/wiki/Q806429",
@@ -2016,17 +2017,17 @@
       "acceptedNames": [],
       "expectedLocalAddressTokens": ["120 Broadway", "New York", "NY"],
       "referenceCoordinate": {
-        "lat": 40.7081,
-        "lon": -74.0112,
+        "lat": 40.70833,
+        "lon": -74.01028,
         "datum": "WGS-84",
         "wgs84": {
-          "lat": 40.7081,
-          "lon": -74.0112
+          "lat": 40.70833,
+          "lon": -74.01028
         },
         "conversion": null
       },
       "toleranceMeters": 100,
-      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "toleranceReason": "Coordenada do edifício no endereço conforme Wikipedia (Equitable Building, 120 Broadway: 40°42′30″N 74°00′37″W) e Structurae; o raio de 100 m absorve a diferença entre o centroide do edifício e o ponto de endereço.",
       "references": [
         {
           "url": "https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html",
@@ -2035,13 +2036,16 @@
         {
           "url": "https://www.census.gov/",
           "type": "registro-postal"
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Equitable_Building_(Manhattan)",
+          "type": "wikipedia"
         }
       ],
       "verification": {
-        "status": "unverified",
-        "verifiedAt": "2026-10-21",
-        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "status": "verified",
+        "verifiedAt": "2026-11-02",
+        "criterion": "Endereço confirmado em fonte postal/oficial e coordenada WGS-84 do edifício no endereço conferida em Wikipedia (Equitable Building, 120 Broadway: 40°42′30″N 74°00′37″W) e Structurae (revisão #47)."
       }
     },
     {
@@ -2076,9 +2080,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). Nenhuma fonte web encontrou edifício identificável em 100 Queen Street, Auckland (só 99, 125, 151, 184 e 191), então não há coordenada independente. O localizador da NZ Post exige consulta interativa. Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     },
     {
@@ -2113,9 +2117,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). O endereço 芝公園4-1-1 não foi associado a um edifício ou marco com coordenada em fonte verificável (a Tokyo Tower é 4-2-8 e o parque municipal 4-8-4). Precisa de consulta ao banco de endereços do Japan Post / Geospatial Information Authority. Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     },
     {
@@ -2150,9 +2154,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). O número 15 aparece em diretórios comerciais (Duvelleroy, Mauboussin, Dinh Van), mas sem coordenada em fonte oficial (BAN/La Poste não consultados por exigirem consulta interativa). Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     },
     {
@@ -2187,9 +2191,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). O endereço é o do MASP (Avenida Paulista, 1578, CEP 01310-200, confirmado em masp.org.br), mas nenhuma fonte consultada mostrou a coordenada; a única candidata é o OpenStreetMap, excluído como fonte independente. Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     },
     {
@@ -2205,28 +2209,31 @@
       "acceptedNames": [],
       "expectedLocalAddressTokens": ["100 King Street West", "Toronto"],
       "referenceCoordinate": {
-        "lat": 43.6487,
-        "lon": -79.3824,
+        "lat": 43.648778,
+        "lon": -79.381694,
         "datum": "WGS-84",
         "wgs84": {
-          "lat": 43.6487,
-          "lon": -79.3824
+          "lat": 43.648778,
+          "lon": -79.381694
         },
         "conversion": null
       },
       "toleranceMeters": 100,
-      "toleranceReason": "Ponto postal sem coordenada independente confirmada; mantido fora das métricas.",
+      "toleranceReason": "Coordenada do edifício no endereço conforme Wikipedia (First Canadian Place, 100 King Street West: 43°38′55.6″N 79°22′54.1″W) e Structurae; o raio de 100 m absorve a diferença entre o centroide do edifício e o ponto de endereço.",
       "references": [
         {
           "url": "https://www.canadapost-postescanada.ca/cpc/en/tools/find-a-postal-code.page",
           "type": "registro-postal"
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/First_Canadian_Place",
+          "type": "wikipedia"
         }
       ],
       "verification": {
-        "status": "unverified",
-        "verifiedAt": "2026-10-21",
-        "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "status": "verified",
+        "verifiedAt": "2026-11-02",
+        "criterion": "Endereço confirmado em fonte postal/oficial e coordenada WGS-84 do edifício no endereço conferida em Wikipedia (First Canadian Place, 100 King Street West: 43°38′55.6″N 79°22′54.1″W) e Structurae (revisão #47)."
       }
     },
     {
@@ -2261,9 +2268,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). Nenhuma fonte consultada identificou o edifício no número 9 da Calle de Atocha nem sua coordenada; o localizador dos Correos exige consulta interativa. Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     },
     {
@@ -2298,9 +2305,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). Nenhuma fonte consultada identificou o edifício em Via del Corso, 3 nem sua coordenada; o localizador dos Correios (Poste Italiane) exige consulta interativa. Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     },
     {
@@ -2335,9 +2342,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). O número 25 de King Street (esquina com Sussex Street, antigo Bank of NSW / City Bank) aparece em notícias imobiliárias e no arquivo da cidade, mas sem coordenada em fonte oficial. Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     },
     {
@@ -2372,9 +2379,9 @@
       ],
       "verification": {
         "status": "unverified",
-        "verifiedAt": "2026-10-21",
+        "verifiedAt": "2026-11-02",
         "criterion": "Fonte postal oficial consultada para a forma do endereço; coordenada exata ainda não foi confirmada.",
-        "reason": "O endereço textual foi selecionado, mas não há coordenada exata independente confirmada; excluído das métricas até nova verificação."
+        "reason": "Revisado em 2026-11-02 (#47). Nenhuma fonte encontrou edifício em 12 Peking Road: o \"12\" pode ser o andar do One Peking (1 Peking Road). O endereço pode não existir; considerar trocá-lo por 1 Peking Road (One Peking) antes da T5. Lacuna registrada; não bloqueia a T5, e o caso fica fora das métricas até nova verificação."
       }
     }
   ]
