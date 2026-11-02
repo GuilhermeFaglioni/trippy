@@ -2,6 +2,8 @@ packages:
   - apps/*
   - packages/*
 overrides:
+  # node-forge entra pelo Expo CLI (ferramenta de desenvolvimento); 1.4.0 tem advisories high, corrigidos em 1.4.1.
+  node-forge: '>=1.4.1'
   '@expo/cli>zod': 4.6.7
   '@expo/mcp-tunnel>zod': 4.6.7
   'expo-mcp>@expo/mcp-tunnel': 0.3.1
@@ -44,11 +46,11 @@ minimumReleaseAgeExclude:
 # GHSA-mrhx-c7xc-m3w5: Remotion 4.0.512 fixa Zod 4.4.3; remover quando o Studio subir para >=4.6.6.
 
 # Exceções da auditoria. Revisar quando o Dependabot trouxer versão corrigida.
-# Ambas são transitivas das ferramentas de desenvolvimento do Expo (CLI e Metro), sem correção publicada
-# em 19/out/2026, e não vão para o app nem para a API.
+# braces é transitivo das ferramentas de desenvolvimento do Expo (Metro), sem correção publicada
+# em 19/out/2026, e não vai para o app nem para a API.
+# node-forge não está mais aqui: o override acima força >=1.4.1 (corrige os advisories high).
 auditConfig:
   ignoreGhsas:
-    - GHSA-86w9-cpqp-85rv # node-forge, via @expo/code-signing-certificates
     - GHSA-vfj7-8cjw-p6xm # braces, via metro > micromatch
 patchedDependencies:
   '@expo/cli@58.1.13': patches/@expo__cli@58.1.13.patch
