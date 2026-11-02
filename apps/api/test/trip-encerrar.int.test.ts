@@ -47,12 +47,18 @@ async function post(path: string, body: unknown, token = 'organizer-token') {
   })
 }
 
+function dataAPartirDeHoje(dias: number): string {
+  const data = new Date()
+  data.setUTCDate(data.getUTCDate() + dias)
+  return data.toISOString().slice(0, 10)
+}
+
 async function createTrip(): Promise<string> {
   const response = await post('/trips', {
     name: `Viagem ${randomUUID()}`,
     destination: 'Lisboa',
-    startDate: '2026-11-01',
-    endDate: '2026-11-05',
+    startDate: dataAPartirDeHoje(7),
+    endDate: dataAPartirDeHoje(11),
     timezone: 'Europe/Lisbon',
   })
   expect(response.status).toBe(201)
