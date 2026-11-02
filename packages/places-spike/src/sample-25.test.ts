@@ -33,9 +33,9 @@ describe('amostra independente do spike 25', () => {
   })
 
   it('inclui referências independentes e datum em cada caso medido', () => {
-    expect(measuredSample25).toHaveLength(47)
+    expect(measuredSample25).toHaveLength(49)
     expect(sample25.cases.filter((item) => item.verification.status === 'unverified')).toHaveLength(
-      13,
+      11,
     )
     for (const item of measuredSample25) {
       expect(item.references.length).toBeGreaterThan(0)
