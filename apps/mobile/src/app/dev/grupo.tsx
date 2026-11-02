@@ -25,10 +25,14 @@ const members: LiveMember[] = [
   name: null,
 }))
 
-/** Pré-visualização só de desenvolvimento das telas 22 e 28: `/dev/grupo?tela=grupo|aviso`. */
+/** Pré-visualização só de desenvolvimento das telas 22 e 28: `/dev/grupo?tela=grupo|aviso&eu=me|pedro`. */
 export default function GroupPreviewRoute() {
   const theme = useTheme()
-  const { tela } = useLocalSearchParams<{ tela?: string }>()
+  const { tela, eu = 'me', sair } = useLocalSearchParams<{
+    tela?: string
+    eu?: string
+    sair?: string
+  }>()
   if (!__DEV__) return <Redirect href="/" />
 
   if (tela === 'aviso') {
@@ -49,11 +53,16 @@ export default function GroupPreviewRoute() {
       <View style={{ flex: 1 }}>
         <MembersView
           members={members}
-          currentUserId="me"
+          currentUserId={eu}
+          tripName="Viagem China"
+          key={`${eu}-${sair}`}
+          initialLeaving={sair === '1'}
           names={{ ana: 'Ana', pedro: 'Pedro', ju: 'Ju', lu: 'Lu', rafa: 'Rafa' }}
           onInvite={noop}
           onSetRole={noop}
           onRemove={noop}
+          onTransferOrganizer={noop}
+          onLeave={noop}
         />
       </View>
       <TabBar

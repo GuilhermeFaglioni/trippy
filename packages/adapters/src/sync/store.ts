@@ -1,4 +1,11 @@
-import { canEditItinerary, canRemoveMember, canSetMemberRole, type Member } from '@trippy/domain'
+import {
+  canEditItinerary,
+  canLeaveTrip,
+  canRemoveMember,
+  canSetMemberRole,
+  canTransferOrganizer,
+  type Member,
+} from '@trippy/domain'
 import { canConfirmGooglePlace, canRemovePlace } from '@trippy/domain/places'
 import { verifyPlaceSearchCandidate } from '../places/candidate-token.ts'
 import type {
@@ -618,7 +625,10 @@ async function applyMemberRemove(
 ): Promise<PushOperationResult> {
   const target = await findActiveTargetMember(client, operation.tripId, operation.userId)
   if (!target) return rejectedResult(operation, 'invalid')
-  if (!canRemoveMember(actor, target)) return rejectedResult(operation, 'forbidden')
+  const leaving = operation.userId === actor.userId
+  if (leaving ? !canLeaveTrip(actor) : !canRemoveMember(actor, target)) {
+    return rejectedResult(operation, 'forbidden')
+  }
 
   const sequence = await nextSequence(client, operation.tripId)
   await client.query(
@@ -643,6 +653,31 @@ async function applyMemberSetRole(
     `UPDATE trip_members SET role = $3, seq = $4
      WHERE trip_id = $1 AND user_id = $2`,
     [operation.tripId, operation.userId, operation.role, sequence],
+  )
+  return { opId: operation.opId, status: 'applied' }
+}
+
+async function applyMemberTransferOrganizer(
+  client: PoolClient,
+  actor: Member,
+  operation: Extract<SyncOperation, { type: 'member.transfer_organizer' }>,
+): Promise<PushOperationResult> {
+  const target = await findActiveTargetMember(client, operation.tripId, operation.userId)
+  if (!target) return rejectedResult(operation, 'invalid')
+  if (!canTransferOrganizer(actor, target)) return rejectedResult(operation, 'forbidden')
+
+  // Rebaixa o ator antes de promover o alvo: o índice único parcial aceita um organizador ativo por viagem.
+  const actorSequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    `UPDATE trip_members SET role = 'coorganizer', seq = $3
+     WHERE trip_id = $1 AND user_id = $2`,
+    [operation.tripId, actor.userId, actorSequence],
+  )
+  const targetSequence = await nextSequence(client, operation.tripId)
+  await client.query(
+    `UPDATE trip_members SET role = 'organizer', seq = $3
+     WHERE trip_id = $1 AND user_id = $2`,
+    [operation.tripId, operation.userId, targetSequence],
   )
   return { opId: operation.opId, status: 'applied' }
 }
@@ -786,6 +821,8 @@ async function applyNewOperation(
       return applyMemberRemove(client, { userId, role }, operation)
     case 'member.set_role':
       return applyMemberSetRole(client, { userId, role }, operation)
+    case 'member.transfer_organizer':
+      return applyMemberTransferOrganizer(client, { userId, role }, operation)
     case 'trip.end':
       return applyTripEnd(client, role, operation)
     case 'trip.open':

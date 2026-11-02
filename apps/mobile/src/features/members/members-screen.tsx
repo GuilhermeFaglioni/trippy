@@ -126,6 +126,27 @@ export function MembersScreen({
     [runMemberMutation, tripId],
   )
 
+  const transferOrganizer = useCallback(
+    (member: LiveMember) =>
+      runMemberMutation(
+        member,
+        (syncClient) => syncClient.transferOrganizer(tripId, member.userId),
+        'Não foi possível passar a organização.',
+      ),
+    [runMemberMutation, tripId],
+  )
+
+  const leave = useCallback(async () => {
+    if (client === null || !session) return
+    setError(null)
+    try {
+      await client.removeMember(tripId, session.user.id)
+      await loadMembers()
+    } catch (leaveError) {
+      setError(leaveError instanceof Error ? leaveError.message : 'Não foi possível sair do grupo.')
+    }
+  }, [client, loadMembers, session, tripId])
+
   return (
     <MembersView
       members={members}
@@ -137,6 +158,9 @@ export function MembersScreen({
       onInvite={() => void sendInvite()}
       onSetRole={(member, role) => void setRole(member, role)}
       onRemove={(member) => void remove(member)}
+      onTransferOrganizer={(member) => void transferOrganizer(member)}
+      onLeave={() => void leave()}
+      tripName={tripName}
       onOpenSettings={onOpenSettings}
     />
   )

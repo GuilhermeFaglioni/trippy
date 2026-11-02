@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
 
-import { canRemoveMember, canSetMemberRole } from '@trippy/domain'
+import {
+  canLeaveTrip,
+  canRemoveMember,
+  canSetMemberRole,
+  canTransferOrganizer,
+} from '@trippy/domain'
 import type { LiveMember } from '@trippy/sync'
 import { Notice } from '../../components'
 import { memberFallbackName, memberFirstName, memberFullName } from './member-name'
@@ -63,6 +68,11 @@ export type MembersViewProps = {
   onInvite: () => void
   onSetRole: (member: LiveMember, role: 'coorganizer' | 'member') => void
   onRemove: (member: LiveMember) => void
+  onTransferOrganizer: (member: LiveMember) => void
+  onLeave: () => void
+  tripName?: string
+  /** Só para a pré-visualização de desenvolvimento: já abre a folha de sair. */
+  initialLeaving?: boolean
   onOpenSettings?: () => void
 }
 
@@ -78,10 +88,15 @@ export function MembersView({
   onInvite,
   onSetRole,
   onRemove,
+  onTransferOrganizer,
+  onLeave,
+  tripName,
+  initialLeaving = false,
   onOpenSettings,
 }: MembersViewProps) {
   const theme = useTheme()
   const [optionsFor, setOptionsFor] = useState<LiveMember | null>(null)
+  const [isLeaving, setIsLeaving] = useState(initialLeaving)
   const closeThen = (action: () => void) => {
     setOptionsFor(null)
     action()
@@ -96,6 +111,9 @@ export function MembersView({
     actor !== undefined && optionsTarget !== undefined && canSetMemberRole(actor, optionsTarget)
   const canRemove =
     actor !== undefined && optionsTarget !== undefined && canRemoveMember(actor, optionsTarget)
+  const canTransfer =
+    actor !== undefined && optionsTarget !== undefined && canTransferOrganizer(actor, optionsTarget)
+  const leaveTitle = `Sair d${tripName ? `a ${tripName}` : 'o grupo'}?`
 
   return (
     <ScrollView
@@ -160,7 +178,9 @@ export function MembersView({
             const target = { userId: member.userId, role: member.role }
             const hasOptions =
               actor !== undefined &&
-              (canSetMemberRole(actor, target) || canRemoveMember(actor, target))
+              (canSetMemberRole(actor, target) ||
+                canRemoveMember(actor, target) ||
+                canTransferOrganizer(actor, target))
             return (
               <View
                 key={member.userId}
@@ -203,6 +223,16 @@ export function MembersView({
           })}
         </View>
       )}
+
+      {actor ? (
+        <TextButton
+          label="Sair do grupo"
+          tone="danger"
+          block
+          onPress={() => setIsLeaving(true)}
+          testID="grupo-sair"
+        />
+      ) : null}
 
       {actor?.role === 'organizer' && onOpenSettings ? (
         <Button
@@ -255,6 +285,15 @@ export function MembersView({
                 </Text>
               </>
             ) : null}
+            {canTransfer ? (
+              <Button
+                label="Passar a organização"
+                variant="secondary"
+                block
+                onPress={() => closeThen(() => onTransferOrganizer(optionsFor))}
+                testID={`grupo-membro-${optionsFor.userId}-organizador`}
+              />
+            ) : null}
             {canRemove ? (
               <Button
                 label="Remover do grupo"
@@ -272,6 +311,57 @@ export function MembersView({
             />
           </>
         ) : null}
+      </ActionSheet>
+
+      <ActionSheet
+        visible={isLeaving}
+        onClose={() => setIsLeaving(false)}
+        testID="grupo-sair-folha"
+      >
+        {actor && canLeaveTrip(actor) ? (
+          <>
+            <Text variant="titleM" color={theme.colors.ink}>
+              {leaveTitle}
+            </Text>
+            <Text variant="notice" color={theme.colors.ink}>
+              Seus lugares sugeridos, registros e fotos continuam no grupo.
+            </Text>
+            <Button
+              label="Sair do grupo"
+              variant="dangerSolid"
+              block
+              onPress={() => {
+                setIsLeaving(false)
+                onLeave()
+              }}
+              testID="grupo-sair-confirmar"
+            />
+            <TextButton
+              label="Cancelar"
+              block
+              onPress={() => setIsLeaving(false)}
+              testID="grupo-sair-cancelar"
+            />
+          </>
+        ) : (
+          <>
+            <Text variant="titleM" color={theme.colors.ink}>
+              Passe a organização antes de sair
+            </Text>
+            <Notice
+              testID="grupo-sair-bloqueado"
+              tone="warning"
+              message="Você é o organizador e só sai depois de passar essa função a outra pessoa. Abra as opções de alguém do grupo e escolha Passar a organização."
+            />
+            <Button
+              label="Entendi"
+              variant="secondary"
+              block
+              onPress={() => setIsLeaving(false)}
+              testID="grupo-sair-entendi"
+            />
+          </>
+        )}
       </ActionSheet>
     </ScrollView>
   )

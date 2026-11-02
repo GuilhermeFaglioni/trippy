@@ -88,6 +88,12 @@ export interface SetMemberRoleOperation extends OperationMetadata {
   role: 'coorganizer' | 'member'
 }
 
+/** Passa o papel de organizador para `userId`; quem envia vira coorganizador. */
+export interface TransferOrganizerOperation extends OperationMetadata {
+  type: 'member.transfer_organizer'
+  userId: UUID
+}
+
 export interface EndTripOperation extends OperationMetadata {
   type: 'trip.end'
 }
@@ -122,6 +128,7 @@ export type SyncOperation =
   | ArrangeItineraryOperation
   | RemoveMemberOperation
   | SetMemberRoleOperation
+  | TransferOrganizerOperation
   | EndTripOperation
   | OpenTripOperation
   | LinkGooglePlaceOperation

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   canEditItinerary,
+  canLeaveTrip,
   canRemoveMember,
   canSetMemberRole,
+  canTransferOrganizer,
   nextOrganizer,
   type Member,
 } from './roles.ts'
@@ -42,6 +44,17 @@ describe('canRemoveMember', () => {
   })
 })
 
+describe('canLeaveTrip', () => {
+  it('bloqueia o organizador até ele transferir o papel', () => {
+    expect(canLeaveTrip({ userId: 'organizer', role: 'organizer' })).toBe(false)
+  })
+
+  it('permite coorganizador e membro comum sair', () => {
+    expect(canLeaveTrip({ userId: 'coorganizer', role: 'coorganizer' })).toBe(true)
+    expect(canLeaveTrip({ userId: 'member', role: 'member' })).toBe(true)
+  })
+})
+
 describe('canSetMemberRole', () => {
   const organizer: Member = { userId: 'organizer', role: 'organizer' }
   const anotherOrganizer: Member = { userId: 'another-organizer', role: 'organizer' }
@@ -55,6 +68,20 @@ describe('canSetMemberRole', () => {
     expect(canSetMemberRole(organizer, anotherOrganizer)).toBe(false)
     expect(canSetMemberRole(coorganizer, member)).toBe(false)
     expect(canSetMemberRole(member, coorganizer)).toBe(false)
+  })
+})
+
+describe('canTransferOrganizer', () => {
+  const organizer: Member = { userId: 'organizer', role: 'organizer' }
+  const coorganizer: Member = { userId: 'coorganizer', role: 'coorganizer' }
+  const member: Member = { userId: 'member', role: 'member' }
+
+  it('só organizador passa o papel para outra pessoa que não seja organizador', () => {
+    expect(canTransferOrganizer(organizer, coorganizer)).toBe(true)
+    expect(canTransferOrganizer(organizer, member)).toBe(true)
+    expect(canTransferOrganizer(organizer, organizer)).toBe(false)
+    expect(canTransferOrganizer(coorganizer, member)).toBe(false)
+    expect(canTransferOrganizer(member, coorganizer)).toBe(false)
   })
 })
 

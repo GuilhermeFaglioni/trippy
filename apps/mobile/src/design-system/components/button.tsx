@@ -11,9 +11,17 @@ import { Text } from './text'
 /** `inverse`: botão claro (`on-forest`, texto escuro) sobre o card de destaque nos dois temas. */
 /** `outlineInverse`: contorno claro sobre fundo forest (login). */
 /** `danger`: secundário destrutivo, borda e texto em `danger` (Remover do grupo). */
+/** `dangerSolid`: confirmação destrutiva cheia (Sair do grupo na folha de confirmação). */
 /** `forest`: ação principal sobre fundo branco em tela cheia (cartão para mostrar). */
 export type ButtonVariant =
-  'primary' | 'secondary' | 'fab' | 'inverse' | 'outlineInverse' | 'forest' | 'danger'
+  | 'primary'
+  | 'secondary'
+  | 'fab'
+  | 'inverse'
+  | 'outlineInverse'
+  | 'forest'
+  | 'danger'
+  | 'dangerSolid'
 
 export type ButtonProps = {
   label: string
@@ -116,15 +124,19 @@ export function Button({
                 ? touching
                   ? withAlpha(colors.onForest, 0.12)
                   : 'transparent'
-                : variant === 'forest'
+                : variant === 'dangerSolid'
                   ? touching
-                    ? derivePressedColor(colors.forest)
-                    : colors.forest
-                  : variant === 'inverse'
+                    ? derivePressedColor(colors.danger)
+                    : colors.danger
+                  : variant === 'forest'
                     ? touching
-                      ? derivePressedColor(colors.onForest)
-                      : colors.onForest
-                    : terracotta
+                      ? derivePressedColor(colors.forest)
+                      : colors.forest
+                    : variant === 'inverse'
+                      ? touching
+                        ? derivePressedColor(colors.onForest)
+                        : colors.onForest
+                      : terracotta
           const bordered =
             (variant === 'secondary' || variant === 'outlineInverse' || variant === 'danger') &&
             !disabled

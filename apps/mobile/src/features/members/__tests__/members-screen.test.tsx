@@ -54,6 +54,7 @@ function createClient(members: LiveMember[] = allMembers) {
     listMembers: jest.fn().mockResolvedValue(members),
     removeMember: jest.fn().mockResolvedValue(undefined),
     setMemberRole: jest.fn().mockResolvedValue(undefined),
+    transferOrganizer: jest.fn().mockResolvedValue(undefined),
     listRemovedTrips: jest.fn().mockResolvedValue([]),
     countNotSent: jest.fn().mockResolvedValue(0),
     syncNow: jest.fn().mockResolvedValue(undefined),
@@ -191,5 +192,32 @@ describe('tela Grupo', () => {
     expect(await screen.findByTestId('grupo-somente-leitura')).toBeOnTheScreen()
     expect(screen.queryByTestId('grupo-membro-member-2-opcoes')).toBeNull()
     expect(screen.queryByTestId('grupo-convite')).toBeNull()
+  })
+
+  it('organizador não sai: a folha explica o bloqueio e ele passa a organização', async () => {
+    const client = createClient()
+    const screen = await renderScreen(client)
+
+    await fireEvent.press(await screen.findByTestId('grupo-sair'))
+    expect(await screen.findByTestId('grupo-sair-bloqueado')).toBeOnTheScreen()
+    expect(screen.queryByTestId('grupo-sair-confirmar')).toBeNull()
+    await fireEvent.press(screen.getByTestId('grupo-sair-entendi'))
+
+    await fireEvent.press(screen.getByTestId('grupo-membro-coorganizer-1-opcoes'))
+    await fireEvent.press(screen.getByTestId('grupo-membro-coorganizer-1-organizador'))
+    await waitFor(() =>
+      expect(client.transferOrganizer).toHaveBeenCalledWith('trip-1', 'coorganizer-1'),
+    )
+    expect(client.removeMember).not.toHaveBeenCalled()
+  })
+
+  it('membro comum confirma na folha e sai do grupo', async () => {
+    currentUserId = 'member-1'
+    const client = createClient()
+    const screen = await renderScreen(client)
+
+    await fireEvent.press(await screen.findByTestId('grupo-sair'))
+    await fireEvent.press(await screen.findByTestId('grupo-sair-confirmar'))
+    await waitFor(() => expect(client.removeMember).toHaveBeenCalledWith('trip-1', 'member-1'))
   })
 })

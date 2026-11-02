@@ -14,6 +14,16 @@ export function canRemoveMember(actor: Member, target: Member): boolean {
   return actor.role === 'coorganizer' && target.role === 'member'
 }
 
+/** Qualquer um sai da viagem, exceto o organizador, que precisa transferir o papel antes. */
+export function canLeaveTrip(actor: Member): boolean {
+  return actor.role !== 'organizer'
+}
+
+/** Só o organizador passa o papel, para outra pessoa que ainda não seja organizador. */
+export function canTransferOrganizer(actor: Member, target: Member): boolean {
+  return actor.role === 'organizer' && actor.userId !== target.userId && target.role !== 'organizer'
+}
+
 /** Só organizador muda papel, sem alterar a si mesmo nem outro organizador. */
 export function canSetMemberRole(actor: Member, target: Member): boolean {
   return actor.role === 'organizer' && actor.userId !== target.userId && target.role !== 'organizer'

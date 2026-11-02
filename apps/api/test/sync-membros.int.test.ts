@@ -319,3 +319,118 @@ it('rejeita alvo removido em operações de papel e remoção', async () => {
     ],
   })
 })
+
+it('membro sai da viagem sozinho: perde o acesso e os outros veem a saída', async () => {
+  const tripId = await createTrip()
+  await addMember(tripId, memberId, 'member')
+
+  const leave = {
+    type: 'member.remove' as const,
+    opId: randomUUID(),
+    tripId,
+    userId: memberId,
+  }
+  const left = await post('/sync/push', { operations: [leave] }, 'member-token')
+  expect(await left.json()).toEqual({ results: [{ opId: leave.opId, status: 'applied' }] })
+
+  const ownPull = await get(`/sync/pull?trip=${tripId}&cursor=0&limit=100`, 'member-token')
+  expect(ownPull.status).toBe(403)
+  expect(await ownPull.json()).toMatchObject({ error: 'not_member' })
+
+  const organizerPull = await get(`/sync/pull?trip=${tripId}&cursor=0&limit=100`)
+  const page = (await organizerPull.json()) as {
+    members: Array<{ userId: string; deletedAt: string | null }>
+  }
+  expect(page.members.find((member) => member.userId === memberId)?.deletedAt).not.toBeNull()
+})
+
+it('coorganizador sai da viagem sozinho', async () => {
+  const tripId = await createTrip()
+  await addMember(tripId, coorganizerId, 'coorganizer')
+
+  const leave = {
+    type: 'member.remove' as const,
+    opId: randomUUID(),
+    tripId,
+    userId: coorganizerId,
+  }
+  const left = await post('/sync/push', { operations: [leave] }, 'coorganizer-token')
+  expect(await left.json()).toEqual({ results: [{ opId: leave.opId, status: 'applied' }] })
+
+  const ownPull = await get(`/sync/pull?trip=${tripId}&cursor=0&limit=100`, 'coorganizer-token')
+  expect(ownPull.status).toBe(403)
+})
+
+it('organizador não sai da viagem sem transferir o papel', async () => {
+  const tripId = await createTrip()
+  await addMember(tripId, coorganizerId, 'coorganizer')
+
+  const leave = {
+    type: 'member.remove' as const,
+    opId: randomUUID(),
+    tripId,
+    userId: organizerId,
+  }
+  const rejected = await post('/sync/push', { operations: [leave] })
+  expect(await rejected.json()).toEqual({
+    results: [{ opId: leave.opId, status: 'rejected', reason: 'forbidden' }],
+  })
+
+  const organizer = await pool.query<{ left_at: Date | null }>(
+    'SELECT left_at FROM trip_members WHERE trip_id = $1 AND user_id = $2',
+    [tripId, organizerId],
+  )
+  expect(organizer.rows[0]!.left_at).toBeNull()
+})
+
+it('organizador transfere o papel e só então pode sair; quem não é organizador não transfere', async () => {
+  const tripId = await createTrip()
+  await addMember(tripId, coorganizerId, 'coorganizer')
+  await addMember(tripId, memberId, 'member')
+
+  const forbiddenTransfers = await post(
+    '/sync/push',
+    {
+      operations: [
+        {
+          type: 'member.transfer_organizer',
+          opId: randomUUID(),
+          tripId,
+          userId: memberId,
+        },
+      ],
+    },
+    'coorganizer-token',
+  )
+  expect(await forbiddenTransfers.json()).toMatchObject({
+    results: [{ status: 'rejected', reason: 'forbidden' }],
+  })
+
+  const transfer = {
+    type: 'member.transfer_organizer' as const,
+    opId: randomUUID(),
+    tripId,
+    userId: coorganizerId,
+  }
+  const transferred = await post('/sync/push', { operations: [transfer] })
+  expect(await transferred.json()).toEqual({
+    results: [{ opId: transfer.opId, status: 'applied' }],
+  })
+
+  const roles = await pool.query<{ user_id: string; role: string }>(
+    'SELECT user_id, role FROM trip_members WHERE trip_id = $1 AND user_id = ANY($2)',
+    [tripId, [organizerId, coorganizerId]],
+  )
+  const roleOf = (userId: string) => roles.rows.find((row) => row.user_id === userId)?.role
+  expect(roleOf(coorganizerId)).toBe('organizer')
+  expect(roleOf(organizerId)).toBe('coorganizer')
+
+  const leave = {
+    type: 'member.remove' as const,
+    opId: randomUUID(),
+    tripId,
+    userId: organizerId,
+  }
+  const left = await post('/sync/push', { operations: [leave] })
+  expect(await left.json()).toEqual({ results: [{ opId: leave.opId, status: 'applied' }] })
+})
