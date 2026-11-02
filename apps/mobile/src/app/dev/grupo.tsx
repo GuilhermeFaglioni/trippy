@@ -28,7 +28,11 @@ const members: LiveMember[] = [
 /** Pré-visualização só de desenvolvimento das telas 22 e 28: `/dev/grupo?tela=grupo|aviso&eu=me|pedro`. */
 export default function GroupPreviewRoute() {
   const theme = useTheme()
-  const { tela, eu = 'me', sair } = useLocalSearchParams<{
+  const {
+    tela,
+    eu = 'me',
+    sair,
+  } = useLocalSearchParams<{
     tela?: string
     eu?: string
     sair?: string
