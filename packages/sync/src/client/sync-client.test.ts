@@ -634,6 +634,32 @@ class FakeSyncTransport {
       return { opId: operation.opId, status: 'applied' }
     }
 
+    if (operation.type === 'member.transfer_organizer') {
+      const target = this.members.get(operation.userId)
+      if (target && target.deletedAt === null) {
+        this.sequence += 1n
+        for (const member of this.members.values()) {
+          if (
+            member.role === 'organizer' &&
+            member.userId !== target.userId &&
+            member.deletedAt === null
+          ) {
+            this.members.set(member.userId, {
+              ...member,
+              role: 'coorganizer',
+              seq: String(this.sequence),
+            })
+          }
+        }
+        this.members.set(target.userId, {
+          ...target,
+          role: 'organizer',
+          seq: String(this.sequence),
+        })
+      }
+      return { opId: operation.opId, status: 'applied' }
+    }
+
     if (operation.type === 'member.set_role') {
       const member = this.members.get(operation.userId)
       if (member && member.deletedAt === null) {
@@ -937,6 +963,28 @@ describe('SyncClient', () => {
     expect(canonicalTripState(await readLocalState(database, tripId))).toEqual(
       canonicalTripState(transport.state()),
     )
+  })
+
+  it('projeta a passagem de organizador e envia a operação ao servidor', async () => {
+    const database = createDatabase()
+    const transport = new FakeSyncTransport()
+    transport.seedMember({ ...createMember(userA, '1'), role: 'organizer' })
+    transport.seedMember(createMember(userB, '2'))
+    const client = await createClient(database, transport)
+    await client.syncNow()
+
+    await client.transferOrganizer(tripId, userB)
+    const expected = [
+      expect.objectContaining({ userId: userA, role: 'coorganizer' }),
+      expect.objectContaining({ userId: userB, role: 'organizer' }),
+    ]
+    expect(await client.listMembers(tripId)).toEqual(expect.arrayContaining(expected))
+
+    await client.syncNow()
+    expect(transport.pushes.flat()).toContainEqual(
+      expect.objectContaining({ type: 'member.transfer_organizer', userId: userB }),
+    )
+    expect(await client.listMembers(tripId)).toEqual(expect.arrayContaining(expected))
   })
 
   it('projeta papel e remoção de membro e reaplica as pendências após pull', async () => {

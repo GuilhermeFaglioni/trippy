@@ -394,6 +394,19 @@ export function validateSyncOperation(
     }
   }
 
+  if (value.type === 'member.transfer_organizer') {
+    if (!isUuid(value.userId)) return failure('userId', 'Informe um UUID válido.')
+    return {
+      success: true,
+      value: {
+        type: 'member.transfer_organizer',
+        opId: value.opId,
+        tripId: value.tripId,
+        userId: value.userId,
+      },
+    }
+  }
+
   if (value.type === 'trip.end') {
     return {
       success: true,

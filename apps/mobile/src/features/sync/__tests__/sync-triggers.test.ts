@@ -22,6 +22,7 @@ function createClient(): jest.Mocked<SyncClient> {
     reapplyItineraryDraft: jest.fn().mockResolvedValue(undefined),
     listMembers: jest.fn().mockResolvedValue([]),
     removeMember: jest.fn().mockResolvedValue(undefined),
+    transferOrganizer: jest.fn().mockResolvedValue(undefined),
     setMemberRole: jest.fn().mockResolvedValue(undefined),
     endTrip: jest.fn().mockResolvedValue(undefined),
     openTrip: jest.fn().mockResolvedValue(undefined),

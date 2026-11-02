@@ -108,6 +108,8 @@ export interface SyncClient {
   listMembers(tripId: UUID): Promise<LiveMember[]>
   /** Enfileira a remoção de um membro da viagem. */
   removeMember(tripId: UUID, userId: UUID): Promise<void>
+  /** Passa o papel de organizador para outra pessoa; quem envia vira coorganizador. */
+  transferOrganizer(tripId: UUID, userId: UUID): Promise<void>
   /** Enfileira a troca do papel para coorganizador ou membro. */
   setMemberRole(tripId: UUID, userId: UUID, role: 'coorganizer' | 'member'): Promise<void>
   endTrip(tripId: UUID): Promise<void>

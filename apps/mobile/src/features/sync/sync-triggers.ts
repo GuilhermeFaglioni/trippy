@@ -103,6 +103,8 @@ export function withWriteSyncTriggers(
     reapplyItineraryDraft: (opId) => afterWrite(() => client.reapplyItineraryDraft(opId)),
     listMembers: (tripId) => client.listMembers(tripId),
     removeMember: (tripId, userId) => afterWrite(() => client.removeMember(tripId, userId)),
+    transferOrganizer: (tripId, userId) =>
+      afterWrite(() => client.transferOrganizer(tripId, userId)),
     setMemberRole: (tripId, userId, role) =>
       afterWrite(() => client.setMemberRole(tripId, userId, role)),
     endTrip: (tripId) => afterWrite(() => client.endTrip(tripId)),

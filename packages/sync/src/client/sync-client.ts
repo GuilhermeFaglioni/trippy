@@ -468,6 +468,15 @@ class LocalSyncClient implements SyncClient {
     await this.writeOperation({ type: 'member.remove', opId: this.idGenerator(), tripId, userId })
   }
 
+  async transferOrganizer(tripId: UUID, userId: UUID): Promise<void> {
+    await this.writeOperation({
+      type: 'member.transfer_organizer',
+      opId: this.idGenerator(),
+      tripId,
+      userId,
+    })
+  }
+
   async setMemberRole(tripId: UUID, userId: UUID, role: 'coorganizer' | 'member'): Promise<void> {
     await this.writeOperation({
       type: 'member.set_role',
@@ -1184,6 +1193,16 @@ class LocalSyncClient implements SyncClient {
         `UPDATE members SET deleted_at = ?, seq = '0'
          WHERE trip_id = ? AND user_id = ? AND deleted_at IS NULL`,
         [createdAt, operation.tripId, operation.userId],
+      )
+      return
+    }
+
+    if (operation.type === 'member.transfer_organizer') {
+      await transaction.run(
+        `UPDATE members SET role = CASE WHEN user_id = ? THEN 'coorganizer' ELSE 'organizer' END,
+           seq = '0'
+         WHERE trip_id = ? AND user_id IN (?, ?) AND deleted_at IS NULL`,
+        [this.userId, operation.tripId, this.userId, operation.userId],
       )
       return
     }
