@@ -572,6 +572,7 @@ describe('canonicalTripState', () => {
     role: 'member',
     joinedAt: '2026-10-20T12:00:00.000Z',
     openedAt: null,
+    name: 'Ana Lima',
     seq: '3',
     deletedAt,
   })

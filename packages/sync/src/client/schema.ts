@@ -140,6 +140,10 @@ const migrations: readonly Migration[] = [
       'CREATE INDEX reviews_trip_id_idx ON reviews (trip_id)',
     ],
   },
+  {
+    version: 8,
+    statements: ['ALTER TABLE members ADD COLUMN name TEXT'],
+  },
 ]
 
 export async function migrateSyncDatabase(

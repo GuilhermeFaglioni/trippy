@@ -218,6 +218,8 @@ export interface SyncMember {
   joinedAt: string
   /** Primeira abertura da viagem por este membro; null enquanto não abriu. */
   openedAt: string | null
+  /** Nome de exibição; fallback já resolvido na API (nome cadastrado, senão derivado do e-mail). */
+  name: string | null
   seq: SyncSequence
   deletedAt: string | null
 }

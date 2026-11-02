@@ -57,7 +57,7 @@ function detail(overrides: Partial<PlaceDetail> = {}): PlaceDetail {
 }
 
 function member(userId: string, role: LiveMember['role']): LiveMember {
-  return { userId, role, joinedAt: '2026-10-20T12:00:00.000Z', openedAt: null }
+  return { userId, role, joinedAt: '2026-10-20T12:00:00.000Z', openedAt: null, name: null }
 }
 
 function createClient(current: PlaceDetail, members: LiveMember[]) {

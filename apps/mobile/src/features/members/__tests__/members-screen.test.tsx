@@ -18,14 +18,27 @@ jest
   )
 
 const allMembers: LiveMember[] = [
-  { userId: currentUserId, role: 'organizer', joinedAt: '2026-10-20T10:00:00Z', openedAt: null },
+  {
+    userId: currentUserId,
+    role: 'organizer',
+    joinedAt: '2026-10-20T10:00:00Z',
+    openedAt: null,
+    name: null,
+  },
   {
     userId: 'coorganizer-1',
     role: 'coorganizer',
     joinedAt: '2026-10-20T10:01:00Z',
     openedAt: null,
+    name: null,
   },
-  { userId: 'member-1', role: 'member', joinedAt: '2026-10-20T10:02:00Z', openedAt: null },
+  {
+    userId: 'member-1',
+    role: 'member',
+    joinedAt: '2026-10-20T10:02:00Z',
+    openedAt: null,
+    name: null,
+  },
 ]
 
 function createClient(members: LiveMember[] = allMembers) {
@@ -77,6 +90,21 @@ describe('tela Grupo', () => {
     currentUserId = 'organizer-1'
   })
 
+  it('mostra o nome do sync e avatares com duas iniciais', async () => {
+    const client = createClient([
+      { ...allMembers[0], name: 'Guilherme Faglioni' },
+      { ...allMembers[1], name: 'Ana Nogueira' },
+      { ...allMembers[2], name: null },
+    ])
+    const screen = await renderScreen(client)
+
+    expect(await screen.findByText('Você')).toBeOnTheScreen()
+    expect(screen.getByText('Ana')).toBeOnTheScreen()
+    expect(screen.getByText('GF')).toBeOnTheScreen()
+    expect(screen.getByText('AN')).toBeOnTheScreen()
+    expect(screen.getByText(/^Participante /u)).toBeOnTheScreen()
+  })
+
   it('organizador altera papéis e remove membros permitidos', async () => {
     const client = createClient()
     const screen = await renderScreen(client)
@@ -113,14 +141,22 @@ describe('tela Grupo', () => {
         role: 'coorganizer',
         joinedAt: '2026-10-20T10:00:00Z',
         openedAt: null,
+        name: null,
       },
       {
         userId: 'coorganizer-2',
         role: 'coorganizer',
         joinedAt: '2026-10-20T10:01:00Z',
         openedAt: null,
+        name: null,
       },
-      { userId: 'member-1', role: 'member', joinedAt: '2026-10-20T10:02:00Z', openedAt: null },
+      {
+        userId: 'member-1',
+        role: 'member',
+        joinedAt: '2026-10-20T10:02:00Z',
+        openedAt: null,
+        name: null,
+      },
     ])
     const screen = await renderScreen(client)
 
@@ -135,8 +171,20 @@ describe('tela Grupo', () => {
 
   it('membro comum só consulta nomes e papéis', async () => {
     const client = createClient([
-      { userId: currentUserId, role: 'member', joinedAt: '2026-10-20T10:00:00Z', openedAt: null },
-      { userId: 'member-2', role: 'member', joinedAt: '2026-10-20T10:01:00Z', openedAt: null },
+      {
+        userId: currentUserId,
+        role: 'member',
+        joinedAt: '2026-10-20T10:00:00Z',
+        openedAt: null,
+        name: null,
+      },
+      {
+        userId: 'member-2',
+        role: 'member',
+        joinedAt: '2026-10-20T10:01:00Z',
+        openedAt: null,
+        name: null,
+      },
     ])
     const screen = await renderScreen(client)
 

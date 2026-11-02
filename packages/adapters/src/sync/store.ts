@@ -805,11 +805,12 @@ async function listPageRows<
   snapshotSeq: string,
   limit: number,
   bootstrap: boolean,
+  joins = '',
 ): Promise<T[]> {
-  const liveFilter = bootstrap ? `AND ${liveColumn} IS NULL` : ''
+  const liveFilter = bootstrap ? `AND ${table}.${liveColumn} IS NULL` : ''
   const result = await client.query<T>(
-    `SELECT ${columns} FROM ${table}
-     WHERE trip_id = $1 AND seq > $2 AND seq <= $3 ${liveFilter}
+    `SELECT ${columns} FROM ${table} ${joins}
+     WHERE ${table}.trip_id = $1 AND ${table}.seq > $2 AND ${table}.seq <= $3 ${liveFilter}
      ORDER BY ${table}.seq
      LIMIT $4`,
     [tripId, cursor, snapshotSeq, limit],
@@ -998,14 +999,20 @@ export class PostgresSyncStore implements SyncStore {
           listPageRows<PullMemberRow>(
             client,
             'trip_members',
-            `trip_id AS "tripId", user_id AS "userId", role, joined_at AS "joinedAt",
-             first_opened_at AS "openedAt", seq::text AS seq, left_at AS "deletedAt"`,
+            `trip_members.trip_id AS "tripId", trip_members.user_id AS "userId",
+             trip_members.role, trip_members.joined_at AS "joinedAt",
+             trip_members.first_opened_at AS "openedAt",
+             COALESCE(NULLIF(btrim(users.name), ''),
+                      NULLIF(initcap(regexp_replace(split_part(users.email, '@', 1), '[._-]+', ' ', 'g')), ''))
+               AS name,
+             trip_members.seq::text AS seq, trip_members.left_at AS "deletedAt"`,
             'left_at',
             query.tripId,
             cursor,
             snapshotSeq,
             selectedLimit,
             bootstrap,
+            'JOIN users ON users.id = trip_members.user_id',
           ),
         ])
         const records: PullRecord[] = [

@@ -22,6 +22,7 @@ const members: LiveMember[] = [
   role: role as LiveMember['role'],
   joinedAt: '2026-10-20T10:00:00Z',
   openedAt: opened ? '2026-10-21T10:00:00Z' : null,
+  name: null,
 }))
 
 /** Pré-visualização só de desenvolvimento das telas 22 e 28: `/dev/grupo?tela=grupo|aviso`. */
