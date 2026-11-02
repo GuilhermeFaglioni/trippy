@@ -20,6 +20,7 @@ import {
   type TripCoverTone,
 } from '../../design-system'
 import { useSession } from '../auth/session-provider'
+import { classifyError, describeSyncStatus } from '../errors/friendly-error'
 import { AcceptInviteForm } from '../invites/accept-invite-form'
 import { useSync } from '../sync/sync-provider'
 import { formatDateRange, formatMonthYear, formatTripDay } from './trip-format'
@@ -112,10 +113,10 @@ export function MyTripsScreen() {
   const router = useRouter()
   const client = useTripsClient()
   const { session } = useSession()
-  const { client: syncClient, rememberTripIds, removedTrips } = useSync()
+  const { client: syncClient, status: syncStatus, rememberTripIds, removedTrips } = useSync()
   const [trips, setTrips] = useState<TripSummary[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{ message: string; offline: boolean } | null>(null)
   const [showInvite, setShowInvite] = useState(false)
 
   const loadTrips = useCallback(async () => {
@@ -131,7 +132,10 @@ export function MyTripsScreen() {
       setTrips(availableTrips)
       if (syncClient !== null) void syncClient.syncNow().catch(() => undefined)
     } catch (loadError) {
-      setError(getTripsErrorMessage(loadError))
+      setError({
+        message: getTripsErrorMessage(loadError),
+        offline: classifyError(loadError) === 'offline',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -222,8 +226,13 @@ export function MyTripsScreen() {
           <View style={{ gap: theme.spacing.space4 }}>
             <Notice
               testID="my-trips-error"
-              tone="change"
-              segments={[{ strong: 'Não foi possível carregar suas viagens.' }, ' ', error]}
+              tone={error.offline ? 'offline' : 'change'}
+              segments={[
+                { strong: 'Não foi possível carregar suas viagens.' },
+                ' ',
+                error.message,
+                ...(error.offline ? [' ', describeSyncStatus(syncStatus)] : []),
+              ]}
             />
             <Button
               label="Tentar de novo"

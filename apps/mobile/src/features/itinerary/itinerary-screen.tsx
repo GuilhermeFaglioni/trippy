@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Platform, ScrollView, View } from 'react-native'
 
@@ -311,9 +312,10 @@ export function ItineraryScreen({
         setDrafts(nextDrafts)
       } catch (loadError) {
         setError(
-          loadError instanceof Error
-            ? loadError.message
-            : 'Não foi possível carregar o roteiro salvo neste aparelho.',
+          friendlyErrorMessage(
+            loadError,
+            'Não foi possível carregar o roteiro salvo neste aparelho.',
+          ),
         )
       } finally {
         if (showLoading) setIsLoading(false)
@@ -338,11 +340,7 @@ export function ItineraryScreen({
         await client.arrangeItinerary(tripId, changedDays)
         await loadData()
       } catch (arrangeError) {
-        setError(
-          arrangeError instanceof Error
-            ? arrangeError.message
-            : 'Não foi possível alterar o roteiro.',
-        )
+        setError(friendlyErrorMessage(arrangeError, 'Não foi possível alterar o roteiro.'))
       } finally {
         setOptimistic(new Map())
         setBusy(false)
@@ -405,9 +403,7 @@ export function ItineraryScreen({
         await loadData()
       } catch (draftError) {
         setError(
-          draftError instanceof Error
-            ? draftError.message
-            : 'Não foi possível atualizar o rascunho do roteiro.',
+          friendlyErrorMessage(draftError, 'Não foi possível atualizar o rascunho do roteiro.'),
         )
       } finally {
         setBusy(false)

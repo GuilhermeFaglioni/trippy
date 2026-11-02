@@ -176,11 +176,11 @@ describe('tela Minhas viagens', () => {
   })
 
   it('exibe falha de rede e permite tentar novamente', async () => {
-    mockRequest.mockRejectedValueOnce(new Error('Falha de rede.'))
+    mockRequest.mockRejectedValueOnce(new TypeError('Network request failed'))
     mockRequest.mockResolvedValueOnce(response([]))
     const screen = await renderScreen()
 
-    expect(await screen.findByTestId('my-trips-error')).toHaveAccessibleName(/Falha de rede\./)
+    expect(await screen.findByTestId('my-trips-error')).toHaveAccessibleName(/Sem conexão\./)
     await fireEvent.press(screen.getByTestId('my-trips-retry'))
     expect(await screen.findByText('Sua primeira viagem começa aqui')).toBeOnTheScreen()
   })
@@ -223,5 +223,18 @@ describe('tela Minhas viagens', () => {
     expect(screen.queryByTestId(`trip-card-${trip.id}`)).toBeNull()
     expect(screen.getByText('Sua primeira viagem começa aqui')).toBeOnTheScreen()
     expect(mockRememberTripIds).toHaveBeenLastCalledWith([trip.id])
+  })
+
+  it('sem conexão, explica em português e nunca mostra o erro técnico', async () => {
+    mockRequest.mockRejectedValue(new TypeError('fetch failed: Could not connect to the server'))
+
+    const screen = await renderScreen()
+
+    const notice = await screen.findByTestId('my-trips-error')
+    expect(notice).toHaveTextContent(
+      /Sem conexão\. O que já está salvo neste aparelho continua aqui\./u,
+    )
+    expect(notice).toHaveTextContent(/Ainda não atualizamos neste aparelho\./u)
+    expect(notice).not.toHaveTextContent(/fetch|Could not connect/iu)
   })
 })

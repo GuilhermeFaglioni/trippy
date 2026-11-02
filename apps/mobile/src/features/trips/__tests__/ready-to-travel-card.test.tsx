@@ -180,7 +180,7 @@ describe('card Pronto para viajar', () => {
     })
 
     expect(await screen.findByTestId('pronto-viajar-erro')).toHaveTextContent(
-      'Convite indisponível.',
+      /Não deu para falar com o servidor agora/u,
     )
     expect(share).not.toHaveBeenCalled()
   })

@@ -143,6 +143,13 @@ export default function TripRoute() {
   useEffect(() => {
     if (membership !== 'active' || !tripId) return
     let active = true
+    // O nome vem primeiro do armazenamento local, para a tela não esperar a rede nem depender
+    // do parâmetro da rota (link de convite, notificação, reabertura do app).
+    void loadTripSummary(tripId).then((cached) => {
+      if (!active || cached === null) return
+      setTrip((current) => current ?? cached)
+      if (!sectionChosenRef.current) setSection(initialSection(cached.phase))
+    })
     void tripsClient
       .listTrips()
       .then((trips) => {
@@ -152,12 +159,8 @@ export default function TripRoute() {
         if (found) void saveTripSummary(found)
         if (found && !sectionChosenRef.current) setSection(initialSection(found.phase))
       })
-      .catch(async () => {
-        // Sem rede: usa o último resumo visto online (datas do Roteiro, fase, papel).
-        const cached = await loadTripSummary(tripId)
-        if (!active || cached === null) return
-        setTrip(cached)
-        if (!sectionChosenRef.current) setSection(initialSection(cached.phase))
+      .catch(() => {
+        // Sem rede: fica o último resumo local (datas do Roteiro, fase, papel).
       })
     return () => {
       active = false
@@ -323,6 +326,15 @@ export default function TripRoute() {
                   : SECTION_TITLES[section]
             }
           />
+          {/* Sem nome ainda (nem rota, nem armazenamento local): carregamento, nunca "Viagem". */}
+          {displayName ? null : (
+            <ActivityIndicator
+              testID="trip-name-loading"
+              accessibilityLabel="Carregando o nome da viagem"
+              color={theme.colors.forest}
+              style={{ alignSelf: 'flex-start' }}
+            />
+          )}
           {section === 'roteiro' && canSeeReadyToTravel && trip ? (
             <ReadyToTravelCard tripId={tripId} tripName={displayName} trip={trip} />
           ) : null}

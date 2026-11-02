@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import {
   createContext,
   useCallback,
@@ -98,9 +99,10 @@ export function SyncProvider({
       .catch((initializationError: unknown) => {
         if (!active) return
         setError(
-          initializationError instanceof Error
-            ? initializationError.message
-            : 'Não foi possível preparar a sincronização local.',
+          friendlyErrorMessage(
+            initializationError,
+            'Não foi possível preparar a sincronização local.',
+          ),
         )
       })
       .finally(() => {

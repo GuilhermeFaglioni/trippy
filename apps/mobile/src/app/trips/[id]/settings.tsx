@@ -90,7 +90,7 @@ export default function TripSettingsRoute() {
       <View style={{ gap: spacing.space4, padding: spacing.space5, paddingTop: spacing.space6 }}>
         <View style={{ gap: spacing.space1 }}>
           <Text variant="backLink" color={colors.inkMuted} testID="trip-header-phase">
-            {`${name || 'Viagem'} · ${phaseLabel}`}
+            {name ? `${name} · ${phaseLabel}` : phaseLabel}
           </Text>
           <ScreenHeader title="Ajustes da viagem" />
         </View>

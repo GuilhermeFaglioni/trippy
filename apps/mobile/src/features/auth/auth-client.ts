@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { getApiBaseUrl as getConfiguredApiBaseUrl } from '../../features/diagnostics/health-client'
 import { fetchThroughNetworkGate } from '../sync/network-gate-runtime'
 
@@ -98,8 +99,8 @@ function errorMessage(value: unknown, code: string): string {
 }
 
 export function getAuthErrorMessage(error: unknown): string {
-  if (error instanceof AuthApiError) return error.message
-  return 'Não foi possível conectar. Confira sua internet e tente novamente.'
+  if (error instanceof AuthApiError && error.status < 500) return error.message
+  return friendlyErrorMessage(error)
 }
 
 export function createAuthClient({
