@@ -33,6 +33,7 @@ export function AcceptInviteForm() {
           // A adesão foi confirmada pela API; a sincronização tenta novamente depois.
         }
       }
+      setShowTerms(false)
       router.push({
         pathname: '/trips/[id]',
         params: { id: trip.id, tripName: trip.name, role: trip.role },

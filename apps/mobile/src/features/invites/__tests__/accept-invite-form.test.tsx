@@ -74,6 +74,8 @@ describe('formulário de entrada por convite', () => {
         params: { id: trip.id, tripName: trip.name, role: trip.role },
       })
     })
+    // O aviso é um Modal: se continuasse aberto, cobriria a tela da viagem recém-aberta.
+    expect(screen.queryByTestId('accept-invite-terms')).toBeNull()
   })
 
   it('ao recusar o aviso, fecha-o e limpa o código sem chamar a API', async () => {
