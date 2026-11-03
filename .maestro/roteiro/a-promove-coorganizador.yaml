@@ -4,12 +4,15 @@ appId: app.trippy.mobile
     stopApp: false
 - runFlow:
     file: ../subflows/abrir-viagem.yaml
-- tapOn:
-    id: trip-tab-grupo
-- extendedWaitUntil:
-    visible:
-      id: grupo-membro-${B_USER_ID}-opcoes
-    timeout: 60000
+- retry:
+    maxRetries: 4
+    commands:
+      - tapOn:
+          id: trip-tab-grupo
+      - extendedWaitUntil:
+          visible:
+            id: grupo-membro-${B_USER_ID}-opcoes
+          timeout: 25000
 - tapOn:
     id: grupo-membro-${B_USER_ID}-opcoes
 - tapOn:

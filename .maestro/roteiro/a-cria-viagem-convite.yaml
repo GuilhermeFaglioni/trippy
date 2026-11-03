@@ -8,15 +8,20 @@ appId: app.trippy.mobile
     optional: true
 - extendedWaitUntil:
     visible: Go home
-    timeout: 90000
+    timeout: 15000
     optional: true
-- tapOn:
-    point: 91%,48%
-    optional: true
+- runFlow:
+    when:
+      visible: Go home
+    commands:
+      - tapOn:
+          point: 91%,48%
 - extendedWaitUntil:
     visible:
-      id: login-email-input
+      id: login-use-email
     timeout: 30000
+- tapOn:
+    id: login-use-email
 - tapOn:
     id: login-email-input
 - inputText: ${A_EMAIL}
@@ -36,31 +41,28 @@ appId: app.trippy.mobile
     id: my-trips-screen
 - tapOn:
     id: my-trips-empty-create
-- assertVisible: Nova viagem
+- assertVisible: Pra onde vocês vão?
 - evalScript: ${output.startDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
 - evalScript: ${output.endDate = new Date(Date.now() + 63 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}
 - tapOn:
     id: new-trip-name
 - inputText: ${TRIP_NAME}
-- tapOn: Destino
 - tapOn:
     id: new-trip-destination
 - inputText: Recife
-- tapOn: Data de ida
+- tapOn: Pra onde vocês vão?
 - tapOn:
     id: new-trip-start-date
 - inputText: ${output.startDate}
-- tapOn:
-    id: trippy-wordmark
+- tapOn: Pra onde vocês vão?
 - tapOn:
     id: new-trip-end-date
 - inputText: ${output.endDate}
-- tapOn:
-    id: trippy-wordmark
+- tapOn: Pra onde vocês vão?
 - tapOn:
     id: new-trip-submit
-- assertVisible: ${TRIP_NAME}, Recife
-- tapOn: ${TRIP_NAME}, Recife
+- assertVisible: '.*${TRIP_NAME}.*'
+- tapOn: '.*${TRIP_NAME}.*'
 - assertVisible:
     id: trip-detail-screen
 - retry:

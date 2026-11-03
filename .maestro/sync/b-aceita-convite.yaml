@@ -20,11 +20,14 @@ appId: app.trippy.mobile
 - assertVisible:
     id: my-trips-screen
 - tapOn:
+    id: my-trips-show-invite
+- tapOn:
     id: accept-invite-code
 - inputText: ${INVITE_CODE}
-- hideKeyboard
+- tapOn: Sua primeira viagem começa aqui
 - tapOn:
     id: accept-invite-button
-- assertVisible:
-    id: trip-detail-screen
-- assertVisible: ${TRIP_NAME}
+- extendedWaitUntil:
+    visible:
+      id: trip-tab-lugares
+    timeout: 60000

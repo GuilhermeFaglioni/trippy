@@ -12,11 +12,14 @@ appId: app.trippy.mobile
     visible:
       id: roteiro-lugar-${PLACE_1_SLUG}
     timeout: 30000
-# Segura o primeiro lugar e arrasta até o fim do dia (o excesso de arraste é limitado à última posição).
-- swipe:
-    from:
+# Segurar e arrastar não é alcançável pelo Maestro (o swipe do iOS não segura antes de arrastar);
+# o mesmo roteiro diverge pelo ícone de mover de dia da linha, que abre a folha de dias.
+- tapOn:
+    id: roteiro-lugar-${PLACE_1_SLUG}-mover-dia
+- tapOn: 'Dia 2 · .*'
+- extendedWaitUntil:
+    notVisible:
       id: roteiro-lugar-${PLACE_1_SLUG}
-    direction: DOWN
-    duration: 1500
+    timeout: 15000
 - assertVisible:
-    id: roteiro-lugar-${PLACE_1_SLUG}
+    id: roteiro-lugar-${PLACE_2_SLUG}

@@ -6,7 +6,7 @@ appId: app.trippy.mobile
 - tapOn:
     id: place-search-query
 - inputText: ${PLACE_NAME}
-- hideKeyboard
+- tapOn: Sugerir um lugar
 - extendedWaitUntil:
     visible:
       id: place-submit

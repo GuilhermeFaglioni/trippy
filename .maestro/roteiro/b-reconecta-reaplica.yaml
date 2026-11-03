@@ -32,4 +32,4 @@ appId: app.trippy.mobile
 - assertNotVisible:
     id: conflito-roteiro
 - assertVisible:
-    id: roteiro-lugar-${PLACE_3_SLUG}
+    id: roteiro-lugar-${PLACE_1_SLUG}

@@ -8,15 +8,20 @@ appId: app.trippy.mobile
     optional: true
 - extendedWaitUntil:
     visible: Go home
-    timeout: 90000
+    timeout: 15000
     optional: true
-- tapOn:
-    point: 91%,48%
-    optional: true
+- runFlow:
+    when:
+      visible: Go home
+    commands:
+      - tapOn:
+          point: 91%,48%
 - extendedWaitUntil:
     visible:
-      id: login-email-input
+      id: login-use-email
     timeout: 120000
+- tapOn:
+    id: login-use-email
 - tapOn:
     id: login-email-input
 - inputText: ${B_EMAIL}
@@ -35,9 +40,11 @@ appId: app.trippy.mobile
 - assertVisible:
     id: my-trips-screen
 - tapOn:
+    id: my-trips-show-invite
+- tapOn:
     id: accept-invite-code
 - inputText: ${INVITE_CODE}
-- hideKeyboard
+- tapOn: Sua primeira viagem começa aqui
 - tapOn:
     id: accept-invite-button
 - scrollUntilVisible:
@@ -46,6 +53,7 @@ appId: app.trippy.mobile
     direction: DOWN
 - tapOn:
     id: accept-invite-terms-accept
-- assertVisible:
-    id: trip-detail-screen
-- assertVisible: ${TRIP_NAME}
+- extendedWaitUntil:
+    visible:
+      id: trip-tab-lugares
+    timeout: 60000

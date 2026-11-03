@@ -10,5 +10,5 @@ appId: app.trippy.mobile
     id: trip-tab-roteiro
 - extendedWaitUntil:
     visible:
-      id: roteiro-lugar-${PLACE_1_SLUG}
+      id: roteiro-lugar-${PLACE_2_SLUG}
     timeout: 30000

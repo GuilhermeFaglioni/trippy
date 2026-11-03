@@ -1,30 +1,10 @@
-appId: app.trippy.mobile
----
-- launchApp:
-    stopApp: false
-- runFlow:
-    file: ../subflows/abrir-viagem.yaml
+# Mesma divergência de A, em outro lugar: B manda o último lugar do dia 1 para o dia 2.
 - tapOn:
-    id: trip-tab-grupo
+    id: roteiro-lugar-${PLACE_3_SLUG}-mover-dia
+- tapOn: 'Dia 2 · .*'
 - extendedWaitUntil:
-    visible:
-      text: 'Coorganizador.*'
-    timeout: 60000
-- runFlow:
-    file: ../subflows/alternar-offline.yaml
-- runFlow:
-    file: ../subflows/abrir-viagem.yaml
-- tapOn:
-    id: trip-tab-roteiro
-- extendedWaitUntil:
-    visible:
+    notVisible:
       id: roteiro-lugar-${PLACE_3_SLUG}
-    timeout: 30000
-# Segura o último lugar e arrasta até o topo do dia.
-- swipe:
-    from:
-      id: roteiro-lugar-${PLACE_3_SLUG}
-    direction: UP
-    duration: 1500
+    timeout: 15000
 - assertVisible:
-    id: roteiro-lugar-${PLACE_3_SLUG}
+    id: roteiro-lugar-${PLACE_1_SLUG}

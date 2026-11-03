@@ -145,6 +145,7 @@ assert_equal() {
   fi
 }
 
+# Ordem dos lugares nos dois primeiros dias, no formato "dia1#dia2" (nomes separados por "|").
 sqlite_order() {
   node --input-type=module - "$1" "$TRIP_ID" <<'NODE'
 import { DatabaseSync } from 'node:sqlite'
@@ -152,16 +153,22 @@ import { DatabaseSync } from 'node:sqlite'
 const [databasePath, tripId] = process.argv.slice(2)
 const database = new DatabaseSync(databasePath, { readOnly: true })
 try {
-  const places = database.prepare(`
-    SELECT name FROM places
-    WHERE trip_id = ? AND day_index = 0 AND deleted_at IS NULL
-    ORDER BY position, id
-  `).all(tripId)
-  console.log(places.map(({ name }) => name).join('|'))
+  const days = [0, 1].map((dayIndex) =>
+    database.prepare(`
+      SELECT name FROM places
+      WHERE trip_id = ? AND day_index = ? AND deleted_at IS NULL
+      ORDER BY position, id
+    `).all(tripId, dayIndex).map(({ name }) => name).join('|'),
+  )
+  console.log(days.join('#'))
 } finally {
   database.close()
 }
 NODE
+}
+
+pg_order() {
+  psql_value "SELECT coalesce((SELECT string_agg(name, '|' ORDER BY position) FROM places WHERE trip_id = '$TRIP_ID' AND day_index = 0 AND deleted_at IS NULL), '') || '#' || coalesce((SELECT string_agg(name, '|' ORDER BY position) FROM places WHERE trip_id = '$TRIP_ID' AND day_index = 1 AND deleted_at IS NULL), '')"
 }
 
 # Banco descartável por execução: o banco de dev compartilhado pode estar atrás (ou divergente)
@@ -274,9 +281,9 @@ run_maestro "$UDID_A" a-prepara-roteiro.yaml \
   -e "PLACE_1=$PLACE_1" -e "PLACE_1_SLUG=$PLACE_1_SLUG" \
   -e "PLACE_2=$PLACE_2" -e "PLACE_2_SLUG=$PLACE_2_SLUG" \
   -e "PLACE_3=$PLACE_3" -e "PLACE_3_SLUG=$PLACE_3_SLUG"
-assert_equal "$(sqlite_order "$DB_A")" "$PLACE_1|$PLACE_2|$PLACE_3" 'Ordem inicial no SQLite A'
-assert_equal "$(psql_value "SELECT string_agg(name, '|' ORDER BY position) FROM places WHERE trip_id = '$TRIP_ID' AND day_index = 0 AND deleted_at IS NULL")" \
-  "$PLACE_1|$PLACE_2|$PLACE_3" 'Ordem inicial no Postgres'
+assert_equal "$(sqlite_order "$DB_A")" "$PLACE_1|$PLACE_2|$PLACE_3#" 'Ordem inicial no SQLite A'
+assert_equal "$(pg_order)" \
+  "$PLACE_1|$PLACE_2|$PLACE_3#" 'Ordem inicial no Postgres'
 
 log 'B autentica e entra pelo convite.'
 run_maestro "$UDID_B" b-aceita-convite.yaml \
@@ -295,27 +302,27 @@ assert_equal "$(psql_value "SELECT role FROM trip_members WHERE trip_id = '$TRIP
 
 log 'A e B ativam Simular sem internet e reordenam o mesmo dia de formas diferentes.'
 run_maestro "$UDID_A" a-offline-reordena.yaml \
-  -e "TRIP_ID=$TRIP_ID" -e "PLACE_1_SLUG=$PLACE_1_SLUG"
+  -e "TRIP_ID=$TRIP_ID" -e "PLACE_1_SLUG=$PLACE_1_SLUG" -e "PLACE_2_SLUG=$PLACE_2_SLUG"
 run_maestro "$UDID_B" b-offline-reordena.yaml \
-  -e "TRIP_ID=$TRIP_ID" -e "B_USER_ID=$B_USER_ID" -e "PLACE_3_SLUG=$PLACE_3_SLUG"
+  -e "TRIP_ID=$TRIP_ID" -e "B_USER_ID=$B_USER_ID" -e "PLACE_1_SLUG=$PLACE_1_SLUG" -e "PLACE_3_SLUG=$PLACE_3_SLUG"
 CONTAINER_B="$(xcrun simctl get_app_container "$UDID_B" app.trippy.mobile data)"
 DB_B="$(find "$CONTAINER_B" -type f -name "trippy-$B_USER_ID.db" -print -quit)"
 if [[ -z "$DB_B" ]]; then
   printf 'Banco SQLite B não encontrado no Simulator.\n' >&2
   exit 1
 fi
-assert_equal "$(sqlite_order "$DB_A")" "$PLACE_2|$PLACE_3|$PLACE_1" 'Rascunho local offline A'
-assert_equal "$(sqlite_order "$DB_B")" "$PLACE_3|$PLACE_1|$PLACE_2" 'Rascunho local offline B'
+assert_equal "$(sqlite_order "$DB_A")" "$PLACE_2|$PLACE_3#$PLACE_1" 'Rascunho local offline A'
+assert_equal "$(sqlite_order "$DB_B")" "$PLACE_1|$PLACE_2#$PLACE_3" 'Rascunho local offline B'
 assert_equal "$(psql_value "SELECT itinerary_version FROM trips WHERE id = '$TRIP_ID'")" \
   '0' 'Versão do servidor enquanto ambos estão offline'
 
 log 'A reconecta; Postgres recebe a ordem A e avança uma versão.'
 run_maestro "$UDID_A" a-reconecta.yaml \
-  -e "TRIP_ID=$TRIP_ID" -e "PLACE_1_SLUG=$PLACE_1_SLUG"
+  -e "TRIP_ID=$TRIP_ID" -e "PLACE_2_SLUG=$PLACE_2_SLUG"
 assert_equal "$(psql_value "SELECT itinerary_version FROM trips WHERE id = '$TRIP_ID'")" \
   '1' 'Versão após sincronização A'
-assert_equal "$(psql_value "SELECT string_agg(name, '|' ORDER BY position) FROM places WHERE trip_id = '$TRIP_ID' AND day_index = 0 AND deleted_at IS NULL")" \
-  "$PLACE_2|$PLACE_3|$PLACE_1" 'Ordem vencedora A no Postgres'
+assert_equal "$(pg_order)" \
+  "$PLACE_2|$PLACE_3#$PLACE_1" 'Ordem vencedora A no Postgres'
 
 log 'B reconecta; tela compara rascunho com roteiro atual e reaplica o rascunho.'
 run_maestro "$UDID_B" b-reconecta-reaplica.yaml \
@@ -324,8 +331,8 @@ run_maestro "$UDID_B" b-reconecta-reaplica.yaml \
   -e "PLACE_3_SLUG=$PLACE_3_SLUG"
 assert_equal "$(psql_value "SELECT itinerary_version FROM trips WHERE id = '$TRIP_ID'")" \
   '2' 'Versão após reaplicação B'
-assert_equal "$(psql_value "SELECT string_agg(name, '|' ORDER BY position) FROM places WHERE trip_id = '$TRIP_ID' AND day_index = 0 AND deleted_at IS NULL")" \
-  "$PLACE_3|$PLACE_1|$PLACE_2" 'Ordem após reaplicação B'
+assert_equal "$(pg_order)" \
+  "$PLACE_1|$PLACE_2#$PLACE_3" 'Ordem após reaplicação B'
 
 log 'B volta ao modo offline e adiciona lugar pendente.'
 run_maestro "$UDID_B" b-offline-adiciona.yaml \
@@ -338,7 +345,7 @@ run_maestro "$UDID_A" a-remove-b.yaml \
 run_maestro "$UDID_B" b-reconecta-removido.yaml -e "TRIP_ID=$TRIP_ID"
 
 log 'Comparando os bancos SQLite A/B com Postgres.'
-node --input-type=module - "$DB_A" "$DB_B" "$TRIP_ID" "$PLACE_PENDENTE" "$DATABASE_NAME" "$B_USER_ID" "$PLACE_3|$PLACE_1|$PLACE_2" <<'NODE'
+node --input-type=module - "$DB_A" "$DB_B" "$TRIP_ID" "$PLACE_PENDENTE" "$DATABASE_NAME" "$B_USER_ID" "$PLACE_1|$PLACE_2" <<'NODE'
 import { DatabaseSync } from 'node:sqlite'
 import { execFileSync } from 'node:child_process'
 import { isDeepStrictEqual } from 'node:util'
@@ -473,7 +480,7 @@ const serverState = execFileSync(
 ).trim()
 const finalServer = JSON.parse(serverState)
 assert(Number(finalServer.version) === 2, `Versão final esperada 2; recebeu ${finalServer.version}.`)
-assert(finalServer.order?.length === 3, 'Postgres deveria manter os três lugares da viagem.')
+assert(finalServer.order?.length === 2, 'Postgres deveria manter dois lugares no primeiro dia.')
 assert(finalServer.order.join('|') === expectedOrder, 'Ordem final do Postgres difere do rascunho reaplicado por B.')
 assert(Number(finalServer.unsentPlaceCount) === 0, 'Postgres recebeu o lugar offline de B após sua remoção.')
 assert(Number(finalServer.activeMembers) === 1, 'Postgres deveria manter somente A como membro ativo.')
