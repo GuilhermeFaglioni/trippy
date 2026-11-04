@@ -1,27 +1,28 @@
 # Ciclo de desenvolvimento com agentes
 
-Definido pelo Guilherme em 19/out/2026. Vale para toda issue com o label `ready-for-agent`. Os agentes são iniciados pelo Orca (`orca worktree create` / `orca agent launch`; guia em `orca skills get orca-cli`).
+Definido pelo Guilherme em 19/out/2026; migrado do Claude Code + Orca para o omp em 04/nov/2026. Vale para toda issue com o label `ready-for-agent`. Os agentes vivem em `.omp/agents/` (`trippy-planner`, `trippy-backend`, `trippy-ui`, `trippy-reviewer`) e os papéis de modelo em `.omp/config.yml`; as skills (Matt Pocock) ficam em `.agents/skills/`.
 
 ## Papéis
 
-| Papel | Modelo |
+| Papel (agente omp) | Papel de modelo → modelo |
 |---|---|
-| **Orquestrador / planejador / revisor** (uma sessão por issue) | `claude-sonnet-5-5` |
-| **Implementadores de backend, sync e tarefas mecânicas** (seguindo a skill `/implement`) | `claude-haiku-5-5`, como subagentes da sessão da issue (`Agent` com `model: haiku`) |
-| **Implementador de UI** (telas e componentes) | `claude-sonnet-5-5`, a própria sessão da issue |
+| **Orquestrador e planejador** (`trippy-planner`, uma sessão por issue; o orquestrador é a sessão principal) | `orchestrator` → `claude-sonnet-5-5` (medium) |
+| **Implementador de backend, sync e tarefas mecânicas** (`trippy-backend`, skill `/implement`) | `backend` → GPT-6 Luna (Max), via assinatura Codex |
+| **Implementador de UI** (`trippy-ui`, telas e componentes) | `frontend` → `claude-sonnet-5-5` (medium) |
+| **Revisor independente e dono da esteira** (`trippy-reviewer`) | `review` → `gemini-4-argon` |
 
-Definido pelo Guilherme em 29/out/2026 para as ondas de implementação, no lugar dos modelos GPT-6 e Opus. O Sonnet planeja, divide em subtarefas, delega ao Haiku, integra e revisa; o Haiku implementa subtarefas pequenas e bem delimitadas (arquivos e critérios explícitos). Subtarefa que o Haiku não fecha em duas tentativas volta para o Sonnet fazer. Desde 30/out/2026 a UI fica com o Sonnet (veja "Fidelidade às telas").
+Definido pelo Guilherme em 04/nov/2026, no lugar do esquema Sonnet + Haiku de 29/out. Os agentes citam só o papel (`@backend` etc.); trocar de modelo é editar `modelRoles` em `.omp/config.yml`. O revisor usa um modelo de outro provedor de propósito: revisa com viés diferente do de quem implementou. O planejador divide em subtarefas, delega, integra e controla o laço de revisão; o implementador recebe subtarefas pequenas e bem delimitadas (arquivos e critérios explícitos). Subtarefa que o implementador não fecha em duas tentativas volta para o planejador. A UI fica com o Sonnet (veja "Fidelidade às telas").
 
-O **orquestrador** (a sessão do Claude Code com o Guilherme) escolhe as issues da fronteira (sem bloqueio aberto), cria uma worktree por issue e inicia o planejador nela.
+O **orquestrador** (a sessão principal do omp com o Guilherme) escolhe as issues da fronteira (sem bloqueio aberto) e dispara um `trippy-planner` por issue (`task` com `agent: trippy-planner`, em paralelo, no máximo `task.maxConcurrency` = 3).
 
 ## Fluxo de uma issue
 
-1. **Worktree.** Uma worktree do Orca por issue, a partir do `develop`, no branch `feat/<nº>-<slug>` (ou `spike/`, `chore/`). Copiar o `.env` da checkout principal (`/Users/guilhermefaglioni/orca/projects/Trippy/.env`); ele nunca entra no Git. Cada worktree usa **um banco próprio** no Postgres local (`docker exec trippy-postgres-1 createdb -U trippy trippy_w<nº>`, com o `DATABASE_URL` do `.env` da worktree apontando para ele); o banco `trippy` fica para a checkout principal. Migrations novas pegam o próximo número livre no `develop` e são renumeradas no rebase se outra entrar antes.
+1. **Workspace.** Um workspace isolado por issue, a partir do `develop`, no branch `feat/<nº>-<slug>` (ou `spike/`, `chore/`). Copiar o `.env` da checkout principal (`~/Documents/Development/trippy/.env`); ele nunca entra no Git. Cada issue usa **um banco próprio** no Postgres local (`docker exec trippy-postgres-1 createdb -U trippy trippy_w<nº>`, com o `DATABASE_URL` do `.env` do workspace apontando para ele); o banco `trippy` fica para a checkout principal. Migrations novas pegam o próximo número livre no `develop` e são renumeradas no rebase se outra entrar antes.
 2. **Plano.** O planejador lê a issue (`gh issue view <nº> --comments`), as specs citadas e os ADRs, e publica o plano como comentário na issue:
    - subtarefas, cada uma com os arquivos que toca e os critérios de aceite que cobre;
    - quais rodam em paralelo (só subtarefas que **não tocam os mesmos arquivos**) e quais dependem de outras.
 3. **Implementação.** O planejador inicia um implementador por subtarefa:
-   - em paralelo, cada um numa **worktree filha** criada a partir do branch da issue (`--parent-worktree active --base-branch <branch da issue>`); o planejador integra os commits no branch da issue;
+   - em paralelo, cada um numa **cópia isolada** (`isolated: true` na `task`) do branch da issue; o planejador integra os commits no branch da issue;
    - em sequência, no próprio branch da issue.
    - O implementador segue `/implement`: TDD nas fronteiras combinadas, typecheck e testes do arquivo com frequência, a suíte completa no fim (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration` quando houver banco), `/code-review` e commit.
 4. **Revisão.** Com a implementação integrada, o planejador inicia o revisor. Ele confere o diff contra **a issue (critérios de aceite / DoD), as specs e os ADRs**, roda a suíte e publica o veredito como comentário na issue:

@@ -1,0 +1,15 @@
+# Configuração do omp para o Trippy. Papéis de modelo usados por .omp/agents/*.md.
+# Trocar de modelo é mudar só estas linhas; os agentes referenciam os papéis (@nome).
+modelRoles:
+  orchestrator: anthropic/claude-sonnet-5-5:medium
+  frontend: anthropic/claude-sonnet-5-5:medium
+  review: google-antigravity/gemini-4-argon:high
+  # PENDENTE: trocar pelo GPT-6 Luna (Max) depois do login da assinatura Codex
+  # (/login no omp; confira o id com `omp models`). Enquanto isso usa o Sonnet.
+  backend: anthropic/claude-sonnet-5-5:high
+
+task:
+  maxConcurrency: 3 # cada implementador paralelo pode usar Postgres, Metro e Simulator
+  maxRecursionDepth: 3 # sessão principal -> planejador -> implementador -> subagentes do /code-review
+  isolation:
+    enabled: true # expõe `isolated: true` nas spawns (substitui as worktrees filhas do Orca)
