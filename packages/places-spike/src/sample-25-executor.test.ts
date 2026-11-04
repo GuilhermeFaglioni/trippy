@@ -159,3 +159,153 @@ describe('runSample25 em modo real', () => {
     expect(search).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('runSample25 com destinos e toques ao Google', () => {
+  it('guarda a geocodificação do destino sem chave de API nem URL', async () => {
+    const destinationSearch = vi.fn(async (query: string) => ({
+      url: `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(query)}&apiKey=SEGREDO-123`,
+      results: [
+        {
+          name: 'Pequim',
+          formatted: 'Pequim, China',
+          country_code: 'cn',
+          city: 'Pequim',
+          lat: 39.9,
+          lon: 116.4,
+          result_type: 'city',
+          rank: { importance: 0.8, confidence: 0.9 },
+          place_id: 'geo-1',
+        },
+      ],
+    }))
+
+    const report = await runSample25({
+      mode: 'real',
+      sample: sampleOf([verifiedCase]),
+      search: async (request) => resultFor(request, [hitCandidate]),
+      budget: { maxRequests: 10 },
+      destinations: [{ query: 'Pequim, China', search: destinationSearch }],
+    })
+
+    expect(destinationSearch).toHaveBeenCalledWith('Pequim, China')
+    expect(report.destinationGeocoding).toEqual([
+      {
+        provider: 'geoapify',
+        query: 'Pequim, China',
+        results: [
+          {
+            name: 'Pequim',
+            formatted: 'Pequim, China',
+            countryCode: 'cn',
+            city: 'Pequim',
+            lat: 39.9,
+            lon: 116.4,
+            resultType: 'city',
+            rank: { importance: 0.8, confidence: 0.9 },
+            placeId: 'geo-1',
+          },
+        ],
+      },
+    ])
+    const serialized = JSON.stringify(report)
+    expect(serialized).not.toContain('SEGREDO-123')
+    expect(serialized).not.toContain('api.geoapify.com')
+  })
+
+  it('conta cada destino como uma chamada do orçamento', async () => {
+    const search = vi.fn(async (request: PlannedRequest) => resultFor(request, [hitCandidate]))
+
+    const report = await runSample25({
+      mode: 'real',
+      sample: sampleOf([verifiedCase]),
+      search,
+      budget: { maxRequests: 1 },
+      destinations: [{ query: 'Pequim, China', search: async () => ({ results: [] }) }],
+    })
+
+    expect(search).not.toHaveBeenCalled()
+    expect(report.providerCalls).toBe(1)
+    expect(report.stoppedByBudget).toBe(true)
+    expect(report.rows).toEqual([])
+  })
+
+  it('faz um toque ao Google por linha medida e guarda só o place_id', async () => {
+    const google = vi.fn(async () => ({
+      id: 'ChIJ-abc',
+      displayName: { text: 'Peninsula Hotel' },
+      location: { latitude: 39.9, longitude: 116.4 },
+      photos: [{ name: 'places/ChIJ-abc/photos/1' }],
+      formattedAddress: 'Rua X, Pequim',
+    }))
+
+    const report = await runSample25({
+      mode: 'real',
+      sample: sampleOf([verifiedCase]),
+      search: async (request) => resultFor(request, [hitCandidate]),
+      budget: { maxRequests: 10, maxGoogleTouches: 10 },
+      google,
+    })
+
+    expect(google).toHaveBeenCalledTimes(3)
+    expect(google).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Peninsula Hotel Beijing' }),
+    )
+    expect(report.googleTouchCount).toBe(3)
+    expect(report.googleTouches).toEqual([
+      { caseId: 'cn-hotel-01', language: 'pt', placeId: 'ChIJ-abc' },
+      { caseId: 'cn-hotel-01', language: 'en', placeId: 'ChIJ-abc' },
+      { caseId: 'cn-hotel-01', language: 'local', placeId: 'ChIJ-abc' },
+    ])
+    const serialized = JSON.stringify(report)
+    expect(serialized).not.toContain('displayName')
+    expect(serialized).not.toContain('Rua X')
+    expect(serialized).not.toContain('places/ChIJ-abc/photos')
+    expect(() => assertNoGoogleLeak(report)).not.toThrow()
+  })
+
+  it('para de tocar o Google ao estourar maxGoogleTouches', async () => {
+    const google = vi.fn(async () => ({ id: 'ChIJ-abc' }))
+
+    const report = await runSample25({
+      mode: 'real',
+      sample: sampleOf([verifiedCase]),
+      search: async (request) => resultFor(request, [hitCandidate]),
+      budget: { maxRequests: 10, maxGoogleTouches: 1 },
+      google,
+    })
+
+    expect(google).toHaveBeenCalledTimes(1)
+    expect(report.googleTouchCount).toBe(1)
+    expect(report.stoppedByBudget).toBe(true)
+  })
+
+  it('exige orçamento explícito para o Google', async () => {
+    await expect(
+      runSample25({
+        mode: 'real',
+        sample: sampleOf([verifiedCase]),
+        search: async (request) => resultFor(request, [hitCandidate]),
+        budget: { maxRequests: 10 },
+        google: async () => ({ id: 'ChIJ-abc' }),
+      }),
+    ).rejects.toThrow(/Google/)
+  })
+
+  it('em dry-run não toca destinos nem o Google', async () => {
+    const destinationSearch = vi.fn(async () => ({ results: [] }))
+    const google = vi.fn(async () => ({ id: 'ChIJ-abc' }))
+
+    const report = await runSample25({
+      mode: 'dry-run',
+      sample: sampleOf([verifiedCase]),
+      destinations: [{ query: 'Pequim, China', search: destinationSearch }],
+      google,
+    })
+
+    expect(destinationSearch).not.toHaveBeenCalled()
+    expect(google).not.toHaveBeenCalled()
+    expect(report.destinationGeocoding).toEqual([])
+    expect(report.googleTouchCount).toBe(0)
+    expect(report.googleTouches).toEqual([])
+  })
+})

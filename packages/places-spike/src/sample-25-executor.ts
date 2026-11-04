@@ -3,6 +3,7 @@ import {
   type BenchmarkCase,
   type BenchmarkGroup,
   type CaseEvaluation,
+  type PlaceCandidate,
   evaluateCase,
 } from './evaluation.ts'
 import type { BenchmarkSearch } from './runner.ts'
@@ -13,11 +14,27 @@ import {
   type Sample25Language,
 } from './sample-25-plan.ts'
 import type { PlannedRequest } from './plan.ts'
-import { assertNoGoogleLeak } from './sample-25-sanitize.ts'
+import {
+  assertNoGoogleLeak,
+  sanitizeGeoapifyGeocoding,
+  sanitizeGooglePlace,
+  type SanitizedGeoapifyGeocoding,
+} from './sample-25-sanitize.ts'
 import type { Sample25, Sample25Case, Sample25Segment } from './sample-25.ts'
 
 export interface Sample25Budget {
   maxRequests: number
+  maxGoogleTouches?: number
+}
+
+export interface Sample25Destination {
+  query: string
+  search: (query: string) => Promise<unknown>
+}
+
+export interface Sample25GoogleInput {
+  name: string
+  coordinates: NonNullable<PlaceCandidate['coordinates']>
 }
 
 export interface RunSample25Options {
@@ -25,6 +42,8 @@ export interface RunSample25Options {
   sample: Sample25
   search?: BenchmarkSearch
   budget?: Sample25Budget
+  destinations?: readonly Sample25Destination[]
+  google?: (input: Sample25GoogleInput) => Promise<unknown>
 }
 
 export interface Sample25Row {
@@ -46,6 +65,12 @@ export interface Sample25Metrics {
   duplicateCount: number
 }
 
+export interface Sample25GoogleTouch {
+  caseId: string
+  language: Sample25Language
+  placeId: string | null
+}
+
 export interface Sample25Report {
   mode: 'dry-run' | 'real'
   plan: Sample25DryRunPlan | null
@@ -56,6 +81,9 @@ export interface Sample25Report {
   metrics: Sample25Metrics | null
   bySegment: Partial<Record<Sample25Segment, Sample25Metrics>> | null
   rows: Sample25Row[]
+  destinationGeocoding: SanitizedGeoapifyGeocoding[]
+  googleTouchCount: number
+  googleTouches: Sample25GoogleTouch[]
 }
 
 export async function runSample25(options: RunSample25Options): Promise<Sample25Report> {
@@ -70,19 +98,32 @@ export async function runSample25(options: RunSample25Options): Promise<Sample25
       metrics: null,
       bySegment: null,
       rows: [],
+      destinationGeocoding: [],
+      googleTouchCount: 0,
+      googleTouches: [],
     }
   }
 
-  const { budget, search } = options
+  const { budget, search, google } = options
   if (!budget) throw new Error('Modo real exige orçamento explícito (budget.maxRequests).')
   if (!Number.isInteger(budget.maxRequests) || budget.maxRequests < 0) {
     throw new Error('Orçamento inválido: maxRequests deve ser inteiro não negativo.')
   }
   if (!search) throw new Error('Modo real exige função de busca (search).')
+  if (google) {
+    if (budget.maxGoogleTouches === undefined) {
+      throw new Error('Modo real com Google exige orçamento explícito (budget.maxGoogleTouches).')
+    }
+    if (!Number.isInteger(budget.maxGoogleTouches) || budget.maxGoogleTouches < 0) {
+      throw new Error('Orçamento inválido: maxGoogleTouches deve ser inteiro não negativo.')
+    }
+  }
+  const maxGoogleTouches = budget.maxGoogleTouches ?? 0
 
   let providerCalls = 0
   let estimatedCredits = 0
   let stoppedByBudget = false
+  let googleTouchCount = 0
 
   const dispatch = async (request: PlannedRequest): Promise<ProviderSearchResult | null> => {
     if (providerCalls >= budget.maxRequests) {
@@ -96,7 +137,20 @@ export async function runSample25(options: RunSample25Options): Promise<Sample25
     return result
   }
 
+  // Destinos são geocodificados antes das medições e consomem o mesmo orçamento.
+  const destinationGeocoding: SanitizedGeoapifyGeocoding[] = []
+  for (const destination of options.destinations ?? []) {
+    if (providerCalls >= budget.maxRequests) {
+      stoppedByBudget = true
+      break
+    }
+    providerCalls += 1
+    const raw = await destination.search(destination.query)
+    destinationGeocoding.push(sanitizeGeoapifyGeocoding(raw, { query: destination.query }))
+  }
+
   const rows: Sample25Row[] = []
+  const googleTouches: Sample25GoogleTouch[] = []
   const verifiedCases = options.sample.cases.filter(
     (item) => item.verification.status === 'verified',
   )
@@ -130,6 +184,24 @@ export async function runSample25(options: RunSample25Options): Promise<Sample25
         evaluation:
           chosen.status === 'error' ? null : evaluateCase(benchmarkCase, chosen.candidates),
       })
+
+      // Um toque ao Google por linha medida; o orçamento só para os toques, não as medições.
+      const candidate = chosen.candidates[0]
+      if (google && chosen.status !== 'error' && candidate?.name && candidate.coordinates) {
+        if (googleTouchCount >= maxGoogleTouches) {
+          stoppedByBudget = true
+        } else {
+          googleTouchCount += 1
+          const sanitized = sanitizeGooglePlace(
+            await google({ name: candidate.name, coordinates: candidate.coordinates }),
+          )
+          googleTouches.push({
+            caseId: sampleCase.id,
+            language,
+            placeId: sanitized?.placeId ?? null,
+          })
+        }
+      }
     }
   }
 
@@ -148,6 +220,9 @@ export async function runSample25(options: RunSample25Options): Promise<Sample25
     metrics: summarize(rows),
     bySegment,
     rows,
+    destinationGeocoding,
+    googleTouchCount,
+    googleTouches,
   }
   assertNoGoogleLeak(report)
   return report
