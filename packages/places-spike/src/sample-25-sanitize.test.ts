@@ -71,12 +71,12 @@ describe('assertNoGoogleLeak', () => {
     expect(() => assertNoGoogleLeak(report)).toThrow()
   })
 
-  it('pega chave proibida de Google fora de bloco Geoapify marcado, mas não dentro dele', () => {
+  it('pega chave proibida de Google mesmo dentro de bloco Geoapify marcado', () => {
     const geoapifyBlock = { provider: 'geoapify', results: [{ location: { lat: 1 } }] }
 
-    expect(() => assertNoGoogleLeak(geoapifyBlock)).not.toThrow()
+    expect(() => assertNoGoogleLeak(geoapifyBlock)).toThrow(/\$\.results\[0\]\.location/)
     expect(() => assertNoGoogleLeak({ provider: 'outro', results: [{ location: { lat: 1 } }] })).toThrow()
-    expect(() => assertNoGoogleLeak({ results: [geoapifyBlock], photos: [] })).toThrow(/\$\.photos/)
+    expect(() => assertNoGoogleLeak({ results: [{ provider: 'geoapify', name: 'ok' }], photos: [] })).toThrow(/\$\.photos/)
   })
 
   it('pega string proibida mesmo dentro de bloco Geoapify marcado', () => {

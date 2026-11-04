@@ -120,14 +120,14 @@ export function sanitizeGeoapifyGeocoding(
   return { provider: 'geoapify', query: options.query, results }
 }
 
-// Varre a estrutura inteira. Blocos marcados com `provider: 'geoapify'` pulam
-// só a checagem de chaves (a allowlist já os limpa); strings proibidas são
-// checadas em qualquer lugar.
+// Varre a estrutura inteira. Chaves proibidas do Google são checadas em qualquer
+// nível, inclusive dentro de blocos marcados com `provider: 'geoapify'`: a marcação
+// não é salvo-conduto. Strings proibidas também são checadas em qualquer lugar.
 export function assertNoGoogleLeak(value: unknown): void {
-  walkForGoogleLeak(value, '$', false)
+  walkForGoogleLeak(value, '$')
 }
 
-function walkForGoogleLeak(value: unknown, path: string, inGeoapifyBlock: boolean): void {
+function walkForGoogleLeak(value: unknown, path: string): void {
   if (typeof value === 'string') {
     if (GOOGLE_FORBIDDEN_STRING.test(value)) {
       throw new Error(`Vazamento do Google em ${path}: string proibida`)
@@ -135,16 +135,15 @@ function walkForGoogleLeak(value: unknown, path: string, inGeoapifyBlock: boolea
     return
   }
   if (Array.isArray(value)) {
-    value.forEach((item, index) => walkForGoogleLeak(item, `${path}[${index}]`, inGeoapifyBlock))
+    value.forEach((item, index) => walkForGoogleLeak(item, `${path}[${index}]`))
     return
   }
   if (!isRecord(value)) return
 
-  const geoapify = inGeoapifyBlock || value.provider === 'geoapify'
   for (const [key, child] of Object.entries(value)) {
-    if (!geoapify && GOOGLE_FORBIDDEN_KEYS[key] === true) {
+    if (GOOGLE_FORBIDDEN_KEYS[key] === true) {
       throw new Error(`Vazamento do Google em ${path}.${key}`)
     }
-    walkForGoogleLeak(child, `${path}.${key}`, geoapify)
+    walkForGoogleLeak(child, `${path}.${key}`)
   }
 }
