@@ -9,6 +9,17 @@ Modelos de brief para cada papel do ciclo (`../ciclo-de-desenvolvimento.md`). Um
 | `ui.md` | Implementador de UI | Planejador | `delegate_task`, `role: implementation` |
 | `revisor.md` | Revisor independente e dono da esteira | Planejador | `delegate_task`, `role: review`, **sempre novo** |
 
+## Campos por modelo
+
+Campos `{{...}}` que cada modelo precisa preencher antes de virar brief. Esta tabela sai do `grep -o '{{[A-Z_]*}}' <arquivo> | sort -u`; se um modelo ganhar ou perder campo, atualize a linha.
+
+| Modelo | Campos a preencher |
+|---|---|
+| `planejador.md` | `{{ISSUE}}` |
+| `backend.md` | `{{ARQUIVOS}}`, `{{BRANCH}}`, `{{CRITERIOS}}`, `{{ISSUE}}`, `{{SUBTAREFA}}` |
+| `ui.md` | `{{ARQUIVOS}}`, `{{BRANCH}}`, `{{CRITERIOS}}`, `{{ISSUE}}`, `{{SUBTAREFA}}`, `{{TELA_PNG}}` |
+| `revisor.md` | `{{ACHADOS_ANTERIORES}}`, `{{BRANCH}}`, `{{E_UI}}`, `{{ISSUE}}`, `{{RODADA}}` |
+
 ## Como usar
 
 1. Copie o modelo e troque os campos `{{...}}` (nº da issue, branch, arquivos, critérios).
