@@ -72,7 +72,7 @@ Essas proteções impedem respostas explicitamente fora dos filtros solicitados 
 
 ### Plano offline T5
 
-O comando `corepack pnpm --filter @trippy/places-spike benchmark:sample-25:dry-run` carrega e valida `data/amostra-25.json`, exclui os 13 casos não verificados e lista 141 consultas primárias (47 casos verificados × PT/EN/local) por segmento. A tentativa Places aparece como condicional a primária vazia ou rejeição humana; o dry-run não a despacha, faz zero chamadas e deixa métricas nulas. Isso é preparação de execução, não medição T5: não fornece top-1/top-5, ganho real da segunda tentativa, endereço local escolhido, correspondência Google, latência, erros ou créditos.
+O comando `corepack pnpm --filter @trippy/places-spike benchmark:sample-25:dry-run` executa `runSample25` em modo dry-run sobre `data/amostra-25.json`: valida a amostra, exclui os 11 casos não verificados e lista 147 consultas primárias (49 casos verificados × PT/EN/local) por segmento. A tentativa Places aparece como condicional a primária vazia ou rejeição humana; o dry-run não a despacha, faz zero chamadas e deixa métricas nulas. A execução real (`--real`) está bloqueada pela CLI até a aprovação do orçamento na #48; a CLI recusa a opção com código de saída 1 e não importa cliente de fornecedor. Isso é preparação de execução, não medição T5: não fornece top-1/top-5, ganho real da segunda tentativa, endereço local escolhido, correspondência Google, latência, erros ou créditos.
 
 ### Decisões e pendências
 
