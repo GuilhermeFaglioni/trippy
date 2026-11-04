@@ -46,12 +46,18 @@ export interface RunSample25Options {
   google?: (input: Sample25GoogleInput) => Promise<unknown>
 }
 
+export type Sample25Candidate = {
+  [K in 'name' | 'aliases' | 'addressParts' | 'coordinates' | 'placeId']?:
+    PlaceCandidate[K] | undefined
+}
+
 export interface Sample25Row {
   caseId: string
   segment: Sample25Segment
   language: Sample25Language
   status: ProviderSearchResult['status']
   evaluation: CaseEvaluation | null
+  candidates: Sample25Candidate[]
 }
 
 export interface Sample25Metrics {
@@ -166,7 +172,10 @@ export async function runSample25(options: RunSample25Options): Promise<Sample25
       if (primary === null) break outer
 
       let chosen = primary
-      if (benchmarkCase.kind === 'poi' && !evaluateCase(benchmarkCase, primary.candidates).topKHit) {
+      if (
+        benchmarkCase.kind === 'poi' &&
+        !evaluateCase(benchmarkCase, primary.candidates).topKHit
+      ) {
         const secondary = await dispatch({
           caseId: sampleCase.id,
           method: 'places',
@@ -183,6 +192,7 @@ export async function runSample25(options: RunSample25Options): Promise<Sample25
         status: chosen.status,
         evaluation:
           chosen.status === 'error' ? null : evaluateCase(benchmarkCase, chosen.candidates),
+        candidates: toRowCandidates(chosen.candidates),
       })
 
       // Um toque ao Google por linha medida; o orçamento só para os toques, não as medições.
@@ -274,4 +284,17 @@ function summarize(rows: readonly Sample25Row[]): Sample25Metrics {
 
 function round(value: number): number {
   return Math.round(value * 1_000) / 1_000
+}
+
+const MAX_ROW_CANDIDATES = 5
+
+// Allowlist explícita: só campos de lugar entram no relatório; chaves e URLs nunca passam.
+function toRowCandidates(candidates: readonly PlaceCandidate[]): Sample25Candidate[] {
+  return candidates.slice(0, MAX_ROW_CANDIDATES).map((candidate) => ({
+    name: candidate.name,
+    aliases: candidate.aliases,
+    addressParts: candidate.addressParts,
+    coordinates: candidate.coordinates,
+    placeId: candidate.placeId,
+  }))
 }

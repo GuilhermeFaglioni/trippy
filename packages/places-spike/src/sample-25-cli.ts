@@ -12,9 +12,7 @@ export function parseSample25Options(args: readonly string[]): Sample25CliOption
     // `pnpm <script> -- <args>` repassa o separador; ele não é uma opção.
     if (arg === '--') continue
     if (arg === '--real') {
-      throw new Error(
-        'Execução real (--real) está bloqueada até a aprovação do orçamento na #48.',
-      )
+      throw new Error('Execução real (--real) está bloqueada até a aprovação do orçamento na #48.')
     }
     throw new Error(`Opção desconhecida: ${arg}`)
   }

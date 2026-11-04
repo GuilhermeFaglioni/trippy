@@ -90,6 +90,7 @@ describe('runSample25 em dry-run', () => {
     expect(report.metrics).toBeNull()
     expect(report.plan).not.toBeNull()
     expect(report.plan?.primaryRequests).toHaveLength(3)
+    expect(report.rows).toEqual([])
   })
 })
 
@@ -141,6 +142,58 @@ describe('runSample25 em modo real', () => {
     expect(report.metrics?.top1HitRate).toBe(0.667)
     expect(report.metrics?.absences).toBe(1)
     expect(report.bySegment?.['china-hotel']?.rows).toBe(3)
+    expect(() => assertNoGoogleLeak(report)).not.toThrow()
+  })
+
+  it('guarda até 5 candidatos por linha, na ordem da busca, sem campos fora da allowlist', async () => {
+    const fetched = [
+      {
+        name: 'Hotel 1',
+        addressParts: ['Rua 1'],
+        coordinates: { lat: 39.9, lon: 116.4 },
+        placeId: 'geo-1',
+        apiKey: 'SEGREDO-123',
+      },
+      {
+        name: 'Hotel 2',
+        coordinates: { lat: 39.91, lon: 116.41 },
+        placeId: 'geo-2',
+        url: 'https://api.geoapify.com/v1/geocode/search?apiKey=SEGREDO-123',
+      },
+      { name: 'Hotel 3' },
+      { name: 'Hotel 4' },
+      { name: 'Hotel 5' },
+      { name: 'Hotel 6' },
+      { name: 'Hotel 7' },
+    ] as PlaceCandidate[]
+    const search = vi.fn(async (request: PlannedRequest) => resultFor(request, fetched))
+
+    const report = await runSample25({
+      mode: 'real',
+      sample: sampleOf([verifiedCase]),
+      search,
+      budget: { maxRequests: 10 },
+    })
+
+    expect(report.rows).toHaveLength(3)
+    for (const row of report.rows) {
+      expect(row.candidates.map((candidate) => candidate.name)).toEqual([
+        'Hotel 1',
+        'Hotel 2',
+        'Hotel 3',
+        'Hotel 4',
+        'Hotel 5',
+      ])
+    }
+    expect(report.rows[0]?.candidates[0]).toEqual({
+      name: 'Hotel 1',
+      addressParts: ['Rua 1'],
+      coordinates: { lat: 39.9, lon: 116.4 },
+      placeId: 'geo-1',
+    })
+    const serialized = JSON.stringify(report)
+    expect(serialized).not.toContain('SEGREDO-123')
+    expect(serialized).not.toContain('api.geoapify.com')
     expect(() => assertNoGoogleLeak(report)).not.toThrow()
   })
 

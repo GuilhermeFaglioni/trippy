@@ -75,9 +75,7 @@ const firstNonEmpty = (...values: unknown[]): string | undefined => {
 }
 
 const compact = <T extends object>(value: T): Partial<T> =>
-  Object.fromEntries(
-    Object.entries(value).filter(([, field]) => field !== undefined),
-  ) as Partial<T>
+  Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>
 
 export function sanitizeGooglePlace(raw: unknown): SanitizedGooglePlace | null {
   if (!isRecord(raw)) return null
@@ -113,10 +111,7 @@ export function sanitizeGeoapifyGeocoding(
   options: { query: string },
 ): SanitizedGeoapifyGeocoding {
   const rawResults = isRecord(raw) && Array.isArray(raw.results) ? raw.results : []
-  const results = rawResults
-    .filter(isRecord)
-    .slice(0, MAX_GEOAPIFY_RESULTS)
-    .map(toGeoapifyResult)
+  const results = rawResults.filter(isRecord).slice(0, MAX_GEOAPIFY_RESULTS).map(toGeoapifyResult)
   return { provider: 'geoapify', query: options.query, results }
 }
 

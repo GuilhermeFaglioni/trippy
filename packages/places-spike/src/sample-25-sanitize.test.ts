@@ -48,7 +48,9 @@ describe('sanitização da resposta do Google', () => {
 
 describe('assertNoGoogleLeak', () => {
   it('aceita dados sem nada do Google', () => {
-    expect(() => assertNoGoogleLeak({ placeId: 'ChIJ-fake', results: [{ name: 'Templo' }] })).not.toThrow()
+    expect(() =>
+      assertNoGoogleLeak({ placeId: 'ChIJ-fake', results: [{ name: 'Templo' }] }),
+    ).not.toThrow()
   })
 
   it('pega campo proibido aninhado no fundo da estrutura, indicando o caminho', () => {
@@ -75,12 +77,19 @@ describe('assertNoGoogleLeak', () => {
     const geoapifyBlock = { provider: 'geoapify', results: [{ location: { lat: 1 } }] }
 
     expect(() => assertNoGoogleLeak(geoapifyBlock)).toThrow(/\$\.results\[0\]\.location/)
-    expect(() => assertNoGoogleLeak({ provider: 'outro', results: [{ location: { lat: 1 } }] })).toThrow()
-    expect(() => assertNoGoogleLeak({ results: [{ provider: 'geoapify', name: 'ok' }], photos: [] })).toThrow(/\$\.photos/)
+    expect(() =>
+      assertNoGoogleLeak({ provider: 'outro', results: [{ location: { lat: 1 } }] }),
+    ).toThrow()
+    expect(() =>
+      assertNoGoogleLeak({ results: [{ provider: 'geoapify', name: 'ok' }], photos: [] }),
+    ).toThrow(/\$\.photos/)
   })
 
   it('pega string proibida mesmo dentro de bloco Geoapify marcado', () => {
-    const geoapifyBlock = { provider: 'geoapify', results: [{ name: 'AIzaFAKEKEYFAKEKEYFAKEKEYFAKEKEY' }] }
+    const geoapifyBlock = {
+      provider: 'geoapify',
+      results: [{ name: 'AIzaFAKEKEYFAKEKEYFAKEKEYFAKEKEY' }],
+    }
 
     expect(() => assertNoGoogleLeak(geoapifyBlock)).toThrow()
   })
@@ -142,7 +151,11 @@ describe('sanitização da resposta de geocoding da Geoapify', () => {
 
   it('limita a 10 resultados, mantendo a ordem original', () => {
     const many = {
-      results: Array.from({ length: 12 }, (_, index) => ({ name: `Lugar ${index}`, lat: 1, lon: 1 })),
+      results: Array.from({ length: 12 }, (_, index) => ({
+        name: `Lugar ${index}`,
+        lat: 1,
+        lon: 1,
+      })),
     }
 
     const record = sanitizeGeoapifyGeocoding(many, { query: 'lugares' })
@@ -158,9 +171,9 @@ describe('sanitização da resposta de geocoding da Geoapify', () => {
       query: 'nada',
       results: [],
     })
-    expect(sanitizeGeoapifyGeocoding({ results: 'não é lista' }, { query: 'nada' }).results).toEqual(
-      [],
-    )
+    expect(
+      sanitizeGeoapifyGeocoding({ results: 'não é lista' }, { query: 'nada' }).results,
+    ).toEqual([])
   })
 
   it('descarta coordenadas fora da faixa válida', () => {
