@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Share } from 'react-native'
 
@@ -45,9 +46,10 @@ export function MembersScreen({
         setMembers(await client.listMembers(tripId))
       } catch (loadError) {
         setError(
-          loadError instanceof Error
-            ? loadError.message
-            : 'Não foi possível carregar os membros salvos neste aparelho.',
+          friendlyErrorMessage(
+            loadError,
+            'Não foi possível carregar os membros salvos neste aparelho.',
+          ),
         )
       } finally {
         if (showLoading) setIsLoading(false)
@@ -98,7 +100,7 @@ export function MembersScreen({
         await mutation(client)
         await loadMembers()
       } catch (writeError) {
-        setError(writeError instanceof Error ? writeError.message : fallbackMessage)
+        setError(friendlyErrorMessage(writeError, fallbackMessage))
       } finally {
         setBusyUserId(null)
       }

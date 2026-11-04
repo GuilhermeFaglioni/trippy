@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useCallback, useEffect, useState } from 'react'
 
 import type { LivePlace } from '@trippy/sync'
@@ -66,9 +67,10 @@ export function TodayScreen({
       setPlaces(await client.listPlaces(tripId))
     } catch (loadError) {
       setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Não foi possível carregar os lugares de hoje neste aparelho.',
+        friendlyErrorMessage(
+          loadError,
+          'Não foi possível carregar os lugares de hoje neste aparelho.',
+        ),
       )
     }
   }, [client, tripId])
@@ -90,9 +92,7 @@ export function TodayScreen({
         await loadPlaces()
       } catch (writeError) {
         setError(
-          writeError instanceof Error
-            ? writeError.message
-            : 'Não foi possível salvar sua presença neste lugar.',
+          friendlyErrorMessage(writeError, 'Não foi possível salvar sua presença neste lugar.'),
         )
       } finally {
         setBusyPlaceId(null)
@@ -110,9 +110,7 @@ export function TodayScreen({
         await client.setFavorite(tripId, place.id, !place.favoriteByMe)
         await loadPlaces()
       } catch (writeError) {
-        setError(
-          writeError instanceof Error ? writeError.message : 'Não foi possível salvar o favorito.',
-        )
+        setError(friendlyErrorMessage(writeError, 'Não foi possível salvar o favorito.'))
       } finally {
         setBusyPlaceId(null)
       }

@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { RECAP_SHARING_TERMS_VERSION } from '@trippy/sync'
 
 import { isTripSummary, type TripSummary } from '../trips/trips-client'
@@ -23,12 +24,23 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
-function errorFrom(response: Response, payload: unknown): Error {
+class InviteApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'InviteApiError'
+  }
+}
+
+function errorFrom(response: Response, payload: unknown): InviteApiError {
   const body = isRecord(payload) ? (payload as ErrorPayload) : undefined
   if (typeof body?.message === 'string' && body.message.trim()) {
-    return new Error(body.message.trim())
+    return new InviteApiError(response.status, body.message.trim())
   }
-  return new Error(
+  return new InviteApiError(
+    response.status,
     response.status === 404
       ? 'Este convite não existe ou foi revogado.'
       : 'Não foi possível concluir o convite. Tente novamente.',
@@ -68,6 +80,5 @@ export function createInviteClient(request: InviteRequest): InviteClient {
 }
 
 export function getInviteErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) return error.message
-  return 'Não foi possível concluir o convite. Tente novamente.'
+  return friendlyErrorMessage(error, 'Não foi possível concluir o convite. Tente novamente.')
 }

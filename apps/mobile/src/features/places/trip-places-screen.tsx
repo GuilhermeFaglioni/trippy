@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView, Share, View } from 'react-native'
 import { useRouter } from 'expo-router'
@@ -131,9 +132,10 @@ export function TripPlacesScreen({
         setMembers(nextMembers)
       } catch (loadError) {
         setScreenError(
-          loadError instanceof Error
-            ? loadError.message
-            : 'Não foi possível carregar os lugares salvos neste aparelho.',
+          friendlyErrorMessage(
+            loadError,
+            'Não foi possível carregar os lugares salvos neste aparelho.',
+          ),
         )
       } finally {
         setIsLoading(false)
@@ -159,9 +161,7 @@ export function TripPlacesScreen({
         await loadPlaces()
       } catch (writeError) {
         setScreenError(
-          writeError instanceof Error
-            ? writeError.message
-            : 'Não foi possível salvar sua reação neste lugar.',
+          friendlyErrorMessage(writeError, 'Não foi possível salvar sua reação neste lugar.'),
         )
       } finally {
         setBusyPlaceId(null)
@@ -193,9 +193,7 @@ export function TripPlacesScreen({
         await loadPlaces()
       } catch (arrangeError) {
         setScreenError(
-          arrangeError instanceof Error
-            ? arrangeError.message
-            : 'Não foi possível alterar o dia do lugar.',
+          friendlyErrorMessage(arrangeError, 'Não foi possível alterar o dia do lugar.'),
         )
       } finally {
         setBusyPlaceId(null)

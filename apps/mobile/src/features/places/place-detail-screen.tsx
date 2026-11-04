@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -88,9 +89,7 @@ export function PlaceDetailScreen({
       setMembers(nextMembers)
     } catch (loadError) {
       setScreenError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Não foi possível carregar este lugar neste aparelho.',
+        friendlyErrorMessage(loadError, 'Não foi possível carregar este lugar neste aparelho.'),
       )
     } finally {
       setIsLoading(false)
@@ -119,7 +118,7 @@ export function PlaceDetailScreen({
         await action(client)
         await load()
       } catch (writeError) {
-        setScreenError(writeError instanceof Error ? writeError.message : fallback)
+        setScreenError(friendlyErrorMessage(writeError, fallback))
       } finally {
         setIsSaving(false)
       }

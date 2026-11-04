@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useMemo } from 'react'
 import type {
   GoogleDetailsResponse,
@@ -177,7 +178,5 @@ export function usePlacesClient(): PlacesClient {
 }
 
 export function getPlacesErrorMessage(error: unknown): string {
-  if (error instanceof PlacesApiError) return error.message
-  if (error instanceof Error && error.message.trim()) return error.message
-  return 'Não foi possível conectar. Confira sua internet e tente novamente.'
+  return friendlyErrorMessage(error)
 }

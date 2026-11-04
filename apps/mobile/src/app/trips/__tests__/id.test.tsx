@@ -4,6 +4,7 @@ import type { SyncClient } from '@trippy/sync'
 import { DesignSystemProvider } from '../../../design-system'
 import * as sessionProvider from '../../../features/auth/session-provider'
 import { SyncProvider } from '../../../features/sync/sync-provider'
+import * as tripSummaryCache from '../../../features/trips/trip-summary-cache'
 import TripRoute from '../[id]'
 
 const mockParams = {
@@ -156,5 +157,49 @@ describe('rota da viagem', () => {
 
     expect(await screen.findByTestId('tela-hoje')).toBeOnTheScreen()
     expect(screen.queryByTestId('tela-roteiro')).toBeNull()
+  })
+
+  describe('abertura por rota direta, sem o nome nos parâmetros', () => {
+    const cachedTrip = {
+      id: 'trip-1',
+      name: 'Fim de semana em Paraty',
+      destination: 'Paraty',
+      startDate: '2027-03-14',
+      endDate: '2027-03-15',
+      timezone: 'America/Sao_Paulo',
+      role: 'organizer' as const,
+      phase: 'planning' as const,
+      createdAt: '2026-10-20T10:00:00Z',
+    }
+
+    let cacheSpy: jest.SpyInstance | undefined
+
+    afterEach(() => {
+      mockParams.tripName = 'Fim de semana'
+      cacheSpy?.mockRestore()
+    })
+
+    it('offline, mostra o nome guardado no aparelho', async () => {
+      mockParams.tripName = ''
+      mockRequest.mockRejectedValue(new TypeError('Network request failed'))
+      cacheSpy = jest.spyOn(tripSummaryCache, 'loadTripSummary').mockResolvedValue(cachedTrip)
+      const screen = await renderRoute(createClient())
+
+      expect(
+        await screen.findByLabelText('Voltar para Minhas viagens · Fim de semana em Paraty'),
+      ).toBeOnTheScreen()
+      expect(screen.queryByTestId('trip-name-loading')).toBeNull()
+    })
+
+    it('sem dado local ainda, mostra carregamento em vez de um título genérico', async () => {
+      mockParams.tripName = ''
+      mockRequest.mockRejectedValue(new TypeError('Network request failed'))
+      cacheSpy = jest.spyOn(tripSummaryCache, 'loadTripSummary').mockResolvedValue(null)
+      const screen = await renderRoute(createClient())
+
+      expect(await screen.findByTestId('trip-name-loading')).toBeOnTheScreen()
+      expect(screen.queryByText(/^Viagem$/u)).toBeNull()
+      expect(screen.queryByLabelText(/Voltar para Minhas viagens ·/u)).toBeNull()
+    })
   })
 })

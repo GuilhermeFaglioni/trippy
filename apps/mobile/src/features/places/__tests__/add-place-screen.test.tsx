@@ -233,16 +233,22 @@ describe('tela Adicionar lugar', () => {
   })
 
   it.each([
-    [503, 'provider_unavailable', 'Busca Geoapify indisponível.'],
-    [429, 'rate_limited', 'Limite de buscas atingido.'],
-  ])('mostra erro HTTP %i e mantém o plano manual', async (httpStatus, code, message) => {
+    [
+      503,
+      'provider_unavailable',
+      'Busca Geoapify indisponível.',
+      /Não deu para falar com o servidor/u,
+    ],
+    [429, 'rate_limited', 'Limite de buscas atingido.', /Não deu para falar com o servidor/u],
+  ])('mostra erro HTTP %i e mantém o plano manual', async (httpStatus, code, message, friendly) => {
     mockRequest.mockResolvedValue(
       new Response(JSON.stringify({ error: code, message }), { status: httpStatus }),
     )
     const rendered = await renderScreen()
 
     await fireEvent.changeText(rendered.getByTestId('place-search-query'), 'Museu')
-    expect(await rendered.findByTestId('place-search-error')).toHaveTextContent(message)
+    expect(await rendered.findByTestId('place-search-error')).toHaveTextContent(friendly)
+    expect(rendered.queryByTestId('place-search-error')).not.toHaveTextContent(/Geoapify|Limite/u)
     expect(rendered.queryByTestId('place-search-secondary')).toBeNull()
     await fireEvent.press(rendered.getByTestId('place-submit'))
 

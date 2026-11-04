@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useCallback, useState } from 'react'
 import * as Crypto from 'expo-crypto'
 import * as ImagePicker from 'expo-image-picker'
@@ -11,8 +12,10 @@ import { openPhotoQueueRepository, type QueuedPhoto } from './photo-queue'
 import { usePhotoUploadQueue } from './photo-upload-queue-provider'
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) return error.message.trim()
-  return 'Não foi possível concluir a solicitação. Confira sua conexão e tente novamente.'
+  return friendlyErrorMessage(
+    error,
+    'Não foi possível concluir a solicitação. Confira sua conexão e tente novamente.',
+  )
 }
 
 export type UseTripPhotosResult = {

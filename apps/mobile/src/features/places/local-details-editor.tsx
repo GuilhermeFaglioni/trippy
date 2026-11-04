@@ -1,3 +1,4 @@
+import { friendlyErrorMessage } from '../errors/friendly-error'
 import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 
@@ -73,9 +74,7 @@ export function LocalDetailsEditor({
       setSaveMessage('Nome e endereço locais salvos.')
       await onSaved()
     } catch (error) {
-      setSaveError(
-        error instanceof Error ? error.message : 'Não foi possível salvar os dados locais.',
-      )
+      setSaveError(friendlyErrorMessage(error, 'Não foi possível salvar os dados locais.'))
     } finally {
       setIsSaving(false)
     }
