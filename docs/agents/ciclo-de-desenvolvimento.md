@@ -13,7 +13,7 @@ Definido pelo Guilherme em 19/out/2026; migrado do Claude Code + Orca para o omp
 
 Definido pelo Guilherme em 04/nov/2026, no lugar do esquema Sonnet + Haiku de 29/out. Os agentes citam só o papel (`@backend` etc.); trocar de modelo é editar `modelRoles` em `.omp/config.yml`. O revisor usa um modelo de outro provedor de propósito: revisa com viés diferente do de quem implementou. O planejador divide em subtarefas, delega, integra e controla o laço de revisão; o implementador recebe subtarefas pequenas e bem delimitadas (arquivos e critérios explícitos). Subtarefa que o implementador não fecha em duas tentativas volta para o planejador. A UI fica com o Sonnet (veja "Fidelidade às telas").
 
-O **orquestrador** (a sessão principal do omp com o Guilherme) escolhe as issues da fronteira (sem bloqueio aberto) e dispara um `trippy-planner` por issue (`task` com `agent: trippy-planner`, em paralelo, no máximo `task.maxConcurrency` = 3).
+O **orquestrador** (a sessão principal do omp com o Guilherme) escolhe as issues da fronteira (sem bloqueio aberto) e dispara um `trippy-planner` por issue (`task` com `agent: trippy-planner`). `task.maxConcurrency` está em **1** (um agente por vez, por nível): o Mac tem 16 GB e cada agente pode usar Postgres, Metro e Simulator. Suba o valor em `.omp/config.yml` só se o ambiente aguentar.
 
 ## Fluxo de uma issue
 
@@ -22,7 +22,7 @@ O **orquestrador** (a sessão principal do omp com o Guilherme) escolhe as issue
    - subtarefas, cada uma com os arquivos que toca e os critérios de aceite que cobre;
    - quais rodam em paralelo (só subtarefas que **não tocam os mesmos arquivos**) e quais dependem de outras.
 3. **Implementação.** O planejador inicia um implementador por subtarefa:
-   - em paralelo, cada um numa **cópia isolada** (`isolated: true` na `task`) do branch da issue; o planejador integra os commits no branch da issue;
+   - em paralelo (só efetivo se `task.maxConcurrency` > 1; com 1 as spawns entram em fila), cada um numa **cópia isolada** (`isolated: true` na `task`) do branch da issue; o planejador integra os commits no branch da issue;
    - em sequência, no próprio branch da issue.
    - O implementador segue `/implement`: TDD nas fronteiras combinadas, typecheck e testes do arquivo com frequência, a suíte completa no fim (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration` quando houver banco), `/code-review` e commit.
 4. **Revisão.** Com a implementação integrada, o planejador inicia o revisor. Ele confere o diff contra **a issue (critérios de aceite / DoD), as specs e os ADRs**, roda a suíte e publica o veredito como comentário na issue:
