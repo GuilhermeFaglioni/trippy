@@ -12,7 +12,7 @@ import { joinFirstNames } from '../members/member-name'
 import { useSync } from '../sync/sync-provider'
 import type { TripSummary } from './trips-client'
 
-/** TestIDs Maestro: pronto-viajar-card, pronto-viajar-avisar. */
+/** TestIDs: pronto-viajar-card, pronto-viajar-avisar. */
 
 type ReadyToTravelCardProps = {
   tripId: string

@@ -25,7 +25,7 @@ import {
 import { useSession } from '../auth/session-provider'
 import { useSync } from '../sync/sync-provider'
 
-/** TestIDs Maestro: roteiro-dia-<índice>, roteiro-lugar-<slug>(-mover-dia), seletor-dia-<índice>, conflito-roteiro. */
+/** TestIDs: roteiro-dia-<índice>, roteiro-lugar-<slug>(-mover-dia), seletor-dia-<índice>, conflito-roteiro. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
 type TripDay = { dayIndex: number; date: string; label: string; short: string }

@@ -1,5 +1,7 @@
 # Spike de fotos no MinIO — issue #22
 
+> **Nota:** este registro cita Maestro e scripts de dois Simulators que foram removidos do repositório. Os testes ponta a ponta agora são feitos à mão por um agente; veja "Testes ponta a ponta à mão" em [`desenvolvimento-local.md`](../desenvolvimento-local.md).
+
 ## Integração final verificada pelo planejador
 
 Após integrar a #23, fotos usa `0006_photos.sql`, preservando `0005_sync_lugares_convites.sql`. Um banco novo, `trippy_w22_rebase`, aplicou 0001–0006. A tela de lugares da viagem continua disponível; a ação **Fotos da viagem** abre `/trips/[id]/photos`.
