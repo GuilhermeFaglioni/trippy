@@ -69,7 +69,7 @@ O `.env.example` fornece os valores exclusivos do adaptador local: `AUTH_MODE=de
 | `AUTH_JWKS_URL` | Vazio | Usada com a verificação JWKS do Cognito, não no modo local. |
 | `SMTP_HOST` / `SMTP_PORT` | `localhost` / `51025` | Envio local via Mailpit; a caixa e API ficam em `http://localhost:58025`. |
 
-Para validar criação de viagem e sessão persistente no iOS Simulator, deixe os serviços locais já iniciados e abra três terminais na raiz do repositório:
+Para validar criação de viagem e sessão persistente no iOS Simulator, deixe os serviços locais já iniciados e abra dois terminais na raiz do repositório:
 
 ```sh
 # Terminal 1: API local
@@ -77,15 +77,9 @@ pnpm --filter @trippy/api dev
 
 # Terminal 2: development build do app iOS e Metro
 EXPO_PUBLIC_API_URL=http://localhost:3000 pnpm --filter @trippy/mobile ios
-
-# Terminal 3: fluxo ponta a ponta, depois que o app estiver instalado no Simulator
-maestro test .maestro/criar-viagem.yaml
-maestro test .maestro/login-ate-home.yaml
 ```
 
-`criar-viagem.yaml` limpa os dados do app e o keychain, gera um e-mail único, busca o código mais recente pela API do Mailpit, conclui o login e cria uma viagem com datas futuras. O fluxo confirma o nome da viagem e o selo “Planejando” na home. `login-ate-home.yaml` repete o login com outro e-mail e confirma “Minhas viagens”; em seguida, encerra e reabre o app sem limpar o estado para verificar que a sessão persiste no SecureStore. Como os fluxos usam endereços novos, não é necessário resetar o banco nem a caixa do Mailpit entre execuções.
-
-Instale o Maestro pelo instalador oficial antes da primeira execução: `curl -fsSL https://get.maestro.mobile.dev | bash`. O `.maestro/login-ate-home.yaml` usa o bundle ID `app.trippy.mobile`; mantenha um iOS Simulator iniciado e use o mesmo app instalado pelo comando `pnpm --filter @trippy/mobile ios`. Não derrube nem recrie os contêineres para rodar esse fluxo.
+Com o app instalado, o teste é feito à mão (veja "Testes ponta a ponta à mão"): entrar com um e-mail novo, buscar o código na caixa do Mailpit (`http://localhost:58025`), criar uma viagem com datas futuras e, depois, fechar e reabrir o app para confirmar que a sessão persiste. Como cada teste usa endereços novos, não é necessário resetar o banco nem a caixa do Mailpit entre execuções. Não derrube nem recrie os contêineres durante o teste.
 
 ## Estrutura do repositório
 
@@ -113,44 +107,43 @@ Monorepo com **pnpm workspaces**.
 | Unidade | Vitest | Domínio: permissões, regras do roteiro, conflitos, sugestão de lugar por foto, estatísticas do recap. |
 | Integração | Vitest + Docker Compose local (Postgres, MinIO, ElasticMQ, Mailpit) | Migrations, bootstrap dos recursos e checks da API. O CI usa o mesmo `docker-compose.yml`. |
 | App | Jest + React Native Testing Library | Componentes e a camada local (SQLite + outbox). |
-| Ponta a ponta | **Maestro** no iOS Simulator | Os fluxos do `fluxos-e-telas.md`: convite, sugerir, roteiro, Hoje, fotos, recap. |
+| Ponta a ponta | **Um agente, à mão**, no iOS Simulator | Os fluxos do `fluxos-e-telas.md`: convite, sugerir, roteiro, Hoje, fotos, recap. Não há ferramenta de automação de UI no repositório. |
 
-## Testes de cenário no Simulator
+## Testes ponta a ponta à mão
 
-- **Dois "celulares":** rodar **dois Simulators ao mesmo tempo**, cada um com seu UDID fixo, usuário próprio e armazenamento isolado. Instalar, abrir e controlar cada um pelo UDID. O teste só passa se o **estado convergir** nos dois aparelhos e no servidor. Não basta as telas parecerem iguais.
-- **Offline:** o build de desenvolvimento injeta falhas de rede em **todas** as fronteiras: sync, upload, busca de lugares e auth, e não só no sync. Desligar o Wi-Fi do Mac não corta o `localhost`, então não serve como teste.
-- **Maestro:** um fluxo por UDID, com fixtures e reset do banco entre cenários, e retomada depois de fechar o app à força. Os cenários com duas pessoas são coordenados por um script que alterna os dois Simulators. As chaves de teste não entram no build de release.
+Os testes de ponta a ponta são feitos por um agente que opera o iOS Simulator (toques, digitação e capturas de tela) e confere o resultado no Postgres e no SQLite do app. Não há Maestro nem scripts que dirijam a interface.
+
+- **Dois "celulares":** rodar **dois Simulators ao mesmo tempo**, cada um com seu UDID fixo, usuário próprio e armazenamento isolado. O teste só passa se o **estado convergir** nos dois aparelhos e no servidor. Não basta as telas parecerem iguais.
+- **Offline:** em `trippy:///diagnostics`, o interruptor "Simular sem internet" faz os clientes HTTP do app falharem como numa queda de rede. Ele cobre sync, upload, busca de lugares e auth. Desligar o Wi-Fi do Mac não corta o `localhost`, então não serve como teste.
 - **Fotos:** colocar fotos de teste com EXIF variado (HEIC, JPEG, fusos diferentes, sem GPS) com `xcrun simctl addmedia`.
 - **Fuso da viagem:** mudar o fuso do Simulator para Xangai e conferir dias, lembrete noturno e encerramento.
 - **Push:** usar `xcrun simctl push` com payloads de exemplo.
 
-### Sincronização offline com dois Simulators
+### Preparo
 
-Pré-requisitos: ambiente Docker local ativo, migrations aplicadas, `.env` com auth local e Mailpit, Xcode com iOS Simulator, e Maestro instalado. O script sobe sua própria API e Metro em portas livres a partir de `4300` e `4400`; não precisa ocupar as portas `3000` e `8081`.
+Docker ativo, migrations aplicadas, `.env` com auth local e Mailpit, e Xcode com iOS Simulator (`DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`). Suba a API e o Metro (veja acima), instale o mesmo development build nos dois Simulators e abra o app pelo link `trippy://expo-development-client/?url=http%3A%2F%2Flocalhost%3A<porta-do-metro>&disableOnboarding=1`. Use e-mails e nomes de viagem únicos por rodada, para não precisar resetar o banco.
 
-Passe os UDIDs dos dois Simulators:
+### Cenário: roteiro e conflito com dois Simulators
 
-```sh
-./scripts/sync-dois-simuladores.sh <UDID_A> <UDID_B>
-```
+1. A entra com e-mail, cria a viagem, põe três lugares no Dia 1 e gera o convite.
+2. B entra com e-mail e aceita o convite pelo código.
+3. A promove B a coorganizador pelo Grupo.
+4. A e B ligam "Simular sem internet" e reordenam o Dia 1 de formas diferentes.
+5. A reconecta: o servidor passa a ter a ordem de A e avança uma versão.
+6. B reconecta: o Roteiro mostra "Seu rascunho" contra "Roteiro atual"; B reaplica o rascunho e o servidor avança outra versão.
+7. B volta a ficar offline e sugere um lugar; A remove B; B reconecta e vê "Você não faz mais parte desta viagem" com as alterações não enviadas.
+8. Comparar a ordem do Dia 1 no SQLite de cada app com o Postgres (`places`, `itinerary_version`, `trip_members`).
 
-Sem argumentos, o script cria dois iPhone 16 Pro com runtime iOS 18.4. Ele compila um development build, instala o mesmo artefato nos dois alvos, autentica usuários distintos via Mailpit, cria a viagem em A, aceita o convite em B, ativa o modo offline em A, grava lugar e visita, encerra e reabre o app, reconecta e sincroniza B. Ao final, compara o SQLite dos dois apps com o Postgres e sai com código diferente de zero se os estados divergirem.
+### Dicas para operar o Simulator
 
-O script desinstala `app.trippy.mobile` apenas nos dois UDIDs recebidos antes de instalar o build, para começar com armazenamento local limpo. Não reseta o Postgres: cada execução usa e-mail e viagem únicos. Para preservar temporariamente logs e capturas do Maestro durante depuração, use `SYNC_KEEP_TEMP=1`; esses artefatos podem conter códigos OTP e convites gerados, então não os versione nem compartilhe.
-
-O script e os fluxos Maestro usados estão em `.maestro/sync/`; a execução e os limites do spike estão em [`23-sync-offline.md`](spikes/23-sync-offline.md).
-
-### Conflito de roteiro com dois Simulators
-
-Use os mesmos pré-requisitos da sincronização offline: Docker já ativo, migrations aplicadas, `.env` com auth local e Mailpit, Xcode e Maestro. O script sobe API e Metro em portas livres a partir de `4300` e `4400`, e usa o banco indicado por `DATABASE_URL` no `.env`.
-
-```sh
-./scripts/roteiro-dois-simuladores.sh <UDID_A> <UDID_B>
-```
-
-Sem UDIDs, o script cria dois iPhone 16 Pro com runtime iOS 18.4. O fluxo autentica A e B pelo Mailpit, cria a viagem e lugares pelo app, promove B pelo Grupo, simula falta de internet nos dois aparelhos, provoca o conflito de ordem, exibe e reaplica o rascunho, e remove B enquanto ele tem uma escrita local pendente. No fim, compara a projeção do SQLite A com Postgres e verifica no SQLite B a viagem limpa, a remoção persistida e a operação `not_sent`; confere também versão, ordem e ausência do lugar recusado no Postgres.
-
-O script usa e-mails e nomes únicos por execução, não reseta o banco nem aplica migrations, e desinstala `app.trippy.mobile` somente nos dois UDIDs recebidos antes de instalar o development build. Para preservar temporariamente logs e capturas Maestro durante depuração, use `ROTEIRO_KEEP_TEMP=1`; os artefatos podem conter códigos de login e convites. Os fluxos ficam em `.maestro/roteiro/`; a evidência e os limites estão em [`24-conflito-roteiro.md`](spikes/24-conflito-roteiro.md).
+- **Nomes de lugar:** só dá para salvar o nome digitado quando a busca não encontra nada (ou offline). Com a chave do Geoapify preenchida, nomes comuns casam com lugares reais. Use nomes sem correspondência, como `Zqxvwk Pqzjhg Lmnbvc`.
+- **Reordenar:** segure o nome do lugar por mais de 350 ms e arraste. A alça ⋮⋮ é decorativa.
+- **Interruptor offline:** um toque simples não liga o switch; arraste o botão. O switch desce cerca de 24 pt quando o app está offline.
+- **Telas diferentes:** o iPhone 17 e o 17e têm tamanhos diferentes (402×874 e 390×844 pt). Não reutilize coordenadas entre os dois.
+- **Conferir o que foi digitado:** a digitação pode perder caracteres; leia o campo antes de enviar.
+- **Capturas de tela:** a captura pode mostrar o passo anterior; espere um instante e capture de novo.
+- **Código de login:** busque o último e-mail do destinatário em `http://localhost:58025/api/v1/search?query=to:<email>` e leia os seis dígitos do corpo.
+- **Versão do roteiro:** cada lugar posto num dia já avança `itinerary_version`. Compare a versão antes e depois de cada passo, e não contra um número fixo.
 
 ## O que o ambiente local NÃO valida
 
