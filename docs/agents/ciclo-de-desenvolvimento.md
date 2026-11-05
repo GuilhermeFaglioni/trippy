@@ -31,7 +31,7 @@ O **orquestrador** (a sessão principal, com o Guilherme) escolhe as issues da f
    - **Reprovado:** lista objetiva do que falta ou está errado. O planejador repassa ao implementador responsável, que corrige e avisa; então uma **nova revisão** é feita, do zero.
    - **Aprovado:** o revisor segue para o passo 5.
    - Depois de **3 reprovações**, o planejador para, marca a issue com `ready-for-human` e avisa o orquestrador.
-5. **PR e esteira.** O revisor abre o PR para o `develop` (título em português, corpo com `Closes #<nº>`, o que foi feito e como validar), ativa o auto-merge (`gh pr merge --auto --squash --delete-branch`) e acompanha a CI (`gh pr checks --watch`).
+5. **PR e esteira.** O revisor abre o PR para o `develop` (ou para o branch da issue-base, se a issue for empilhada; nesse caso a CI não dispara, pois só roda em PRs para `develop`/`main`) (título em português, corpo com `Closes #<nº>`, o que foi feito e como validar), ativa o auto-merge (`gh pr merge --auto --squash --delete-branch`) e acompanha a CI (`gh pr checks --watch`).
 6. **Falhas na esteira.** O revisor é responsável por resolver:
    - **check falhando:** lê o log (`gh run view --log-failed`), corrige, roda a suíte localmente e faz push;
    - **conflito com o `develop`:** faz `git rebase origin/develop` (ou merge, se o rebase ficar arriscado), resolve, roda a suíte e faz push com `--force-with-lease`;

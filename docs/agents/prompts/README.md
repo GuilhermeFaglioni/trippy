@@ -18,7 +18,7 @@ Campos `{{...}}` que cada modelo precisa preencher antes de virar brief. Esta ta
 | `planejador.md` | `{{ISSUE}}` |
 | `backend.md` | `{{ARQUIVOS}}`, `{{BRANCH}}`, `{{CRITERIOS}}`, `{{ISSUE}}`, `{{SUBTAREFA}}` |
 | `ui.md` | `{{ARQUIVOS}}`, `{{BRANCH}}`, `{{CRITERIOS}}`, `{{ISSUE}}`, `{{SUBTAREFA}}`, `{{TELA_PNG}}` |
-| `revisor.md` | `{{ACHADOS_ANTERIORES}}`, `{{BRANCH}}`, `{{E_UI}}`, `{{ISSUE}}`, `{{RODADA}}` |
+| `revisor.md` | `{{ACHADOS_ANTERIORES}}`, `{{AUTO_MERGE}}`, `{{BASE}}`, `{{BRANCH}}`, `{{E_UI}}`, `{{ISSUE}}`, `{{RODADA}}` |
 
 ## Como usar
 
