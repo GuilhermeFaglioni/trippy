@@ -14,8 +14,8 @@ Os cinco labels padrão: `needs-triage`, `needs-info`, `ready-for-agent`, `ready
 
 ### Ciclo de desenvolvimento
 
-Planejador → swarm de implementadores (`/implement`) → revisor → PR com auto-merge, com o revisor cuidando da esteira. See `docs/agents/ciclo-de-desenvolvimento.md`.
+Planejador → implementadores (`/implement`) → revisor independente → PR com auto-merge, com o revisor cuidando da esteira. Orquestrado pelo T3 Code, com Claude, Gemini e GPT. Skills em `.agents/skills/`. See `docs/agents/ciclo-de-desenvolvimento.md`.
 
 ### Domain docs
 
-Contexto único: `CONTEXT.md` e `docs/adr/` na raiz, criados sob demanda. See `docs/agents/domain.md`.
+Contexto único: `GLOSSARY.md` e `docs/adr/` na raiz, criados sob demanda. See `docs/agents/domain.md`.
