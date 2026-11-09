@@ -8,11 +8,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "pg": "^8.16.0"
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
-    "@types/pg": "^8.15.0",
-    "tsx": "^4.20.0"
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15"
   }
 }
