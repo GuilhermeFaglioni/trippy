@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Trippy · viagem em grupo, do plano à memória</title>
+    <meta
+      name="description"
+      content="O Trippy é um app para o grupo planejar a viagem junto e guardar o que viveu em cada lugar. Entre na lista de espera."
+    />
+    <meta name="theme-color" content="#F5F1EA" />
+    <meta property="og:title" content="Trippy" />
+    <meta
+      property="og:description"
+      content="Um app para o grupo planejar a viagem junto e guardar o que viveu em cada lugar."
+    />
+    <link vite-ignore rel="alternate" hreflang="pt-BR" href="/" />
+    <link vite-ignore rel="alternate" hreflang="en" href="/en/" />
+    <link vite-ignore rel="alternate" hreflang="x-default" href="/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <a class="skip" href="#lista">Pular para a lista de espera</a>
+
+    <div class="stage" aria-hidden="true">
+      <canvas id="cena"></canvas>
+      <div class="stage-fallback"></div>
+      <div class="scrim"></div>
+    </div>
+
+    <header class="topbar">
+      <a class="brand" href="#topo" aria-label="Trippy, voltar ao início">
+        <svg class="brand-mark" viewBox="0 0 96 96" aria-hidden="true">
+          <rect width="96" height="96" rx="24" fill="#1F4D3F" />
+          <path d="M48 80s-20-17-20-36a20 20 0 0 1 40 0c0 19-20 36-20 36z" fill="#F5F1EA" />
+          <circle cx="48" cy="44" r="9" fill="#E9B872" />
+          <rect x="58" y="16" width="22" height="10" rx="5" fill="#C2410C" />
+        </svg>
+        <span class="brand-word">trippy</span>
+      </a>
+      <div class="topbar-actions">
+        <a class="lang" href="/en/" hreflang="en" lang="en" aria-label="Read this page in English"
+          >EN</a
+        >
+        <a class="btn btn-primary btn-sm" href="#lista">Entrar na lista</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="topo" data-chapter="0">
+        <div class="copy">
+          <h1 class="display">Viagem em grupo, do plano à memória.</h1>
+          <p class="lede">
+            O Trippy é um app para o grupo planejar a viagem junto e guardar o que viveu em cada
+            lugar.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#lista">Entrar na lista de espera</a>
+            <a class="btn-link" href="#planejar">Ver como funciona</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter" id="planejar" data-chapter="1">
+        <div class="copy sticky">
+          <h2 class="title">Cada um sugere, o roteiro vira um só.</h2>
+          <p>
+            Todo mundo adiciona os lugares que quer conhecer, pelo nome, pelo endereço ou colando um
+            link do Google Maps. Quem organiza monta o roteiro, dia por dia.
+          </p>
+        </div>
+      </section>
+
+      <section class="chapter" id="viajar" data-chapter="2">
+        <div class="copy sticky">
+          <h2 class="title">O plano vai junto na viagem.</h2>
+          <p>
+            O grupo vê o que tem hoje e o próximo lugar, e registra cada visita com fotos,
+            observações e quem foi.
+          </p>
+        </div>
+      </section>
+
+      <section class="chapter" id="lembrar" data-chapter="3">
+        <div class="copy sticky">
+          <h2 class="title">As fotos de todo mundo, num lugar só.</h2>
+          <p>
+            As memórias de cada pessoa ficam juntas, lugar por lugar. No fim, viram um recap da
+            viagem: álbum com destaques e um vídeo curto.
+          </p>
+        </div>
+      </section>
+
+      <section class="waitlist" id="lista" data-chapter="4">
+        <div class="waitlist-inner">
+          <div class="waitlist-copy">
+            <h2 class="title">Entre na lista de espera.</h2>
+            <p>Deixe seu contato. Quando tiver novidade do Trippy, você fica sabendo.</p>
+          </div>
+
+          <form class="form" id="form-lista" novalidate>
+            <div class="field">
+              <label for="nome">Nome</label>
+              <input
+                id="nome"
+                name="nome"
+                type="text"
+                autocomplete="name"
+                required
+                maxlength="120"
+              />
+              <p class="field-error" id="nome-erro" hidden></p>
+            </div>
+            <div class="field">
+              <label for="email">E-mail</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                required
+                maxlength="200"
+              />
+              <p class="field-error" id="email-erro" hidden></p>
+            </div>
+            <div class="field">
+              <label for="whatsapp">WhatsApp <span class="optional">opcional</span></label>
+              <input
+                id="whatsapp"
+                name="whatsapp"
+                type="tel"
+                inputmode="tel"
+                autocomplete="tel"
+                placeholder="(11) 91234-5678"
+                maxlength="30"
+              />
+              <p class="field-error" id="whatsapp-erro" hidden></p>
+            </div>
+            <div class="field">
+              <label for="grupo"
+                >Com quem você costuma viajar? <span class="optional">opcional</span></label
+              >
+              <select id="grupo" name="grupo">
+                <option value="">Escolha uma opção</option>
+                <option value="Amigos">Amigos</option>
+                <option value="Família">Família</option>
+                <option value="Casal">Casal</option>
+                <option value="Trabalho">Trabalho</option>
+                <option value="Só eu">Só eu</option>
+              </select>
+            </div>
+            <div class="field hp" aria-hidden="true">
+              <label for="empresa">Empresa</label>
+              <input id="empresa" name="empresa" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+            <button
+              class="btn btn-primary btn-block"
+              type="submit"
+              aria-describedby="aviso-consentimento"
+            >
+              <span class="btn-label">Entrar na lista</span>
+            </button>
+            <p class="consent-note" id="aviso-consentimento">
+              Ao entrar, você aceita receber avisos do Trippy.
+            </p>
+            <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <footer class="footer">
+          <span class="brand-word small">trippy</span>
+          <span>App para viagens em grupo, para iOS e Android.</span>
+        </footer>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
