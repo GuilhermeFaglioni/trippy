@@ -45,7 +45,7 @@ export type PlaceDetailScreenProps = {
 /**
  * Tela do lugar (referência `08-lugar`): ações, fotos, quem foi, nota, observações e, para quem
  * organiza, a edição de nome e endereço locais.
- * TestIDs Maestro: lugar-voltar, lugar-fui, lugar-favorito, lugar-mostrar-endereco,
+ * TestIDs: lugar-voltar, lugar-fui, lugar-favorito, lugar-mostrar-endereco,
  * lugar-fotos-ver-todas, lugar-nota-<n>, lugar-media, lugar-observacao-escrever,
  * lugar-observacao-campo, lugar-observacao-salvar, lugar-observacao-pessoa-<n>, lugar-quem-foi,
  * lugar-visita-voce, lugar-visita-pessoa-<n>, local-name-<id>, local-address-<id>,
@@ -142,7 +142,7 @@ export function PlaceDetailScreen({
   const iWent = userId !== null && visitorIds.has(userId)
 
   // A própria pessoa vira "Você"; as outras usam o primeiro nome, ou "Pessoa N" se faltar.
-  // O slug (testID) segue a ordem da lista, estável para o Maestro.
+  // O slug (testID) segue a ordem da lista, estável para quem testa à mão.
   const identify = (memberId: string): Identity => {
     if (memberId === userId) return { label: 'Você', slug: 'voce' }
     const index = others.findIndex((member) => member.userId === memberId)

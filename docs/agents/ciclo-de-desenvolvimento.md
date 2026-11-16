@@ -43,7 +43,7 @@ O **orquestrador** (a sessão principal, com o Guilherme) escolhe as issues da f
 O ciclo estava lento por excesso de testes e de decisões imediatas. Valem estas regras, que prevalecem sobre o fluxo acima quando houver conflito:
 
 - **Testes em camadas.** Durante a implementação, só typecheck e os testes do arquivo mexido. A suíte completa (`pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:integration`) roda **uma vez**, antes do PR; o resto fica com a CI. Testes novos cobrem as fronteiras (permissão, convergência offline, validação), não cada componente.
-- **E2E só no fim da sprint.** Fluxos Maestro e cenários com dois Simulators ficam em uma issue própria por sprint. Uma feature não espera E2E para ser mergeada.
+- **E2E só no fim da sprint.** Os testes ponta a ponta, feitos à mão por um agente nos Simulators, ficam em uma issue própria por sprint. Uma feature não espera E2E para ser mergeada.
 - **Decidir com padrão.** Dúvida pequena (texto, ordem, nome): o implementador escolhe o padrão mais simples, registra no corpo do PR e segue. `needs-info` só para decisão de produto, custo ou arquitetura fora das specs.
 - **Revisão única.** O revisor confere critérios de aceite e riscos (permissão, perda de dados, offline), sem reabrir estilo. Uma reprovação com lista objetiva, no máximo duas.
 - **Ambiente travado não bloqueia.** Se o Simulator ou a infraestrutura de E2E falhar, registre numa issue e mergeie a feature com os testes de integração verdes.

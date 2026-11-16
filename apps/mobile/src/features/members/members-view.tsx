@@ -23,7 +23,7 @@ import {
   type AvatarColor,
 } from '../../design-system/components'
 
-/** TestIDs Maestro: grupo-membro-<userId>-papel, grupo-membro-<userId>-opcoes, -promover/-rebaixar/-remover. */
+/** TestIDs: grupo-membro-<userId>-papel, grupo-membro-<userId>-opcoes, -promover/-rebaixar/-remover. */
 
 const ROLE_LABELS: Record<LiveMember['role'], string> = {
   organizer: 'Organizador',

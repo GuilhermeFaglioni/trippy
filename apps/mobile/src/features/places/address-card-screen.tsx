@@ -12,7 +12,7 @@ import { mapUrl } from './map-link'
 
 /**
  * Cartão para mostrar (referência `07-cartao-para-mostrar`), em tela cheia e sem rede.
- * TestIDs Maestro: address-card, address-card-name, address-card-address, address-card-close,
+ * TestIDs: address-card, address-card-name, address-card-address, address-card-close,
  * address-card-complete, address-card-copy, address-card-map.
  */
 type AddressCardScreenProps = {

@@ -26,7 +26,7 @@ import {
   type TripSummary,
 } from '../../features/trips/trips-client'
 
-/** TestIDs Maestro: viagem-removida, trip-tab-lugares, trip-tab-roteiro, trip-tab-grupo, trip-tab-hoje. */
+/** TestIDs: viagem-removida, trip-tab-lugares, trip-tab-roteiro, trip-tab-grupo, trip-tab-hoje. */
 const typography = createTypographyTokens(normalizeFontPlatform(Platform.OS))
 
 /** Aba inicial por fase; Hoje e Recap entram nas telas próprias. */

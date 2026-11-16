@@ -33,6 +33,8 @@ export function AcceptInviteForm() {
           // A adesão foi confirmada pela API; a sincronização tenta novamente depois.
         }
       }
+      // O aviso é um Modal nativo: sem fechá-lo, ele continua por cima da viagem aberta.
+      setShowTerms(false)
       router.push({
         pathname: '/trips/[id]',
         params: { id: trip.id, tripName: trip.name, role: trip.role },

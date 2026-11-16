@@ -1,5 +1,7 @@
 # Spike 24 — conflito no roteiro e membro removido
 
+> **Nota:** este registro cita Maestro e scripts de dois Simulators que foram removidos do repositório. Os testes ponta a ponta agora são feitos à mão por um agente; veja "Testes ponta a ponta à mão" em [`desenvolvimento-local.md`](../desenvolvimento-local.md).
+
 **Escopo:** conflito de versão em `itinerary.arrange`, gestão de membros pelo sync (`member.remove`, `member.set_role`) e comportamento do cliente removido. O código entrou no #57; o sair do grupo, no #101.
 
 ## Hipótese
