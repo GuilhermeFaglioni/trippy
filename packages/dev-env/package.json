@@ -8,8 +8,8 @@
     "bootstrap": "node --env-file-if-exists=../../.env --import tsx src/bootstrap.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1161.0",
-    "@aws-sdk/client-sqs": "^3.1161.0"
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@aws-sdk/client-sqs": "^3.1164.0"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
