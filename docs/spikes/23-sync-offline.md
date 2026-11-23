@@ -1,5 +1,7 @@
 # Spike 23 — sincronização offline de lugares
 
+> **Nota:** este registro cita Maestro e scripts de dois Simulators que foram removidos do repositório. Os testes ponta a ponta agora são feitos à mão por um agente; veja "Testes ponta a ponta à mão" em [`desenvolvimento-local.md`](../desenvolvimento-local.md).
+
 **Execução:** 21/out/2026
 
 **Escopo:** convergência de lugares, visitas e membros entre dois clientes SQLite e Postgres, incluindo reenvio idempotente, remoção e retomada após encerramento do app.

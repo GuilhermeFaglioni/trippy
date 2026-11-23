@@ -16,7 +16,7 @@ import {
 } from './today-model'
 import { TodayView, type TodayNextPlace } from './today-view'
 
-/** TestIDs Maestro: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-estamos-aqui (botão que abre a tela Estamos aqui, só durante a viagem), hoje-lugar-<slug> (e -eu-fui, -favorito, -foto), hoje-o-que-mudou. */
+/** TestIDs: tela-hoje, hoje-banner-desatualizacao, hoje-dia, hoje-proximo-lugar, hoje-estamos-aqui (botão que abre a tela Estamos aqui, só durante a viagem), hoje-lugar-<slug> (e -eu-fui, -favorito, -foto), hoje-o-que-mudou. */
 
 type TodayScreenProps = {
   tripId: string
